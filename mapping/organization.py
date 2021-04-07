@@ -1,5 +1,5 @@
 import pandas as pd
-from rdflib import Graph, Literal, RDF, URIRef, N
+from rdflib import Graph, Literal, RDF, URIRef
 from rdflib.namespace import FOAF , XSD, DC, FOAF, SKOS, RDF, RDFS
 
 import cleansing.organization as cls_org

@@ -250,5 +250,8 @@ def splitname(full_name, first_names):
     # print([full_name])
   return [first, last, ' - '.join(comment)]
 
+def exists_contact(row):
+  return ((str(row['Titel Cleansed']) != str(np.nan)) or (str(row['Mail nr2 Cleansed']) != str(np.nan)) or (str(row['Telefoonnr Contact 1']) != str(np.nan)))
+
 def export_data(g):
   g.serialize('output.ttl',format='turtle')
