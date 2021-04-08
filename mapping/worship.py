@@ -55,7 +55,7 @@ def main(file):
     g.add((kbo_id, RDF.type, ns.generiek.GestructureerdeIdentificator))
     add_literal(g, kbo_id, ns.generiek.lokaleIdentificator, str(row['KBO_EB Cleansed']), XSD.string)
 
-    g.add((abb_id, ns.org.classification, ns.bestuur_van_de_eredienst))
+    g.add((abb_id, ns.org.classification, ns.bestuurseenheid_classification_code['eredienst']))
 
     # Bestuurorgaan
     #bestuur = concept_uri(ns.lblod + 'bestuursorgaan/', str(row['organization_id']))
@@ -82,14 +82,14 @@ def main(file):
     voorzitter_contact_uri = concept_uri(ns.lblod + 'contactpunt/', str(row['organization_id']) + str(row['Naam_voorzitter_EB First']) + str(row['Naam_voorzitter_EB Last']) + str(row['Tel_voorzitter_EB 1']))
     g.add((voorzitter_contact_uri, RDF.type, ns.schema.ContactPoint))
     g.add((voorzitter_vesting_uri, ns.org.siteAddress, voorzitter_contact_uri))
-    add_literal(voorzitter_contact_uri, ns.schema.telephone, str(row['Tel_voorzitter_EB 1']))
-    add_literal(voorzitter_contact_uri, ns.schema.email, str(row['Mail_voorzitter_EB Cleansed']))  
+    add_literal(voorzitter_contact_uri, ns.schema.telephone, str(row['Tel_voorzitter_EB 1']), XSD.string)
+    add_literal(voorzitter_contact_uri, ns.schema.email, str(row['Mail_voorzitter_EB Cleansed']), XSD.string)  
 
     if str(row['Tel_voorzitter_EB 2']) != str(np.nan):
       voorzitter_contact_2_uri = concept_uri(ns.lblod + 'contactpunt/', str(row['organization_id']) + str(row['Naam_voorzitter_EB First']) + str(row['Naam_voorzitter_EB Last']) + str(row['Tel_voorzitter_EB 2']))
       g.add((voorzitter_contact_2_uri, RDF.type, ns.schema.ContactPoint))
       g.add((voorzitter_vesting_uri, ns.org.siteAddress, voorzitter_contact_2_uri))
-      add_literal(voorzitter_contact_2_uri, ns.schema.telephone, str(row['Tel_voorzitter_EB 2']))
+      add_literal(voorzitter_contact_2_uri, ns.schema.telephone, str(row['Tel_voorzitter_EB 2']), XSD.string)
 
     ### Voorzitter - Adres
     voorzitter_address_id = concept_uri(ns.lblod + 'adresvoorstelling/', str(row['organization_id']) + str(row['Naam_voorzitter_EB First']) + str(row['Naam_voorzitter_EB Last'])) 
@@ -113,6 +113,7 @@ def main(file):
     #einde
     #status ~ cf loket lokale besturen PoC https://poc-form-builder.relance.s.redpencil.io/codelijsten
     g.add((voorzitter, ns.mandaat.isAangesteldAls, voorzitter_mandataris))
+    g.add((voorzitter_mandaat, ns.org.heldBy, voorzitter_mandataris))
 
     ####    
     # Secretaris
@@ -161,6 +162,7 @@ def main(file):
     #einde
     #status
     g.add((secretaris, ns.mandaat.isAangesteldAls, secretaris_mandataris))
+    g.add((secretaris_mandaat, ns.org.heldBy, secretaris_mandataris))
 
     ####
     # Penningmeester
@@ -203,12 +205,13 @@ def main(file):
     ## Penningmeester - Mandataris
     penningmeester_mandataris = concept_uri(ns.lblod + 'mandataris/', str(row['organization_id']) + str(row['Naam_penningmeester_EB First']) + str(row['Naam_penningmeester_EB Last']) + 'penningmeester')
     g.add((penningmeester_mandataris, RDF.type, ns.mandaat.Mandataris))
-    g.add((penningmeester, ns.mandaat.isAangesteldAls, penningmeester_mandataris))
     g.add((penningmeester_mandataris, ns.org.holds, penningmeester_mandaat))
     g.add((penningmeester_mandataris, ns.mandaat.isBestuurlijkeAliasVan, penningmeester))
     add_literal(g, penningmeester_mandataris, ns.mandaat.start, str(row['Datum verkiezing penningmeester']), XSD.dateTime)
     #einde
     #status
+    g.add((penningmeester, ns.mandaat.isAangesteldAls, penningmeester_mandataris))
+    g.add((penningmeester_mandaat, ns.org.heldBy, penningmeester_mandataris))
 
     ####
     # Lid 1
@@ -227,10 +230,12 @@ def main(file):
     ## Lid 1 - Mandataris
     lid1_mandataris = concept_uri(ns.lblod + 'mandataris/', str(row['organization_id']) + str(row['Naam_Lid4 First']) + str(row['Naam_Lid4 Last']) + 'lid1')
     g.add((lid1_mandataris, RDF.type, ns.mandaat.Mandataris))
-    g.add((lid1, ns.mandaat.isAangesteldAls, lid1_mandataris))
     g.add((lid1_mandataris, ns.org.holds, penningmeester_mandaat))
     g.add((lid1_mandataris, ns.mandaat.isBestuurlijkeAliasVan, lid1))
     add_literal(g, lid1_mandataris, ns.mandaat.start, str(row['Datum verkiezing lid 4']), XSD.dateTime)
+
+    g.add((lid1, ns.mandaat.isAangesteldAls, lid1_mandataris))
+    g.add((lid1_mandaat, ns.org.heldBy, lid1_mandataris))
 
     ###
     # Lid 2
@@ -249,11 +254,12 @@ def main(file):
     ## Lid 2 - Mandataris
     lid2_mandataris = concept_uri(ns.lblod + 'mandataris/', str(row['organization_id']) + str(row['Naam_Lid5 First']) + str(row['Naam_Lid5 Last']) + 'lid2')
     g.add((lid2_mandataris, RDF.type, ns.mandaat.Mandataris))
-    g.add((lid2, ns.mandaat.isAangesteldAls, lid2_mandataris))
     g.add((lid2_mandataris, ns.org.holds, penningmeester_mandaat))
     g.add((lid2_mandataris, ns.mandaat.isBestuurlijkeAliasVan, lid2))
     add_literal(g, lid2_mandataris, ns.mandaat.start, str(row['Datum verkiezing lid 4']), XSD.dateTime)
 
+    g.add((lid2, ns.mandaat.isAangesteldAls, lid2_mandataris))
+    g.add((lid2_mandaat, ns.org.heldBy, lid2_mandataris))
 
   export_data(g)
   

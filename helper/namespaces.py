@@ -24,8 +24,9 @@ oc = Namespace('https://data.vlaanderen.be/id/concept/OrganisatieClassificatie/'
 
 
 # Predefined concepts:
-bestuurseenheid_classificatie_code = {
-  "Bestuur van de eredienst": "http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/66ec74fd-8cfc-4e16-99c6-350b35012e86"
+bestuurseenheid_classification_code = {
+  "eredienst": "http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/66ec74fd-8cfc-4e16-99c6-350b35012e86",
+  "centraal": "http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/f9cac08a-13c1-49da-9bcb-f650b0604054"
 }
 
 bestursfunctie_code = {

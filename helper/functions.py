@@ -94,6 +94,17 @@ def mail_cleansing(mail):
 
   return [mail_cleansed, comment]
 
+def website_cleansing(website):
+  website_cleansed = comment = np.nan
+
+  if website != 'nan':
+    if  re.match(r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,4}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)', website):
+      website_cleansed = website
+    else: 
+      comment = 'Wrong website format. Check it.'
+
+  return [website_cleansed, comment]
+
 def telephone_number_cleansing(telephone_number):
   telephone_number = re.sub(r'\s', '', telephone_number)
 
@@ -149,9 +160,9 @@ def split_telephone_number(telephone_number):
   return [telephone_number_1, telephone_number_2, ' - '.join(comment)]
 
 def check_telephone_number_lenght(telephone_number):
-  if  (len(telephone_number) < 9 or len(telephone_number) > 10):
+  if  len(telephone_number) < 9 or len(telephone_number) > 10:
     return False
-  else :
+  else:
     return True
 
 def date_cleansing(date):
@@ -250,8 +261,44 @@ def splitname(full_name, first_names):
     # print([full_name])
   return [first, last, ' - '.join(comment)]
 
-def exists_contact(row):
+def find_resulting_org(orgs, name, type_entiteit):
+  if name == 'Puurs Sint-Amands':
+    return orgs[(orgs['Unieke Naam'].str.contains('PUURS_SINT_AMANDS', flags=re.IGNORECASE, regex=True, na=False)) & (orgs['Organisatiestatus'] == 'Actief') & (orgs['Type Entiteit'] == type_entiteit)]
+  elif type_entiteit == 'Gemeente':
+    return orgs[(orgs['Unieke Naam'].str.contains('G_' + name, flags=re.IGNORECASE, regex=True, na=False)) & (orgs['Organisatiestatus'] == 'Actief')]
+  else:
+    return orgs[(orgs['Unieke Naam'].str.contains('O_' + name, flags=re.IGNORECASE, regex=True, na=False)) & (orgs['Organisatiestatus'] == 'Actief')]
+
+def org_status_cleansing(orgs):
+  orgs['Resulting organisation'] = None
+
+  for index, row in orgs[orgs['Organisatiestatus'] == 'gefusioneerd'].iterrows():
+    if str(row['Opmerkingen ivm Organisatie']).startswith('Fusie'):
+      resulting_city = row['Opmerkingen ivm Organisatie'].split('tot')[-1].strip()
+      obj_resulting_org = find_resulting_org(orgs, resulting_city, row['Type Entiteit'])
+      orgs.at[index, 'Resulting organisation'] = str(obj_resulting_org.iloc[0]['KBOnr_cleansed'])
+
+  return orgs
+
+def exists_contact_org(row):
+  return ((str(row['Website Cleansed']) != str(np.nan)) or (str(row['Algemeen telefoonnr']) != str(np.nan)) or (str(row['Algemeen mailadres']) != str(np.nan)))
+
+def exists_address_org(row):
+  return ((str(row['Straat']) != str(np.nan)) or (str(row['Huisnr_cleansed']) != str(np.nan)) or (str(row['Busnr_new']) != str(np.nan)) or
+          (str(row['Postcode van de organisatie_cleansed']) != str(np.nan)) or (str(row['Gemeente van de organisatie']) != str(np.nan)) or
+          (str(row['Provincie van de organisatie_cleansed']) != str(np.nan)))
+  
+def exists_site_org(row):
+  return (exists_address_org(row) or exists_contact_org(row))
+
+def exists_contact_cont(row):
   return ((str(row['Titel Cleansed']) != str(np.nan)) or (str(row['Mail nr2 Cleansed']) != str(np.nan)) or (str(row['Telefoonnr Contact 1']) != str(np.nan)))
+
+def exists_site_central(row):
+  return (exists_address_org(row) or exists_contact_org(row))
+
+def exists_contact_central(row):
+  return ((str(row['Website Cleansed']) != str(np.nan)) or (str(row['Algemeen telefoonnr']) != str(np.nan)) or (str(row['Algemeen mailadres']) != str(np.nan)))
 
 def export_data(g):
   g.serialize('output.ttl',format='turtle')
