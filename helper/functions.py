@@ -280,6 +280,97 @@ def org_status_cleansing(orgs):
 
   return orgs
 
+def voting_2020_cleansing(data):
+  for index, row in data.iterrows():
+    date = str(row['Verkiezingen2020_Opmerkingen'])
+    
+    if date != 'nan':
+      dates_parsed = date_cleansing(date)
+
+      if dates_parsed :
+        eb.at[index, 'Verkiezingen2020_Opmerkingen Cleansed'] = dates_parsed[0]
+        if len(dates_parsed) > 1:
+          comment = []
+          for i in range(1, len(dates_parsed)):
+            comment.append(str(dates_parsed[i]))
+            eb.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = ' - '.join(comment)
+        else:
+          eb.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = np.NaN
+      else:
+        eb.at[index, 'Verkiezingen2020_Opmerkingen Cleansed'] = np.NaN
+
+        eb['Verkiezingen2020_Opmerkingen Comment'] = data['Verkiezingen2020_Opmerkingen Comment'].astype(object)
+        eb.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = 'Wrong date format. Check it.'
+  return data
+
+def voting_2020_ckb_cleansing(data):
+  for index, row in data.iterrows():
+    date = str(row['Verkiezingen2020_Opmerkingen'])
+
+    if date != "nan":
+      dates_parsed = date_cleansing(date)
+      if dates_parsed :
+        ckb.at[index, 'Verkiezingen2020_Opmerkingen Cleansed'] = dates_parsed[0]
+        if len(dates_parsed) > 1:
+          comment = []
+          for i in range(1, len(dates_parsed)):
+            comment.append(str(dates_parsed[i]))
+            ckb.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = ' - '.join(comment)
+        else:
+          ckb.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = np.NaN
+      else:
+        ckb.at[index, 'Verkiezingen2020_Opmerkingen Cleansed'] = np.NaN
+
+        ckb['Verkiezingen2020_Opmerkingen Comment'] = data['Verkiezingen2020_Opmerkingen Comment'].astype(object)
+        ckb.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = 'Wrong date format. Check it.'
+
+  return data
+
+def voting_ckb_2017_cleansing(data):
+  for index, row in data.iterrows():
+    date = str(row['Verkiezingen17_Opmerkingen'])
+
+    if date != 'nan':
+      dates_parsed = date_cleansing(date)
+
+      if dates_parsed :
+        ckb.at[index, 'Verkiezingen17_Opmerkingen Cleansed'] = dates_parsed[0]
+        if len(dates_parsed) > 1:
+          comment = []
+          for i in range(1, len(dates_parsed)):
+            comment.append(str(dates_parsed[i]))
+            ckb.at[index, 'Verkiezingen17_Opmerkingen Comment'] = ' - '.join(comment)
+        else:
+          ckb.at[index, 'Verkiezingen17_Opmerkingen Comment'] = np.NaN
+      else:
+        ckb.at[index, 'Verkiezingen17_Opmerkingen Cleansed'] = np.NaN
+
+        ckb['Verkiezingen17_Opmerkingen Comment'] = data['Verkiezingen17_Opmerkingen Comment'].astype(object)
+        ckb.at[index, 'Verkiezingen17_Opmerkingen Comment'] = 'Wrong date format. Check it.'
+
+def voting_2017_cleansing(data):
+  for index, row in data.iterrows():
+    date = str(row['Verkiezingen17_Opmerkingen'])
+
+    if date != 'nan':
+      dates_parsed = date_cleansing(date)
+
+      if dates_parsed :
+        eb.at[index, 'Verkiezingen17_Opmerkingen Cleansed'] = dates_parsed[0]
+        if len(dates_parsed) > 1:
+          comment = []
+          for i in range(1, len(dates_parsed)):
+            comment.append(str(dates_parsed[i]))
+            eb.at[index, 'Verkiezingen17_Opmerkingen Comment'] = ' - '.join(comment)
+        else:
+          eb.at[index, 'Verkiezingen17_Opmerkingen Comment'] = np.NaN
+      else:
+        eb.at[index, 'Verkiezingen17_Opmerkingen Cleansed'] = np.NaN
+
+        eb['Verkiezingen17_Opmerkingen Comment'] = data['Verkiezingen17_Opmerkingen Comment'].astype(object)
+        eb.at[index, 'Verkiezingen17_Opmerkingen Comment'] = 'Wrong date format. Check it.'
+  return data
+
 def exists_contact_org(row):
   return ((str(row['Website Cleansed']) != str(np.nan)) or (str(row['Algemeen telefoonnr']) != str(np.nan)) or (str(row['Algemeen mailadres']) != str(np.nan)))
 
