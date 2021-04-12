@@ -13,6 +13,8 @@ def main(ckb):
 
   ckb[['Huisnr_CKB_Cleansed', 'Busnummer_CKB_Cleansed', 'Huisnr_CKB_Comment']] = pd.DataFrame(ckb['Huisnr_CKB'].astype(str).apply(helper.split_house_bus_number).values.tolist(), columns=['house_number', 'bus_number', 'comment'])
 
+  ckb = helper.provincie_cleansing(ckb, 'Gemeente van de organisatie', 'Provincie van de organisatie')
+  
   ckb['Naam_Voorzitter_CKB_cleansed'] = ckb['Naam_Voorzitter_CKB'].str.replace('<br>', '').str.strip()
   ckb['Naam_secretaris_CKB_cleansed'] = ckb['Naam_secretaris_CKB'].str.replace('<br>', '').str.strip()
 

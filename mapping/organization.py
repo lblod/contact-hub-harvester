@@ -4,12 +4,12 @@ from rdflib import Graph, Literal, RDF, URIRef
 from rdflib.namespace import FOAF , XSD, DC, FOAF, SKOS, RDF, RDFS
 
 import cleansing.organization as cls_org
-from helper.functions import add_literal, concept_uri, export_data, exists_site, exists_contact_org, exists_address
+from helper.functions import add_literal, concept_uri, export_data, export_df, exists_site_org, exists_contact_org, exists_address_org
 import helper.namespaces as ns
 
 def create_status_uri(g, data):
   for status in data['Organisatiestatus'].dropna().unique():
-    subject = concept_uri(ns.os, status)
+    subject, _ = concept_uri(ns.os, status)
     g.add((subject, RDF.type, SKOS.Concept))
     g.add((subject, SKOS.prefLabel, Literal(status, lang='nl')))
     if status.startswith('Actief') or status.startswith('Valt Niet Meer'):
@@ -19,7 +19,7 @@ def create_status_uri(g, data):
 
 def create_category_uri(g, data):
   for category in data['Type Entiteit'].dropna().unique():
-    category = concept_uri(ns.oc, category)
+    category, _ = concept_uri(ns.oc, category)
     g.add((category, RDF.type, SKOS.Concept))
     g.add((category, SKOS.prefLabel, Literal(category, lang='nl')))
 
@@ -27,27 +27,33 @@ def main(file):
   org_raw = pd.read_excel(file)
   orgs_cleansed = cls_org.main(org_raw)
 
+  export_df(orgs_cleansed)
+
   g = Graph()
 
   create_status_uri(g, orgs_cleansed)
   create_category_uri(g, orgs_cleansed)
   
   for index, row in orgs_cleansed.iterrows():
-    abb_id = concept_uri(ns.lblod + 'organisatie/', str(row['organisation_id']))
+    abb_id, uuid = concept_uri(ns.lblod + 'organisatie/', str(row['organisation_id']))
     g.add((abb_id, RDF.type, ns.org.Organization))
+    g.add((abb_id. ns.mu.uuid, uuid))
 
     add_literal(g, abb_id, ns.regorg.legalName, str(row['Maatschappelijke Naam']))
     add_literal(g, abb_id, SKOS.prefLabel, str(row['Titel']))
 
-    g.add((abb_id, ns.org.classification, concept_uri(ns.oc, row['Type Entiteit'])))
+    classification, _ = concept_uri(ns.oc, row['Type Entiteit'])
+    g.add((abb_id, ns.org.classification, classification))
 
-    g.add((abb_id, ns.regorg.orgStatus, concept_uri(ns.os, str(row['Organisatiestatus']))))
+    status, _ = concept_uri(ns.os, str(row['Organisatiestatus']))
+    g.add((abb_id, ns.regorg.orgStatus, status))
 
     add_literal(g, abb_id, ns.dbpedia.nisCode, str(row['NIScode_cleansed']), XSD.string)
 
     if str(row['KBOnr_cleansed']) != str(np.nan):
-      kbo_id = concept_uri(ns.lblod + 'gestructureerdeIdentificator/', str(row['organisation_id']) + str(row['KBOnr_cleansed']))
+      kbo_id, kbo_uuid = concept_uri(ns.lblod + 'gestructureerdeIdentificator/', str(row['organisation_id']) + str(row['KBOnr_cleansed']))
       g.add((kbo_id, RDF.type, ns.generiek.GestructureerdeIdentificator))
+      g.add((kbo_id, ns.mu.uuid, kbo_uuid))
       add_literal(g, kbo_id, ns.generiek.lokaleIdentificator, str(row['KBOnr_cleansed']), XSD.string)
 
       g.add((abb_id, ns.generiek.gestructureerdeIdentificator, kbo_id))
@@ -66,7 +72,7 @@ def main(file):
 
       g.add((abb_id, ns.generiek.gestructureerdeIdentificator, unieke_naam_id))
 
-    if exists_site(row):
+    if exists_site_org(row):
       site_id = concept_uri(ns.lblod + 'vesting/', str(row['organisation_id']))
       g.add((site_id, RDF.type, ns.org.Site))
 
@@ -80,7 +86,7 @@ def main(file):
 
         g.add((site_id, ns.schema.siteAddress, contact_id))
 
-      if exists_address(row):
+      if exists_address_org(row):
         address_id = concept_uri(ns.lblod + 'adresvoorstelling/', str(row['organisation_id']))
         g.add((address_id, RDF.type, ns.locn.Address))
         add_literal(g, address_id, ns.locn.thoroughfare, str(row['Straat']))
@@ -88,7 +94,7 @@ def main(file):
         add_literal(g, address_id, ns.adres['Adresvoorstelling.busnummer'], str(row['Busnr_new']), XSD.string)
         add_literal(g, address_id, ns.locn.postCode, str(row['Postcode van de organisatie_cleansed']), XSD.string)
         add_literal(g, address_id, ns.adres.gemeentenaam, str(row['Gemeente van de organisatie']))
-        add_literal(g, address_id, ns.locn.adminUnitL2, str(row['Provincie van de organisatie_cleansed']))
+        add_literal(g, address_id, ns.locn.adminUnitL2, str(row['Provincie Cleansed']))
         g.add((address_id, ns.adres.land, Literal('België', lang='nl')))
 
         g.add((site_id, ns.organisatie.bestaatUit, address_id))

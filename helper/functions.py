@@ -1,18 +1,17 @@
 import pandas as pd
 import numpy as np
+from datetime import datetime
 import dateparser
 import hashlib
-from rdflib import Graph, Literal, RDF, URIRef, Namespace 
+from rdflib import Literal, RDF, URIRef
 from rdflib.namespace import FOAF , XSD, DC, FOAF, SKOS, RDF, RDFS
-import urllib.parse 
-import io
 import re
 
 def concept_uri(base_uri, input):
   m = hashlib.md5()
   m.update(input.encode('utf-8'))
 
-  return URIRef(base_uri + m.hexdigest())
+  return (URIRef(base_uri + m.hexdigest()), m.hexdigest())
 
 def add_literal(g, subject, predicate, object_value, datatype=None):
   if object_value != str(np.nan):
@@ -23,6 +22,22 @@ def add_literal(g, subject, predicate, object_value, datatype=None):
 
 def space_cleansing(space):
   return re.sub(r'\s', '', space)
+
+def naam_contact_cleansing(naam_contact):
+  naam_contact_cleansed = comment = np.nan
+
+  if naam_contact != 'nan':
+    naam_contact = naam_contact.strip().title()
+
+    if re.match(r'^[a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð \'’-]+$', naam_contact):
+      naam_contact_cleansed = naam_contact
+    else: 
+      comment = 'Wrong naam format. Check it.'
+
+  return [naam_contact_cleansed, comment]
+
+def referentieorganisatie_cleansing(referentieorganisatie):
+  return re.sub(r'\s', '', referentieorganisatie)
 
 def split_house_bus_number(house_bus_number):
   house_number = bus_number = np.NaN
@@ -62,25 +77,25 @@ def load_gp():
 def find_city_provincie(gp, city):
   return gp[gp['Gemeente'].str.contains(city)]
 
-def provincie_cleansing(data, gemeentee, provincie):
+def provincie_cleansing(data, gemeentee_col, provincie_col):
   gp = load_gp()
 
   data['Provincie Cleansed'] = None
   data['Provincie Comment'] = None
 
   for index, row in data.iterrows():
-    city = str(row[gemeentee])
+    city = str(row[gemeentee_col])
     result = find_city_provincie(gp, city)
     
     if len(result) > 0:
-      if str(result.iloc[0]['Provincie']) != str(row[provincie]):
+      if str(result.iloc[0]['Provincie']) != str(row[provincie_col]):
         data.at[index, 'Provincie Cleansed'] = result.iloc[0]['Provincie'].strip().title()
         data.at[index, 'Provincie Comment'] = "Different Provincie"
       else:
-        data.at[index, 'Provincie Cleansed'] = str(row[provincie])
+        data.at[index, 'Provincie Cleansed'] = str(row[provincie_col])
     elif city != 'nan':
       data.at[index, 'Provincie Comment'] = "Municipality Not Found"
-      data.at[index, 'Provincie Cleansed'] = str(row[provincie])
+      data.at[index, 'Provincie Cleansed'] = str(row[provincie_col])
   return data
 
 def mail_cleansing(mail):
@@ -261,6 +276,21 @@ def splitname(full_name, first_names):
     # print([full_name])
   return [first, last, ' - '.join(comment)]
 
+def decretale_functie_cleasing(decretale):
+  decretale_functie = functionaris_status = np.nan
+
+  if 'Waarnemend' in decretale:
+    status = decretale[decretale.find("("):decretale.find(")")+1]
+    decretale_functie = decretale.replace(status, '').strip()
+    functionaris_status = 'Waarnemend'
+  elif 'GEEN of ONBEKEND' in decretale:
+    decretale_functie = np.nan
+  else:
+    decretale_functie = decretale.strip()
+    functionaris_status = 'Effectief'
+
+  return [decretale_functie, functionaris_status]
+
 def find_resulting_org(orgs, name, type_entiteit):
   if name == 'Puurs Sint-Amands':
     return orgs[(orgs['Unieke Naam'].str.contains('PUURS_SINT_AMANDS', flags=re.IGNORECASE, regex=True, na=False)) & (orgs['Organisatiestatus'] == 'Actief') & (orgs['Type Entiteit'] == type_entiteit)]
@@ -288,19 +318,19 @@ def voting_2020_cleansing(data):
       dates_parsed = date_cleansing(date)
 
       if dates_parsed :
-        eb.at[index, 'Verkiezingen2020_Opmerkingen Cleansed'] = dates_parsed[0]
+        data.at[index, 'Verkiezingen2020_Opmerkingen Cleansed'] = dates_parsed[0]
         if len(dates_parsed) > 1:
           comment = []
           for i in range(1, len(dates_parsed)):
             comment.append(str(dates_parsed[i]))
-            eb.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = ' - '.join(comment)
+            data.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = ' - '.join(comment)
         else:
-          eb.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = np.NaN
+          data.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = np.NaN
       else:
-        eb.at[index, 'Verkiezingen2020_Opmerkingen Cleansed'] = np.NaN
+        data.at[index, 'Verkiezingen2020_Opmerkingen Cleansed'] = np.NaN
 
-        eb['Verkiezingen2020_Opmerkingen Comment'] = data['Verkiezingen2020_Opmerkingen Comment'].astype(object)
-        eb.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = 'Wrong date format. Check it.'
+        data['Verkiezingen2020_Opmerkingen Comment'] = data['Verkiezingen2020_Opmerkingen Comment'].astype(object)
+        data.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = 'Wrong date format. Check it.'
   return data
 
 def voting_2020_ckb_cleansing(data):
@@ -310,19 +340,19 @@ def voting_2020_ckb_cleansing(data):
     if date != "nan":
       dates_parsed = date_cleansing(date)
       if dates_parsed :
-        ckb.at[index, 'Verkiezingen2020_Opmerkingen Cleansed'] = dates_parsed[0]
+        data.at[index, 'Verkiezingen2020_Opmerkingen Cleansed'] = dates_parsed[0]
         if len(dates_parsed) > 1:
           comment = []
           for i in range(1, len(dates_parsed)):
             comment.append(str(dates_parsed[i]))
-            ckb.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = ' - '.join(comment)
+            data.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = ' - '.join(comment)
         else:
-          ckb.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = np.NaN
+          data.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = np.NaN
       else:
-        ckb.at[index, 'Verkiezingen2020_Opmerkingen Cleansed'] = np.NaN
+        data.at[index, 'Verkiezingen2020_Opmerkingen Cleansed'] = np.NaN
 
-        ckb['Verkiezingen2020_Opmerkingen Comment'] = data['Verkiezingen2020_Opmerkingen Comment'].astype(object)
-        ckb.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = 'Wrong date format. Check it.'
+        data['Verkiezingen2020_Opmerkingen Comment'] = data['Verkiezingen2020_Opmerkingen Comment'].astype(object)
+        data.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = 'Wrong date format. Check it.'
 
   return data
 
@@ -334,19 +364,19 @@ def voting_ckb_2017_cleansing(data):
       dates_parsed = date_cleansing(date)
 
       if dates_parsed :
-        ckb.at[index, 'Verkiezingen17_Opmerkingen Cleansed'] = dates_parsed[0]
+        data.at[index, 'Verkiezingen17_Opmerkingen Cleansed'] = dates_parsed[0]
         if len(dates_parsed) > 1:
           comment = []
           for i in range(1, len(dates_parsed)):
             comment.append(str(dates_parsed[i]))
-            ckb.at[index, 'Verkiezingen17_Opmerkingen Comment'] = ' - '.join(comment)
+            data.at[index, 'Verkiezingen17_Opmerkingen Comment'] = ' - '.join(comment)
         else:
-          ckb.at[index, 'Verkiezingen17_Opmerkingen Comment'] = np.NaN
+          data.at[index, 'Verkiezingen17_Opmerkingen Comment'] = np.NaN
       else:
-        ckb.at[index, 'Verkiezingen17_Opmerkingen Cleansed'] = np.NaN
+        data.at[index, 'Verkiezingen17_Opmerkingen Cleansed'] = np.NaN
 
-        ckb['Verkiezingen17_Opmerkingen Comment'] = data['Verkiezingen17_Opmerkingen Comment'].astype(object)
-        ckb.at[index, 'Verkiezingen17_Opmerkingen Comment'] = 'Wrong date format. Check it.'
+        data['Verkiezingen17_Opmerkingen Comment'] = data['Verkiezingen17_Opmerkingen Comment'].astype(object)
+        data.at[index, 'Verkiezingen17_Opmerkingen Comment'] = 'Wrong date format. Check it.'
 
 def voting_2017_cleansing(data):
   for index, row in data.iterrows():
@@ -356,19 +386,19 @@ def voting_2017_cleansing(data):
       dates_parsed = date_cleansing(date)
 
       if dates_parsed :
-        eb.at[index, 'Verkiezingen17_Opmerkingen Cleansed'] = dates_parsed[0]
+        data.at[index, 'Verkiezingen17_Opmerkingen Cleansed'] = dates_parsed[0]
         if len(dates_parsed) > 1:
           comment = []
           for i in range(1, len(dates_parsed)):
             comment.append(str(dates_parsed[i]))
-            eb.at[index, 'Verkiezingen17_Opmerkingen Comment'] = ' - '.join(comment)
+            data.at[index, 'Verkiezingen17_Opmerkingen Comment'] = ' - '.join(comment)
         else:
-          eb.at[index, 'Verkiezingen17_Opmerkingen Comment'] = np.NaN
+          data.at[index, 'Verkiezingen17_Opmerkingen Comment'] = np.NaN
       else:
-        eb.at[index, 'Verkiezingen17_Opmerkingen Cleansed'] = np.NaN
+        data.at[index, 'Verkiezingen17_Opmerkingen Cleansed'] = np.NaN
 
-        eb['Verkiezingen17_Opmerkingen Comment'] = data['Verkiezingen17_Opmerkingen Comment'].astype(object)
-        eb.at[index, 'Verkiezingen17_Opmerkingen Comment'] = 'Wrong date format. Check it.'
+        data['Verkiezingen17_Opmerkingen Comment'] = data['Verkiezingen17_Opmerkingen Comment'].astype(object)
+        data.at[index, 'Verkiezingen17_Opmerkingen Comment'] = 'Wrong date format. Check it.'
   return data
 
 def exists_contact_org(row):
@@ -377,7 +407,7 @@ def exists_contact_org(row):
 def exists_address_org(row):
   return ((str(row['Straat']) != str(np.nan)) or (str(row['Huisnr_cleansed']) != str(np.nan)) or (str(row['Busnr_new']) != str(np.nan)) or
           (str(row['Postcode van de organisatie_cleansed']) != str(np.nan)) or (str(row['Gemeente van de organisatie']) != str(np.nan)) or
-          (str(row['Provincie van de organisatie_cleansed']) != str(np.nan)))
+          (str(row['Provincie Cleansed']) != str(np.nan)))
   
 def exists_site_org(row):
   return (exists_address_org(row) or exists_contact_org(row))
@@ -391,5 +421,9 @@ def exists_site_central(row):
 def exists_contact_central(row):
   return ((str(row['Website Cleansed']) != str(np.nan)) or (str(row['Algemeen telefoonnr']) != str(np.nan)) or (str(row['Algemeen mailadres']) != str(np.nan)))
 
-def export_data(g):
-  g.serialize('output.ttl',format='turtle')
+def export_data(g, type):
+  now = datetime.now().strftime('%Y%m%d%H%M%S')
+  g.serialize(f'output/{now}-{type}.ttl',format='turtle')
+
+def export_df(data, type):
+  data.to_excel(f'output/{type}_cleansed.xlsx')

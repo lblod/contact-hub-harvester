@@ -11,8 +11,12 @@ def main(orgs):
 
   orgs[['Huisnr_cleansed', 'Busnr_new', 'Huisnr_comment']] = pd.DataFrame(orgs['Huisnr'].astype(str).apply(helper.split_house_bus_number).values.tolist(), columns=['house_number', 'bus_number', 'comment'])
 
+  orgs = helper.provincie_cleansing(orgs, 'Gemeente van de organisatie', 'Provincie van de organisatie')
+
   orgs['Postcode van de organisatie_cleansed'] = orgs['Postcode van de organisatie'].astype(str).str.replace('\.0', '').replace('nan', np.nan)
 
   orgs['NIScode_cleansed'] = orgs['NIScode'].astype(str).str.replace('\.0', '').replace('nan', np.nan)
+
+  orgs[~orgs['organisation_id'].isnull()]
 
   return orgs

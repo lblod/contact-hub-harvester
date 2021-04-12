@@ -5,7 +5,7 @@ from rdflib import Graph, Literal, RDF, URIRef
 from rdflib.namespace import FOAF , XSD, DC, FOAF, SKOS, RDF, RDFS
 
 import cleansing.central as cls_central
-from helper.functions import add_literal, concept_uri, exists_site_central, exists_site, exists_contact_central, exists_address
+from helper.functions import add_literal, concept_uri, exists_site_central, exists_contact_central
 import helper.namespaces as ns
 
 def create_status_uri(g, data):
