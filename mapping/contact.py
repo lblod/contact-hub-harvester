@@ -12,7 +12,7 @@ def main(file):
   contact_raw = pd.read_excel(file)
   contact_cleansed = cls_contact.main(contact_raw)
 
-  #export_df(contact_cleansed, 'contact')
+  export_df(contact_cleansed, 'contact')
 
   g = Graph()
 
@@ -29,7 +29,7 @@ def main(file):
       g.add((site_id, RDF.type, ns.org.Site))
       add_literal(g, site_id, ns.mu.uuid, site_uuid, XSD.string)
 
-      contact_id, contact_uuid = concept_uri(ns.lblod + 'contactinfo/', str(row['Voornaam Contact Cleansed']) + str(row['Familienaam Contact Cleansed']) + '1')
+      contact_id, contact_uuid = concept_uri(ns.lblod + 'contactpunt/', str(row['Voornaam Contact Cleansed']) + str(row['Familienaam Contact Cleansed']) + '1')
       g.add((contact_id, RDF.type, ns.schema.ContactPoint))
       add_literal(g, contact_id, ns.mu.uuid, contact_uuid, XSD.string)
 

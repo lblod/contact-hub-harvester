@@ -30,7 +30,7 @@ def main(df):
 
   df[['Mail nr2 Cleansed', 'Mail nr2 Comment']] = pd.DataFrame(df['Mail nr2'].astype(str).apply(helper.mail_cleansing).values.tolist(), columns=['mail_cleansed','comment'])
   
-  #df[~df['organisation_id'].isnull()]
+  df[(~df['Familienaam Contact Cleansed'].isnull() | ~df['Voornaam Contact Cleansed'].isnull())]
 
   df = df[df['Decretale functie'] != 'Griffier']
 

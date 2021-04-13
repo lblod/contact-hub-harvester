@@ -19,11 +19,11 @@ besluit = Namespace('http://data.vlaanderen.be/ns/besluit#')
 lblodlg = Namespace('https://data.lblod.info/vocabularies/leidinggevenden')
 mu = Namespace('http://mu.semte.ch/vocabularies/core/')
 
-#lblod = Namespace('http://contacthub-dev.lblod.info/id/')
-lblod = Namespace('http://contacthub-qa.lblod.info/id/')
-os = Namespace('https://data.vlaanderen.be/id/concept/OrganisatieStatus/')
-oc = Namespace('https://data.vlaanderen.be/id/concept/OrganisatieClassificatie/')
-
+lblod = Namespace('http://contacthub-dev.lblod.info/id/')
+#lblod = Namespace('http://contacthub-qa.lblod.info/id/')
+os = Namespace('http://data.vlaanderen.be/id/concept/OrganisatieStatus/')
+oc = Namespace('http://data.vlaanderen.be/id/concept/OrganisatieClassificatie/')
+bf = Namespace('http://data.vlaanderen.be/id/concept/BestuursfunctieCode/')
 
 # Predefined concepts:
 bestuurseenheid_classification_code = {
@@ -32,14 +32,21 @@ bestuurseenheid_classification_code = {
 }
 
 bestursfunctie_code = {
-  "Algemeen Directeur": URIRef("https://data.vlaanderen.be/id/concept/BestuursfunctieCode/39e08271-68db-4282-897f-5cba88c71862"),
-  "Financieel Directeur": URIRef("https://data.vlaanderen.be/id/concept/BestuursfunctieCode/6d4cf4dd-2080-4752-8733-d02a036b2df0"),
-  "Adjunct Financieel Directeur": URIRef("https://data.vlaanderen.be/id/concept/BestuursfunctieCode/3200ffc1-bb72-4235-a81c-64aa578b0789"),
-  "Adjunct Algemeen Directeur": URIRef("https://data.vlaanderen.be/id/concept/BestuursfunctieCode/f7b4e17b-6f4e-48e7-a558-bce61669f59a"),
+  "Algemeen Directeur": URIRef("http://data.vlaanderen.be/id/concept/BestuursfunctieCode/39e08271-68db-4282-897f-5cba88c71862"),
+  "Financieel Directeur": URIRef("http://data.vlaanderen.be/id/concept/BestuursfunctieCode/6d4cf4dd-2080-4752-8733-d02a036b2df0"),
+  "Adjunct Financieel Directeur": URIRef("http://data.vlaanderen.be/id/concept/BestuursfunctieCode/3200ffc1-bb72-4235-a81c-64aa578b0789"),
+  "Adjunct Algemeen Directeur": URIRef("http://data.vlaanderen.be/id/concept/BestuursfunctieCode/f7b4e17b-6f4e-48e7-a558-bce61669f59a"),
   "Voorzitter": URIRef("http://data.vlaanderen.be/id/concept/BestuursfunctieCode/a38959ecec530654de15ab06c5b1f276"),
   "Secretaris": URIRef("http://data.vlaanderen.be/id/concept/BestuursFunctieCode/f960d7b1488d049a982b23251025d9f6"),
   "Penningmeester": URIRef("http://data.vlaanderen.be/id/concept/BestuursFunctieCode/c456aedca0643d3e71919f16ac181da8"),
-  "Lid": URIRef("http://data.vlaanderen.be/id/concept/BestuursfunctieCode/")
+  "Lid": URIRef("http://data.vlaanderen.be/id/concept/BestuursfunctieCode/ac31868f5f3913b3cd34b2bd3f99fbac"),
+  "Kardinaal-Aartsbischop": URIRef("http://data.vlaanderen.be/id/concept/BestuursfunctieCode/e43dd66d23aaaa2a42c7cfb496f532e2"),
+  "Co-Voorzitter": URIRef("http://data.vlaanderen.be/id/concept/BestuursfunctieCode/023d078d517c30824bc3f5e9611145b6"),
+  "Bisschop": URIRef("http://data.vlaanderen.be/id/concept/BestuursfunctieCode/26c90aaa2190e038d415cb5429191bbb"),
+  "Franstalige Vicevoorzitter": URIRef("http://data.vlaanderen.be/id/concept/BestuursfunctieCode/6e72c04def05d0375b0bf2a0a3185afb"),
+  "Secretaris-Generaal": URIRef("http://data.vlaanderen.be/id/concept/BestuursfunctieCode/857020211d908358cf523e66fa9c0720"),
+  "Nederlandstalige Vicevoorzitter": URIRef("http://data.vlaanderen.be/id/concept/BestuursfunctieCode/d7c2ac05cab1ee0fb3d97a7126439a42"),
+  "Metropoliet-Aartsbisschop van België": URIRef("http://data.vlaanderen.be/id/concept/BestuursfunctieCode/e302d2a8188dc3c3d54439fdb7cd545c")
 }
 
 functionaris_status = {

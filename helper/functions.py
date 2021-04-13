@@ -99,15 +99,41 @@ def provincie_cleansing(data, gemeentee_col, provincie_col):
   return data
 
 def mail_cleansing(mail):
-  mail_cleansed = comment = np.NaN
+  mail_cleansed = comment = np.nan
 
-  if mail != 'nan':
+  if str(mail) != 'nan':
     if  re.match(r'[\w\.-]+@[\w\.-]+(\.[\w]+)+', mail):
       mail_cleansed = mail
     else: 
       comment = 'Wrong mail format. Check it.'
 
   return [mail_cleansed, comment]
+
+def split_mail(mail):
+  mail_voorzitter = mail_voorzitter_comment = mail_secretaris = mail_secretaris_comment = np.nan
+
+  mails = []
+  if str(mail) != 'nan':
+    if 'V:' in mail:
+      mail_voorzitter = mail[mail.find("V")+2:mail.find("S")].strip()
+      mail_secretaris = mail[mail.find("S")+2:].strip()
+    if ';' in mail:
+      mails = mail.split(';')
+    elif ' ' in mail:
+      mails = mail.split(' ')
+    else:
+      mail_voorzitter = mail
+
+    if len(mails) > 0:
+      mail_voorzitter = mails[0].strip()
+      mail_secretaris = mails[1].strip()
+
+      mail_voorzitter, mail_voorzitter_comment = mail_cleansing(mail_voorzitter)
+
+      if str(mail_secretaris) != 'nan' or len(mail_secretaris) > 0:
+        mail_secretaris, mail_secretaris_comment = mail_cleansing(mail_secretaris)
+
+  return [mail_voorzitter, mail_voorzitter_comment, mail_secretaris, mail_secretaris_comment]
 
 def website_cleansing(website):
   website_cleansed = comment = np.nan
@@ -143,7 +169,7 @@ def telephone_number_cleansing(telephone_number):
   return split_telephone_number(telephone_number)
 
 def split_telephone_number(telephone_number):
-  telephone_number_1 = telephone_number_2 = np.NaN
+  telephone_number_1 = telephone_number_2 = np.nan
   comment = []
 
   split = [telephone_number]
@@ -415,11 +441,16 @@ def exists_site_org(row):
 def exists_contact_cont(row):
   return ((str(row['Titel Cleansed']) != str(np.nan)) or (str(row['Mail nr2 Cleansed']) != str(np.nan)) or (str(row['Telefoonnr Contact 1']) != str(np.nan)))
 
-def exists_site_central(row):
-  return (exists_address_org(row) or exists_contact_org(row))
+# def exists_site_central(row):
+#   return exists_address_central(row)
 
-def exists_contact_central(row):
+def exists_contact_position(row, position):
   return ((str(row['Website Cleansed']) != str(np.nan)) or (str(row['Algemeen telefoonnr']) != str(np.nan)) or (str(row['Algemeen mailadres']) != str(np.nan)))
+
+def exists_address_central(row):
+  return ((str(row['Straat_CKB']) != str(np.nan)) or (str(row['Huisnr_CKB_Cleansed']) != str(np.nan)) or (str(row['Busnummer_CKB_Cleansed']) != str(np.nan)) or
+          (str(row['Postcode_CKB']) != str(np.nan)) or (str(row['Gemeente_CKB']) != str(np.nan)) or
+          (str(row['Provincie_CKB']) != str(np.nan)))
 
 def export_data(g, type):
   now = datetime.now().strftime('%Y%m%d%H%M%S')

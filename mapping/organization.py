@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-from rdflib import Graph, Literal, RDF, URIRef
-from rdflib.namespace import FOAF , XSD, DC, FOAF, SKOS, RDF, RDFS
+from rdflib import Graph, Literal, RDF
+from rdflib.namespace import FOAF , XSD, DC, SKOS, RDF
 
 import cleansing.organization as cls_org
 from helper.functions import add_literal, concept_uri, export_data, export_df, exists_site_org, exists_contact_org, exists_address_org
@@ -27,7 +27,7 @@ def main(file):
   org_raw = pd.read_excel(file)
   orgs_cleansed = cls_org.main(org_raw)
 
-  export_df(orgs_cleansed)
+  export_df(orgs_cleansed, 'org')
 
   g = Graph()
 
@@ -35,9 +35,9 @@ def main(file):
   create_category_uri(g, orgs_cleansed)
   
   for index, row in orgs_cleansed.iterrows():
-    abb_id, uuid = concept_uri(ns.lblod + 'organisatie/', str(row['organisation_id']))
+    abb_id, abb_uuid = concept_uri(ns.lblod + 'organisatie/', str(row['organisation_id']))
     g.add((abb_id, RDF.type, ns.org.Organization))
-    g.add((abb_id. ns.mu.uuid, uuid))
+    add_literal(g, abb_id, ns.mu.uuid, abb_uuid, XSD.string)
 
     add_literal(g, abb_id, ns.regorg.legalName, str(row['Maatschappelijke Naam']))
     add_literal(g, abb_id, SKOS.prefLabel, str(row['Titel']))
@@ -51,33 +51,32 @@ def main(file):
     add_literal(g, abb_id, ns.dbpedia.nisCode, str(row['NIScode_cleansed']), XSD.string)
 
     if str(row['KBOnr_cleansed']) != str(np.nan):
-      kbo_id, kbo_uuid = concept_uri(ns.lblod + 'gestructureerdeIdentificator/', str(row['organisation_id']) + str(row['KBOnr_cleansed']))
+      kbo_id, _ = concept_uri(ns.lblod + 'gestructureerdeIdentificator/', str(row['organisation_id']) + str(row['KBOnr_cleansed']))
       g.add((kbo_id, RDF.type, ns.generiek.GestructureerdeIdentificator))
-      g.add((kbo_id, ns.mu.uuid, kbo_uuid))
       add_literal(g, kbo_id, ns.generiek.lokaleIdentificator, str(row['KBOnr_cleansed']), XSD.string)
 
       g.add((abb_id, ns.generiek.gestructureerdeIdentificator, kbo_id))
     
     if str(row['Unieke Naam']) != str(np.nan):
-      unieke_naam_id = concept_uri(ns.lblod + 'gestructureerdeIdentificator/', str(row['organisation_id']) + str(row['Unieke Naam']) + '1')
+      unieke_naam_id, _ = concept_uri(ns.lblod + 'gestructureerdeIdentificator/', str(row['organisation_id']) + str(row['Unieke Naam']) + '1')
       g.add((unieke_naam_id, RDF.type, ns.generiek.GestructureerdeIdentificator))
       add_literal(g, unieke_naam_id, ns.generiek.lokaleIdentificator, str(row['Unieke Naam']), XSD.string)
 
       g.add((abb_id, ns.generiek.gestructureerdeIdentificator, unieke_naam_id))
 
     if str(row['Unieke Naam van actieve organisaties']) != str(np.nan):
-      unieke_naam_active_id = concept_uri(ns.lblod + 'gestructureerdeIdentificator/', str(row['organisation_id']) + str(row['Unieke Naam van actieve organisaties']) + '2')
-      g.add((unieke_naam_id, RDF.type, ns.generiek.GestructureerdeIdentificator))
+      unieke_naam_active_id, _ = concept_uri(ns.lblod + 'gestructureerdeIdentificator/', str(row['organisation_id']) + str(row['Unieke Naam van actieve organisaties']) + '2')
+      g.add((unieke_naam_active_id, RDF.type, ns.generiek.GestructureerdeIdentificator))
       add_literal(g, unieke_naam_active_id, ns.generiek.lokaleIdentificator, str(row['Unieke Naam van actieve organisaties']), XSD.string)
 
       g.add((abb_id, ns.generiek.gestructureerdeIdentificator, unieke_naam_id))
 
     if exists_site_org(row):
-      site_id = concept_uri(ns.lblod + 'vesting/', str(row['organisation_id']))
+      site_id, _ = concept_uri(ns.lblod + 'vesting/', str(row['organisation_id']))
       g.add((site_id, RDF.type, ns.org.Site))
 
       if exists_contact_org(row):
-        contact_id = concept_uri(ns.lblod + 'contactinfo/', str(row['organisation_id']))
+        contact_id, _ = concept_uri(ns.lblod + 'contactinfo/', str(row['organisation_id']))
         g.add((contact_id, RDF.type, ns.schema.ContactPoint))
         
         add_literal(g, contact_id, FOAF.page, str(row['Website Cleansed']), XSD.anyURI)
@@ -87,7 +86,7 @@ def main(file):
         g.add((site_id, ns.schema.siteAddress, contact_id))
 
       if exists_address_org(row):
-        address_id = concept_uri(ns.lblod + 'adresvoorstelling/', str(row['organisation_id']))
+        address_id, _ = concept_uri(ns.lblod + 'adresvoorstelling/', str(row['organisation_id']))
         g.add((address_id, RDF.type, ns.locn.Address))
         add_literal(g, address_id, ns.locn.thoroughfare, str(row['Straat']))
         add_literal(g, address_id, ns.adres['Adresvoorstelling.huisnummer'], str(row['Huisnr_cleansed']), XSD.string)
@@ -104,35 +103,36 @@ def main(file):
     if row['Unieke Naam'] != row['Moederentiteit']:
       find_moeder_kboid = orgs_cleansed[orgs_cleansed['Unieke Naam'] == row['Moederentiteit']]
       if len(find_moeder_kboid) > 0:
-        g.add((abb_id, ns.org.linkedTo, concept_uri(ns.lblod + 'organisatie/', str(find_moeder_kboid.iloc[0]['organisation_id']))))
+        org_id, _ = concept_uri(ns.lblod + 'organisatie/', str(find_moeder_kboid.iloc[0]['organisation_id']))
+        g.add((abb_id, ns.org.linkedTo, org_id))
 
     if pd.notna(row['Actief vanaf']):
-      change_event_open_id = concept_uri(ns.lblod + 'veranderingsgebeurtenis/', str(row['organisation_id']) + str(row['Actief vanaf']))
+      change_event_open_id, _ = concept_uri(ns.lblod + 'veranderingsgebeurtenis/', str(row['organisation_id']) + str(row['Actief vanaf']))
       g.add((change_event_open_id, RDF.type, ns.organisatie.Oprichting))
       add_literal(g, change_event_open_id, DC.date, str(row['Actief vanaf']), XSD.dateTime)
       g.add((abb_id, ns.org.resultedFrom, change_event_open_id))
 
     if row['Organisatiestatus'] == 'Valt niet meer onder Vlaams toezicht':
-      change_event_not_flemish_id = concept_uri(ns.lblod + 'veranderingsgebeurtenis/', str(row['organisation_id']) + str(row['Actief tot']) + str(row['Actief tot']))
+      change_event_not_flemish_id, _ = concept_uri(ns.lblod + 'veranderingsgebeurtenis/', str(row['organisation_id']) + str(row['Actief tot']) + str(row['Actief tot']))
       g.add((change_event_not_flemish_id, RDF.type, ns.organisatie.Vervanging))
       g.add((abb_id, ns.org.resultedFrom, change_event_not_flemish_id))
 
     elif row['Organisatiestatus'] == 'Gefusioneerd':
-      change_event_merged_id = concept_uri(ns.lblod + 'veranderingsgebeurtenis/', str(row['organisation_id']) + str(row['Actief tot']))
+      change_event_merged_id, _ = concept_uri(ns.lblod + 'veranderingsgebeurtenis/', str(row['organisation_id']) + str(row['Actief tot']))
       g.add((change_event_merged_id, RDF.type, ns.organisatie.Fusie))
       if pd.notna(row['Actief tot']):
         add_literal(g, change_event_merged_id, DC.date, str(row['Actief tot']), XSD.dateTime)
       # addLiteral(change_event_merged_id, NEED PROPERTY, 'Opmerkingen ivm Organisatie')
     
-      merged_abb_id = concept_uri(ns.lblod + 'organisatie/', str(row['Resulting organisation']))
+      merged_abb_id, _ = concept_uri(ns.lblod + 'organisatie/', str(row['Resulting organisation']))
       g.add((change_event_merged_id, ns.org.originalOrganization, abb_id))
       g.add((change_event_merged_id, ns.org.resultingOrganization, merged_abb_id))
       g.add((abb_id, ns.org.changedBy, change_event_merged_id))
 
     elif pd.notna(row['Actief tot']):
-      change_event_close_id = concept_uri(ns.lblod + 'veranderingsgebeurtenis/', str(row['organisation_id']) + str(row['Actief tot']))
+      change_event_close_id, _ = concept_uri(ns.lblod + 'veranderingsgebeurtenis/', str(row['organisation_id']) + str(row['Actief tot']))
       g.add((change_event_close_id, RDF.type, ns.organisatie.Stopzetting))
       add_literal(g, change_event_close_id, DC.date, str(row['Actief tot']), XSD.dateTime)
       g.add((abb_id, ns.org.changedBy, change_event_close_id))
   
-  export_data(g)
+  export_data(g, 'org-dev')
