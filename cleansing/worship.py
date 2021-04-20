@@ -19,9 +19,11 @@ def main(eb):
 
   eb[['Postcode_EB Cleansed', 'Postcode_EB Comment']] = pd.DataFrame(eb['Postcode_EB'].astype(str).apply(helper.postcode_cleansing).values.tolist(), columns=['postcode_cleansed','comment'])
 
+  eb['Straat Cleansed'] = eb['Straat_EB'].str.replace('x000D_', '').str.replace('<br>', '').str.strip()
+  
   first_names = helper.load_possible_first_names()
 
-  eb['Naam_voorzitter_EB Cleansed'] = eb['Naam_voorzitter_EB'].str.replace('<br>', '').str.strip()
+  eb['Naam_voorzitter_EB Cleansed'] = eb['Naam_voorzitter_EB'].str.replace('<br>', ' ').str.strip()
   
   eb[['Naam_voorzitter_EB First', 'Naam_voorzitter_EB Last', 'Naam_voorzitter_EB Comment']] = pd.DataFrame(eb['Naam_voorzitter_EB Cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
 
@@ -53,12 +55,14 @@ def main(eb):
 
   eb['Naam_Lid4 Cleansed'] = eb['Naam_Lid4'].str.replace('<br>', '').str.strip()
   
-  eb[['Naam_Lid4 First', 'Naam_Lid4 Last', 'Naam_Lid4 Comment']] = pd.DataFrame(eb['Naam_Lid4 Cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
+  eb[['Naam_Lid4_EB First', 'Naam_Lid4_EB Last', 'Naam_Lid4 Comment']] = pd.DataFrame(eb['Naam_Lid4 Cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
 
   eb['Naam_Lid5 Cleansed'] = eb['Naam_Lid5'].str.replace('<br>', '').str.strip()
   
-  eb[['Naam_Lid5 First', 'Naam_Lid5 Last', 'Naam_Lid5 Comment']] = pd.DataFrame(eb['Naam_Lid5 Cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
+  eb[['Naam_Lid5_EB First', 'Naam_Lid5_EB Last', 'Naam_Lid5 Comment']] = pd.DataFrame(eb['Naam_Lid5 Cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
   
-  eb['Datum verkiezing penningmeester Cleansed'] = eb['Datum verkiezing penningmeester'].replace(' ', np.nan)
+  #eb['Datum verkiezing penningmeester Cleansed'] = eb['Datum verkiezing penningmeester'].replace(' ', np.nan)
+
+  eb.rename(columns={"Datum verkiezing lid 4": "Datum verkiezing Lid4", "Datum verkiezing lid 5": "Datum verkiezing Lid5"})
 
   return eb

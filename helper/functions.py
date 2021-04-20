@@ -96,6 +96,10 @@ def provincie_cleansing(data, gemeentee_col, provincie_col):
     elif city != 'nan':
       data.at[index, 'Provincie Comment'] = "Municipality Not Found"
       data.at[index, 'Provincie Cleansed'] = str(row[provincie_col])
+    else:
+      data.at[index, 'Provincie Cleansed'] = np.nan
+
+  
   return data
 
 def mail_cleansing(mail):
@@ -441,20 +445,32 @@ def exists_site_org(row):
 def exists_contact_cont(row):
   return ((str(row['Titel Cleansed']) != str(np.nan)) or (str(row['Mail nr2 Cleansed']) != str(np.nan)) or (str(row['Telefoonnr Contact 1']) != str(np.nan)))
 
-# def exists_site_central(row):
-#   return exists_address_central(row)
+def exists_role_worship(row, role):
+   (str(row[f'Naam_{role}_EB First']) != (np.nan)) or (str(row[f'Naam_{role}_EB Last']) != str(np.nan))
 
 def exists_contact_position(row, position):
   return ((str(row['Website Cleansed']) != str(np.nan)) or (str(row['Algemeen telefoonnr']) != str(np.nan)) or (str(row['Algemeen mailadres']) != str(np.nan)))
 
 def exists_address_central(row):
   return ((str(row['Straat_CKB']) != str(np.nan)) or (str(row['Huisnr_CKB_Cleansed']) != str(np.nan)) or (str(row['Busnummer_CKB_Cleansed']) != str(np.nan)) or
-          (str(row['Postcode_CKB']) != str(np.nan)) or (str(row['Gemeente_CKB']) != str(np.nan)) or
-          (str(row['Provincie_CKB']) != str(np.nan)))
+          (str(row['Postcode_CKB']) != str(np.nan)) or (str(row['Gemeente_CKB']) != str(np.nan)) or (str(row['Provincie_CKB']) != str(np.nan)))
+
+def exists_address_worship(row):
+  return ((str(row['Straat_EB']) != str(np.nan)) or (str(row['Huisnr_EB Cleansed']) != str(np.nan)) or (str(row['Busnummer_EB Cleansed']) != str(np.nan)) or 
+          (str(row['Postcode_EB Cleansed']) != str(np.nan)) or (str(row['Gemeente_EB Cleansed']) != str(np.nan)) or (str(row['Provincie Cleansed']) != str(np.nan)))
+
+def exists_site_role_worship(row, role):
+  return (exists_address_role_worship(row, role) or exists_contact_role_worship(row, role))
+
+def exists_address_role_worship(row, role):
+  return (str(row[f'Adres_{role}_EB Cleansed']) != str(np.nan))
+
+def exists_contact_role_worship(row, role):
+  return ((str(row[f'Tel_{role}_EB 1']) != str(np.nan)) or (str(row[f'Mail_{role}_EB Cleansed']) != str(np.nan)))
 
 def export_data(g, type):
   now = datetime.now().strftime('%Y%m%d%H%M%S')
   g.serialize(f'output/{now}-{type}.ttl',format='turtle')
 
 def export_df(data, type):
-  data.to_excel(f'output/{type}_cleansed.xlsx')
+  data.to_excel(f'output/{type}_cleansed.xlsx', index=False)

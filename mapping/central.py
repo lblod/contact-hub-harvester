@@ -97,7 +97,7 @@ def main(file):
   create_status_uri(g, central_cleansed)
   create_bestuursfuncie(g)
 
-  for index, row in central_cleansed.iterrows():    
+  for _, row in central_cleansed.iterrows():    
     abb_id, _ = concept_uri(ns.lblod + 'organisatie/', str(row['organization_id']))
     g.add((abb_id, RDF.type, ns.org.Organization))
 
@@ -113,11 +113,14 @@ def main(file):
       kbo_uri, _  = concept_uri(ns.lblod + 'gestructureerdeIdentificator/', str(row['KBO_CKB_cleansed']))
       g.add((kbo_uri, RDF.type, ns.generiek.GestructureerdeIdentificator))
       add_literal(g, kbo_uri, ns.generiek.lokaleIdentificator, str(row['KBO_CKB_cleansed']), XSD.string)
+      g.add((abb_id, ns.generiek.gestructureerdeIdentificator, kbo_uri))
 
     if str(row['Titel']) != str(np.nan):
       naam_uri, _ = concept_uri(ns.lblod + 'gestructureerdeIdentificator/', str(row['Titel']))
       g.add((naam_uri, RDF.type, ns.generiek.GestructureerdeIdentificator))
       add_literal(g, naam_uri, ns.generiek.lokaleIdentificator, str(row['Titel']), XSD.string)
+      g.add((abb_id, ns.generiek.gestructureerdeIdentificator, naam_uri))
+
 
     # Vestiging
     if exists_address_central(row):
@@ -149,7 +152,7 @@ def main(file):
     # Voorzitter
     voorzitter, _ = concept_uri(ns.lblod + 'persoon/', str(row['Naam_Voorzitter_CKB_first']) + str(row['Naam_Voorzitter_CKB_last']))
     g.add((voorzitter, RDF.type, ns.person.Person))
-    add_literal(g, voorzitter, ns.persoon.gebruikteVoornaam, str(row['Naam_Voorzitter_CKB_first']))
+    add_literal(g, voorzitter, FOAF.givenName, str(row['Naam_Voorzitter_CKB_first']))
     add_literal(g, voorzitter, FOAF.familyName, str(row['Naam_Voorzitter_CKB_last']))
 
     ## Voorzitter 
@@ -173,7 +176,7 @@ def main(file):
     voorzitter_mandaat, _ = concept_uri(ns.lblod + 'mandaat/', str(row['Naam_Voorzitter_CKB_first']) + str(row['Naam_Voorzitter_CKB_last']) + str(row['organization_id']))
     g.add((voorzitter_mandaat, RDF.type, ns.mandaat.Mandaat))
     g.add((voorzitter_mandaat, ns.org.role, ns.bestursfunctie_code['Voorzitter']))
-    g.add((voorzitter_mandaat, ns.org.holds, bestuur_temporary))
+    g.add((voorzitter_mandaat, ns.org.postIn, bestuur_temporary))
 
     ## Mandataris
     voorzitter_mandataris, _ = concept_uri(ns.lblod + 'mandataris/', str(row['Naam_Voorzitter_CKB_first']) + str(row['Naam_Voorzitter_CKB_last']) + str(row['organization_id'] + 'voorzitter'))
@@ -219,7 +222,7 @@ def main(file):
     g.add((secretaris_mandaat, ns.org.role, ns.bestursfunctie_code['Secretaris']))
 
     g.add((bestuur_temporary, ns.org.hasPost, secretaris_mandaat))
-    g.add((secretaris_mandaat, ns.org.holds, bestuur_temporary))
+    g.add((secretaris_mandaat, ns.org.postIn, bestuur_temporary))
 
   export_data(g, 'central-dev')
 

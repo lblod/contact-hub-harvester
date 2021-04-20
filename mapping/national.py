@@ -46,7 +46,7 @@ def main(file):
     add_literal(g, address_id, ns.adres['Adresvoorstelling.huisnummer'], str(row['Huisnummer']), XSD.string)
     add_literal(g, address_id, ns.adres['Adresvoorstelling.busnummer'], str(row['Busnummer']), XSD.string)
     add_literal(g, address_id, ns.locn.postCode, str(row['Postcode']), XSD.string)
-    add_literal(g, address_id, ns.adres.gemeenttenaam, str(row['Gemeentenaam']))
+    add_literal(g, address_id, ns.adres.gemeentenaam, str(row['Gemeentenaam']))
     add_literal(g, address_id, ns.locn.adminUnitL2, str(row['Provincie']))
     g.add((address_id, ns.adres.land, Literal('België', lang='nl')))
     g.add((site_id, ns.organisatie.bestaatUit, address_id))
