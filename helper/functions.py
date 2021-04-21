@@ -62,9 +62,12 @@ def split_house_bus_number(house_bus_number):
 def postcode_cleansing(postcode):
   postcode_cleansed = comment = np.NaN
 
-  if postcode != 'nan':
-    postcode = re.sub(r'\D', '', postcode)
-    if  re.match(r'\d{4}', postcode):
+  if str(postcode) != str(np.nan):
+    if re.match(r'\w', postcode):
+      postcode_extract = re.sub(r'\D', '', postcode)
+      comment = "Wrong postcode format. Check it."
+      postcode_cleansed = postcode_extract
+    elif  re.match(r'\d{4}', postcode):
       postcode_cleansed = postcode
     else: 
       comment = 'Wrong postcode format. Check it.'
@@ -237,11 +240,11 @@ def kbo_cleansing(kbo):
 
   kbo_cleansed = comment = np.nan
 
-  if kbo != 'nan':
+  if str(kbo) != str(np.nan):
     kbo = re.sub(r'\D', '', kbo)
     if  re.match(r'\d{10}', kbo):
       kbo_cleansed = kbo
-    elif re.match(r'\d{1,9}', kbo):
+    elif re.match(r'\d{6,9}', kbo):
       kbo_cleansed = kbo
       comment = f'only {len(kbo)} digits. Missing some digits?'
     else: 
@@ -433,40 +436,35 @@ def voting_2017_cleansing(data):
 
 def exists_contact_org(row):
   return ((str(row['Website Cleansed']) != str(np.nan)) or (str(row['Algemeen telefoonnr']) != str(np.nan)) or (str(row['Algemeen mailadres']) != str(np.nan)))
-
-def exists_address_org(row):
-  return ((str(row['Straat']) != str(np.nan)) or (str(row['Huisnr_cleansed']) != str(np.nan)) or (str(row['Busnr_new']) != str(np.nan)) or
-          (str(row['Postcode van de organisatie_cleansed']) != str(np.nan)) or (str(row['Gemeente van de organisatie']) != str(np.nan)) or
-          (str(row['Provincie Cleansed']) != str(np.nan)))
   
 def exists_site_org(row):
-  return (exists_address_org(row) or exists_contact_org(row))
+  return (exists_address(row) or exists_contact_org(row))
 
 def exists_contact_cont(row):
   return ((str(row['Titel Cleansed']) != str(np.nan)) or (str(row['Mail nr2 Cleansed']) != str(np.nan)) or (str(row['Telefoonnr Contact 1']) != str(np.nan)))
 
-def exists_role_worship(row, role):
-   (str(row[f'Naam_{role}_EB First']) != (np.nan)) or (str(row[f'Naam_{role}_EB Last']) != str(np.nan))
+def exists_role(row, role):
+  return (str(row[f'Naam_{role} First']) != str(np.nan)) or (str(row[f'Naam_{role} Last']) != str(np.nan))
 
-def exists_contact_position(row, position):
-  return ((str(row['Website Cleansed']) != str(np.nan)) or (str(row['Algemeen telefoonnr']) != str(np.nan)) or (str(row['Algemeen mailadres']) != str(np.nan)))
+def exists_address(row):
+  return ((str(row['Straat']) != str(np.nan)) or (str(row['Huisnr Cleansed']) != str(np.nan)) or (str(row['Busnummer Cleansed']) != str(np.nan)) or
+          (str(row['Postcode Cleansed']) != str(np.nan)) or (str(row['Gemeente Cleansed']) != str(np.nan)) or (str(row['Provincie Cleansed']) != str(np.nan)))
 
-def exists_address_central(row):
-  return ((str(row['Straat_CKB']) != str(np.nan)) or (str(row['Huisnr_CKB_Cleansed']) != str(np.nan)) or (str(row['Busnummer_CKB_Cleansed']) != str(np.nan)) or
-          (str(row['Postcode_CKB']) != str(np.nan)) or (str(row['Gemeente_CKB']) != str(np.nan)) or (str(row['Provincie_CKB']) != str(np.nan)))
+def exists_site_role(row, role):
+  return exists_address_role(row, role) or exists_contact_role(row, role)
 
-def exists_address_worship(row):
-  return ((str(row['Straat_EB']) != str(np.nan)) or (str(row['Huisnr_EB Cleansed']) != str(np.nan)) or (str(row['Busnummer_EB Cleansed']) != str(np.nan)) or 
-          (str(row['Postcode_EB Cleansed']) != str(np.nan)) or (str(row['Gemeente_EB Cleansed']) != str(np.nan)) or (str(row['Provincie Cleansed']) != str(np.nan)))
+def exists_address_role(row, role):
+  return (str(row[f'Adres_{role} Cleansed']) != str(np.nan))
 
-def exists_site_role_worship(row, role):
-  return (exists_address_role_worship(row, role) or exists_contact_role_worship(row, role))
+def exists_contact_role(row, role):
+  return ((str(row[f'Tel_{role} 1']) != str(np.nan)) or (str(row[f'Mail_{role} Cleansed']) != str(np.nan)))
 
-def exists_address_role_worship(row, role):
-  return (str(row[f'Adres_{role}_EB Cleansed']) != str(np.nan))
-
-def exists_contact_role_worship(row, role):
-  return ((str(row[f'Tel_{role}_EB 1']) != str(np.nan)) or (str(row[f'Mail_{role}_EB Cleansed']) != str(np.nan)))
+def exists_bestuursperiode(row, roles):
+  for role in roles:
+    if exists_role(row, role):
+      return True
+  
+  return False
 
 def export_data(g, type):
   now = datetime.now().strftime('%Y%m%d%H%M%S')

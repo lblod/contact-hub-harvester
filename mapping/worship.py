@@ -5,7 +5,7 @@ from rdflib import Graph, Literal, RDF
 from rdflib.namespace import FOAF , XSD, DC, FOAF, SKOS, RDF, RDFS
 
 import cleansing.worship as cls_worship
-from helper.functions import add_literal, concept_uri, export_data, export_df, exists_address_worship, exists_site_role_worship, exists_address_role_worship, exists_contact_role_worship, exists_role_worship
+from helper.functions import add_literal, concept_uri, export_data, export_df, exists_address, exists_site_role, exists_address_role, exists_contact_role, exists_role, exists_bestuursperiode
 import helper.namespaces as ns
 
 def create_status_uri(g, data):
@@ -40,18 +40,18 @@ def main(file):
     add_literal(g, abb_id, SKOS.prefLabel, str(row['Naam_EB']))
     add_literal(g, abb_id, ns.regorg.legalName, str(row['Naam_EB']))
 
-    if exists_address_worship(row):
+    if exists_address(row):
       site_id, _ = concept_uri(ns.lblod + 'vestiging/', str(row['organization_id']))
       g.add((site_id, RDF.type, ns.org.Site))
 
       address_id, _ = concept_uri(ns.lblod + 'adres/', str(row['organization_id']))
       g.add((address_id, RDF.type, ns.locn.Address))
       
-      add_literal(g, address_id, ns.locn.thoroughfare, str(row['Straat_EB']))
-      add_literal(g, address_id, ns.adres['Adresvoorstelling.huisnummer'], str(row['Huisnr_EB Cleansed']), XSD.string)
-      add_literal(g, address_id, ns.adres['Adresvoorstelling.busnummer'], str(row['Busnummer_EB Cleansed']), XSD.string)
-      add_literal(g, address_id, ns.locn.postCode, str(row['Postcode_EB Cleansed']), XSD.string)
-      add_literal(g, address_id, ns.adres.gemeentenaam, str(row['Gemeente_EB Cleansed']), XSD.string)
+      add_literal(g, address_id, ns.locn.thoroughfare, str(row['Straat']))
+      add_literal(g, address_id, ns.adres['Adresvoorstelling.huisnummer'], str(row['Huisnr Cleansed']), XSD.string)
+      add_literal(g, address_id, ns.adres['Adresvoorstelling.busnummer'], str(row['Busnummer Cleansed']), XSD.string)
+      add_literal(g, address_id, ns.locn.postCode, str(row['Postcode Cleansed']), XSD.string)
+      add_literal(g, address_id, ns.adres.gemeentenaam, str(row['Gemeente Cleansed']), XSD.string)
       add_literal(g, address_id, ns.locn.adminUnitL2, str(row['Provincie Cleansed']))
       g.add((address_id, ns.adres.land, Literal('België', lang='nl')))
 
@@ -64,99 +64,100 @@ def main(file):
       add_literal(g, kbo_id, ns.generiek.lokaleIdentificator, str(row['KBO_EB Cleansed']), XSD.string)
       g.add((abb_id, ns.generiek.gestructureerdeIdentificator, kbo_id))
 
-    # Bestuurorgaan
-    #bestuur = concept_uri(ns.lblod + 'bestuursorgaan/', str(row['organization_id']))
-    #g.add((bestuur, RDF.type, ns.besluit.Bestuursorgaan))
-    #g.add((bestuur, ns.besluit.bestuurt, abb_id))
-
-    # Bestuursorgaan (in bestuursperiode)
-    bestuur_temporary, _ = concept_uri(ns.lblod + 'bestuursorgaan/', str(row['organization_id']) + str(datetime.now().year))
-    g.add((bestuur_temporary, RDF.type, ns.besluit.Bestuursorgaan))
-    g.add((bestuur_temporary, ns.generiek.isTijdspecialisatieVan, abb_id))
-
     roles = ['voorzitter', 'secretaris', 'penningmeester']
-
-    # Roles / Mandaat / Mandataris
-    for role in roles:
-      if exists_role_worship(row, role):
-        person_role, _ = concept_uri(ns.lblod + 'persoon/', str(row[f'Naam_{role}_EB First']) + str(row[f'Naam_{role}_EB Last']))
-        g.add((person_role, RDF.type, ns.person.Person))
-        add_literal(g, person_role, FOAF.givenName, str(row[f'Naam_{role}_EB First']))
-        add_literal(g, person_role, FOAF.familyName, str(row[f'Naam_{role}_EB Last']))
-
-        ## Role - Vesting
-        if exists_site_role_worship(row, role):
-          person_role_vesting_uri, _ = concept_uri(ns.lblod + 'vestiging/', str(row['organization_id']) + str(row[f'Naam_{role}_EB First']) + str(row[f'Naam_{role}_EB Last']))
-          g.add((person_role_vesting_uri, RDF.type, ns.org.Site))
-          g.add((person_role, ns.org.basedAt, person_role_vesting_uri))
-
-          ### Role - Contact punt
-          if exists_contact_role_worship(row, role):
-            person_role_contact_uri, _ = concept_uri(ns.lblod + 'contactpunt/', str(row['organization_id']) + str(row[f'Naam_{role}_EB First']) + str(row[f'Naam_{role}_EB Last']) + str(row[f'Tel_{role}_EB 1']))
-            g.add((person_role_contact_uri, RDF.type, ns.schema.ContactPoint))
-            g.add((person_role_vesting_uri, ns.org.siteAddress, person_role_contact_uri))
-
-            add_literal(g, person_role_contact_uri, ns.schema.telephone, str(row[f'Tel_{role}_EB 1']), XSD.string)
-            add_literal(g, person_role_contact_uri, ns.schema.email, str(row[f'Mail_{role}_EB Cleansed']), XSD.string)  
-
-            if str(row[f'Tel_{role}_EB 2']) != str(np.nan):
-              person_role_contact_2_uri, _ = concept_uri(ns.lblod + 'contactpunt/', str(row['organization_id']) + str(row[f'Naam_{role}_EB First']) + str(row[f'Naam_{role}_EB Last']) + str(row[f'Tel_{role}_EB 2']))
-              g.add((person_role_contact_2_uri, RDF.type, ns.schema.ContactPoint))
-              g.add((person_role_vesting_uri, ns.org.siteAddress, person_role_contact_2_uri))
-
-              add_literal(g, person_role_contact_2_uri, ns.schema.telephone, str(row[f'Tel_{role}_EB 2']), XSD.string)
-
-          ### Role - Adres
-          if exists_address_role_worship(row, role):
-            person_role_address_id, _ = concept_uri(ns.lblod + 'adres/', str(row['organization_id']) + str(row[f'Naam_{role}_EB First']) + str(row[f'Naam_{role}_EB Last'])) 
-            g.add((person_role_address_id, RDF.type, ns.locn.Address))
-            g.add((person_role_vesting_uri, ns.organisatie.bestaatUit, person_role_address_id))
-            add_literal(g, person_role_address_id, ns.locn.fullAddress, str(row[f'Adres_{role}_EB Cleansed']))
-        
-        ## Role - Mandaat
-        person_role_mandaat, _ = concept_uri(ns.lblod + 'mandaat/', str(row['organization_id']) + str(row[f'Naam_{role}_EB First']) + str(row[f'Naam_{role}_EB Last']))
-        g.add((person_role_mandaat, RDF.type, ns.mandaat.Mandaat))
-        g.add((person_role_mandaat, ns.org.role, ns.bestursfunctie_code[role]))
-        g.add((person_role_mandaat, ns.org.postIn, bestuur_temporary))
-        g.add((bestuur_temporary, ns.org.hasPost, person_role_mandaat))  
-
-        ## Role - Mandataris
-        person_role_mandataris, _ = concept_uri(ns.lblod + 'mandataris/', str(row['organization_id']) + str(row[f'Naam_{role}_EB First']) + str(row[f'Naam_{role}_EB Last']) + role)
-        g.add((person_role_mandataris, RDF.type, ns.mandaat.Mandataris))
-        g.add((person_role_mandataris, ns.mandaat.isBestuurlijkeAliasVan, person_role_vesting_uri))
-        g.add((person_role_mandataris, ns.org.holds, person_role_mandaat))
-        add_literal(g, person_role_mandataris, ns.mandaat.start, str(row[f'Datum verkiezing {role}']), XSD.dateTime)
-        #einde
-        #status ~ cf loket lokale besturen PoC https://poc-form-builder.relance.s.redpencil.io/codelijsten
-        g.add((person_role, ns.mandaat.isAangesteldAls, person_role_mandataris))
-        g.add((person_role_mandaat, ns.org.heldBy, person_role_mandataris))
-
     roles_lid = ['Lid4', 'Lid5']
-    ####
-    # Lids
-    for role in roles_lid:
-      if exists_role_worship(row, role):
-        lid, _ =  concept_uri(ns.lblod + 'persoon/', str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']))
-        g.add((lid, RDF.type, ns.person.Person))
-        add_literal(g, lid, FOAF.givenName, str(row[f'Naam_{role} First']))
-        add_literal(g, lid, FOAF.familyName, str(row[f'Naam_{role} Last']))
 
-        ## Lid 1 - Mandaat
-        lid_mandaat, _ = concept_uri(ns.lblod + 'mandaat/', str(row['organization_id']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']))
-        g.add((lid_mandaat, RDF.type, ns.mandaat.Mandaat))
-        g.add((lid_mandaat, ns.org.role, ns.bestursfunctie_code[role]))
-        g.add((lid_mandaat, ns.org.postIn, bestuur_temporary))
-        g.add((bestuur_temporary, ns.org.hasPost, lid_mandaat))
+    if exists_bestuursperiode(row, roles+roles_lid):
+      # Bestuurorgaan
+      #bestuur = concept_uri(ns.lblod + 'bestuursorgaan/', str(row['organization_id']))
+      #g.add((bestuur, RDF.type, ns.besluit.Bestuursorgaan))
+      #g.add((bestuur, ns.besluit.bestuurt, abb_id))
 
-        ## Lid 1 - Mandataris
-        lid_mandataris, _ = concept_uri(ns.lblod + 'mandataris/', str(row['organization_id']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']) + role)
-        g.add((lid_mandataris, RDF.type, ns.mandaat.Mandataris))
-        g.add((lid_mandataris, ns.org.holds, lid_mandaat))
-        g.add((lid_mandataris, ns.mandaat.isBestuurlijkeAliasVan, lid))
-        add_literal(g, lid_mandataris, ns.mandaat.start, str(row[f'Datum verkiezing {role}']), XSD.dateTime)
+      # Bestuursorgaan (in bestuursperiode)
+      bestuur_temporary, _ = concept_uri(ns.lblod + 'bestuursorgaan/', str(row['organization_id']) + str(datetime.now().year))
+      g.add((bestuur_temporary, RDF.type, ns.besluit.Bestuursorgaan))
+      g.add((bestuur_temporary, ns.generiek.isTijdspecialisatieVan, abb_id))
 
-        g.add((lid, ns.mandaat.isAangesteldAls, lid_mandataris))
-        g.add((lid_mandaat, ns.org.heldBy, lid_mandataris))
+      # Roles / Mandaat / Mandataris
+      for role in roles:
+        if exists_role(row, role):
+          person_role, _ = concept_uri(ns.lblod + 'persoon/', str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']))
+          g.add((person_role, RDF.type, ns.person.Person))
+          add_literal(g, person_role, FOAF.givenName, str(row[f'Naam_{role} First']))
+          add_literal(g, person_role, FOAF.familyName, str(row[f'Naam_{role} Last']))
+
+          ## Role - Vesting
+          if exists_site_role(row, role):
+            person_role_vesting_uri, _ = concept_uri(ns.lblod + 'vestiging/', str(row['organization_id']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']))
+            g.add((person_role_vesting_uri, RDF.type, ns.org.Site))
+            g.add((person_role, ns.org.basedAt, person_role_vesting_uri))
+
+            ### Role - Contact punt
+            if exists_contact_role(row, role):
+              person_role_contact_uri, _ = concept_uri(ns.lblod + 'contactpunt/', str(row['organization_id']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']) + str(row[f'Tel_{role} 1']))
+              g.add((person_role_contact_uri, RDF.type, ns.schema.ContactPoint))
+              g.add((person_role_vesting_uri, ns.org.siteAddress, person_role_contact_uri))
+
+              add_literal(g, person_role_contact_uri, ns.schema.telephone, str(row[f'Tel_{role} 1']), XSD.string)
+              add_literal(g, person_role_contact_uri, ns.schema.email, str(row[f'Mail_{role} Cleansed']), XSD.string)  
+
+              if str(row[f'Tel_{role} 2']) != str(np.nan):
+                person_role_contact_2_uri, _ = concept_uri(ns.lblod + 'contactpunt/', str(row['organization_id']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']) + str(row[f'Tel_{role} 2']))
+                g.add((person_role_contact_2_uri, RDF.type, ns.schema.ContactPoint))
+                g.add((person_role_vesting_uri, ns.org.siteAddress, person_role_contact_2_uri))
+
+                add_literal(g, person_role_contact_2_uri, ns.schema.telephone, str(row[f'Tel_{role} 2']), XSD.string)
+
+            ### Role - Adres
+            if exists_address_role(row, role):
+              person_role_address_id, _ = concept_uri(ns.lblod + 'adres/', str(row['organization_id']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last'])) 
+              g.add((person_role_address_id, RDF.type, ns.locn.Address))
+              g.add((person_role_vesting_uri, ns.organisatie.bestaatUit, person_role_address_id))
+              add_literal(g, person_role_address_id, ns.locn.fullAddress, str(row[f'Adres_{role} Cleansed']))
+          
+          ## Role - Mandaat
+          person_role_mandaat, _ = concept_uri(ns.lblod + 'mandaat/', str(row['organization_id']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']))
+          g.add((person_role_mandaat, RDF.type, ns.mandaat.Mandaat))
+          g.add((person_role_mandaat, ns.org.role, ns.bestursfunctie_code[role]))
+          g.add((person_role_mandaat, ns.org.postIn, bestuur_temporary))
+          g.add((bestuur_temporary, ns.org.hasPost, person_role_mandaat))  
+
+          ## Role - Mandataris
+          person_role_mandataris, _ = concept_uri(ns.lblod + 'mandataris/', str(row['organization_id']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']) + role)
+          g.add((person_role_mandataris, RDF.type, ns.mandaat.Mandataris))
+          g.add((person_role_mandataris, ns.mandaat.isBestuurlijkeAliasVan, person_role_vesting_uri))
+          g.add((person_role_mandataris, ns.org.holds, person_role_mandaat))
+          add_literal(g, person_role_mandataris, ns.mandaat.start, str(row[f'Datum verkiezing {role}']), XSD.dateTime)
+          #einde
+          #status ~ cf loket lokale besturen PoC https://poc-form-builder.relance.s.redpencil.io/codelijsten
+          g.add((person_role, ns.mandaat.isAangesteldAls, person_role_mandataris))
+          g.add((person_role_mandaat, ns.org.heldBy, person_role_mandataris))
+
+      ####
+      # Lids
+      for role in roles_lid:
+        if exists_role(row, role):
+          lid, _ =  concept_uri(ns.lblod + 'persoon/', str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']))
+          g.add((lid, RDF.type, ns.person.Person))
+          add_literal(g, lid, FOAF.givenName, str(row[f'Naam_{role} First']))
+          add_literal(g, lid, FOAF.familyName, str(row[f'Naam_{role} Last']))
+
+          ## Lid 1 - Mandaat
+          lid_mandaat, _ = concept_uri(ns.lblod + 'mandaat/', str(row['organization_id']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']))
+          g.add((lid_mandaat, RDF.type, ns.mandaat.Mandaat))
+          g.add((lid_mandaat, ns.org.role, ns.bestursfunctie_code[role[:-1].lower()]))
+          g.add((lid_mandaat, ns.org.postIn, bestuur_temporary))
+          g.add((bestuur_temporary, ns.org.hasPost, lid_mandaat))
+
+          ## Lid 1 - Mandataris
+          lid_mandataris, _ = concept_uri(ns.lblod + 'mandataris/', str(row['organization_id']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']) + role)
+          g.add((lid_mandataris, RDF.type, ns.mandaat.Mandataris))
+          g.add((lid_mandataris, ns.org.holds, lid_mandaat))
+          g.add((lid_mandataris, ns.mandaat.isBestuurlijkeAliasVan, lid))
+          add_literal(g, lid_mandataris, ns.mandaat.start, str(row[f'Datum verkiezing {role}']), XSD.dateTime)
+
+          g.add((lid, ns.mandaat.isAangesteldAls, lid_mandataris))
+          g.add((lid_mandaat, ns.org.heldBy, lid_mandataris))
 
   export_data(g, 'worship-dev')
 

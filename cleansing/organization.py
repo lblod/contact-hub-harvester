@@ -9,11 +9,13 @@ def main(orgs):
 
   orgs[['Website Cleansed', 'Website Comment']] = pd.DataFrame(orgs['Website'].astype(str).apply(helper.website_cleansing).values.tolist(), columns=['website_cleansed','comment'])
 
-  orgs[['Huisnr_cleansed', 'Busnr_new', 'Huisnr_comment']] = pd.DataFrame(orgs['Huisnr'].astype(str).apply(helper.split_house_bus_number).values.tolist(), columns=['house_number', 'bus_number', 'comment'])
+  orgs[['Huisnr Cleansed', 'Busnummer Cleansed', 'Huisnr_comment']] = pd.DataFrame(orgs['Huisnr'].astype(str).apply(helper.split_house_bus_number).values.tolist(), columns=['house_number', 'bus_number', 'comment'])
 
   orgs = helper.provincie_cleansing(orgs, 'Gemeente van de organisatie', 'Provincie van de organisatie')
 
-  orgs['Postcode van de organisatie_cleansed'] = orgs['Postcode van de organisatie'].astype(str).str.replace('\.0', '').replace('nan', np.nan)
+  orgs['Gemeente Cleansed'] = orgs['Gemeente van de organisatie'].str.strip().title()
+
+  orgs['Postcode Cleansed'] = orgs['Postcode van de organisatie'].astype(str).str.replace('\.0', '').replace('nan', np.nan)
 
   orgs['NIScode_cleansed'] = orgs['NIScode'].astype(str).str.replace('\.0', '').replace('nan', np.nan)
 

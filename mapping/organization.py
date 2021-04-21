@@ -4,7 +4,7 @@ from rdflib import Graph, Literal, RDF
 from rdflib.namespace import FOAF , XSD, DC, SKOS, RDF
 
 import cleansing.organization as cls_org
-from helper.functions import add_literal, concept_uri, export_data, export_df, exists_site_org, exists_contact_org, exists_address_org
+from helper.functions import add_literal, concept_uri, export_data, export_df, exists_site_org, exists_contact_org, exists_address
 import helper.namespaces as ns
 
 def create_status_uri(g, data):
@@ -34,7 +34,7 @@ def main(file):
   create_status_uri(g, orgs_cleansed)
   create_category_uri(g, orgs_cleansed)
   
-  for index, row in orgs_cleansed.iterrows():
+  for _, row in orgs_cleansed.iterrows():
     abb_id, abb_uuid = concept_uri(ns.lblod + 'organisatie/', str(row['organisation_id']))
     g.add((abb_id, RDF.type, ns.org.Organization))
     add_literal(g, abb_id, ns.mu.uuid, abb_uuid, XSD.string)
@@ -85,7 +85,7 @@ def main(file):
 
         g.add((site_id, ns.schema.siteAddress, contact_id))
 
-      if exists_address_org(row):
+      if exists_address(row):
         address_id, _ = concept_uri(ns.lblod + 'adresvoorstelling/', str(row['organisation_id']))
         g.add((address_id, RDF.type, ns.locn.Address))
         add_literal(g, address_id, ns.locn.thoroughfare, str(row['Straat']))

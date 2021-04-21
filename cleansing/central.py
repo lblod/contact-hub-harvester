@@ -10,35 +10,39 @@ def main(ckb):
 
   ckb[['KBO_CKB_cleansed', 'KBO_CKB_comment']] = pd.DataFrame(ckb['KBO_CKB'].astype(str).apply(helper.kbo_cleansing).values.tolist(), columns=['kbo_cleansed','comment'])
 
-  ckb['organization_id'] = ckb['KBO_CKB_cleansed'].fillna(ckb['Titel'])
+  ckb['Straat'] = ckb['Straat_CKB'].str.strip().str.title() 
 
-  ckb[['Huisnr_CKB_Cleansed', 'Busnummer_CKB_Cleansed', 'Huisnr_CKB_Comment']] = pd.DataFrame(ckb['Huisnr_CKB'].astype(str).apply(helper.split_house_bus_number).values.tolist(), columns=['house_number', 'bus_number', 'comment'])
+  ckb[['Huisnr Cleansed', 'Busnummer Cleansed', 'Huisnr_CKB_Comment']] = pd.DataFrame(ckb['Huisnr_CKB'].astype(str).apply(helper.split_house_bus_number).values.tolist(), columns=['house_number', 'bus_number', 'comment'])
 
   ckb = helper.provincie_cleansing(ckb, 'Gemeente_CKB', 'Provincie_CKB')
+
+  ckb[['Postcode Cleansed', 'Postcode_CKB Comment']] = pd.DataFrame(ckb['Postcode_CKB'].astype(str).apply(helper.postcode_cleansing).values.tolist(), columns=['postcode_cleansed','comment'])
   
-  ckb['Naam_Voorzitter_CKB_cleansed'] = ckb['Naam_Voorzitter_CKB'].str.replace('<br>', '').str.strip()
-  ckb['Naam_secretaris_CKB_cleansed'] = ckb['Naam_secretaris_CKB'].str.replace('<br>', '').str.strip()
+  ckb['Gemeente Cleansed'] = ckb['Gemeente_CKB'].str.strip().str.title()
+
+  ckb['Naam_voorzitter_cleansed'] = ckb['Naam_Voorzitter_CKB'].str.replace('<br>', '').str.strip()
+  ckb['Naam_secretaris_cleansed'] = ckb['Naam_secretaris_CKB'].str.replace('<br>', '').str.strip()
 
   first_names = helper.load_possible_first_names()
 
-  ckb[['Naam_Voorzitter_CKB_first', 'Naam_Voorzitter_CKB_last', 'Naam_Voorzitter_CKB_comment']] = pd.DataFrame(ckb['Naam_Voorzitter_CKB_cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
+  ckb[['Naam_voorzitter First', 'Naam_voorzitter Last', 'Naam_voorzitter Comment']] = pd.DataFrame(ckb['Naam_voorzitter_cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
 
-  ckb[['Naam_secretaris_CKB_first', 'Naam_secretaris_CKB_last', 'Naam_secretaris_CKB_comment']] = pd.DataFrame(ckb['Naam_secretaris_CKB_cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
+  ckb[['Naam_secretaris First', 'Naam_secretaris Last', 'Naam_secretaris Comment']] = pd.DataFrame(ckb['Naam_secretaris_cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
+  
+  ckb[['Mail_voorzitter Cleansed', 'Mail_voorzitter Comment', 'Mail_secretaris Cleansed', 'Mail_secretaris Comment']] = pd.DataFrame(ckb['Mail_CKB'].astype(str).apply(helper.split_mail).values.tolist(), columns=['mail_voorzitter', 'mail_voorzitter_comment', 'mail_secretaris', 'mail_secretaris_comment'])
 
-  ckb[['Mail_voorzitter_CKB_Cleansed', 'Mail_voorzitter_CKB_Comment', 'Mail_secretaris_CKB_Cleansed', 'Mail_secretaris_CKB_Comment']] = pd.DataFrame(ckb['Mail_CKB'].astype(str).apply(helper.split_mail).values.tolist(), columns=['mail_voorzitter', 'mail_voorzitter_comment', 'mail_secretaris', 'mail_secretaris_comment'])
-
-  ckb['Tel_CKB_voorzitter'] = ckb['Tel_CKB'].str.extract(r'([\d/ ]*)\s*\(\s*voorzitter\s*\)', flags=re.IGNORECASE) \
+  ckb['Tel_voorzitter'] = ckb['Tel_CKB'].str.extract(r'([\d/ ]*)\s*\(\s*voorzitter\s*\)', flags=re.IGNORECASE) \
   .fillna(ckb['Tel_CKB'].str.extract(r'Voorzitter\s*:\s*([\d/ ]*)', flags=re.IGNORECASE)) \
   .fillna(ckb['Tel_CKB'].str.extract(r'V\s*:\s*([\d/ ]*)', flags=re.IGNORECASE)) \
   .fillna(ckb['Tel_CKB'].str.extract(r'([\d/ ]*)', flags=re.IGNORECASE))
 
-  ckb['Tel_CKB_secretaris'] = ckb['Tel_CKB'].str.extract(r'([\d/ ]*)\s*\(\s*secretaris\s*\)', flags=re.IGNORECASE) \
+  ckb['Tel_secretaris'] = ckb['Tel_CKB'].str.extract(r'([\d/ ]*)\s*\(\s*secretaris\s*\)', flags=re.IGNORECASE) \
   .fillna(ckb['Tel_CKB'].str.extract(r'Secretaris\s*:\s*([\d/ ]*)', flags=re.IGNORECASE)) \
   .fillna(ckb['Tel_CKB'].str.extract(r'S\s*:\s*([\d/ ]*)', flags=re.IGNORECASE)) \
   .fillna(ckb['Tel_CKB'].str.extract(r'([\d/ ]*)', flags=re.IGNORECASE))
 
-  ckb[['Tel_CKB_voorzitter_1', 'Tel_CKB_voorzitter_2', 'Tel_CKB_voorzitter_Comment']] = pd.DataFrame(ckb['Tel_CKB_voorzitter'].astype(str).apply(helper.telephone_number_cleansing).values.tolist(), columns=['telephone_number_1', 'telephone_number_2', 'comment'])
+  ckb[['Tel_voorzitter 1', 'Tel_voorzitter 2', 'Tel_voorzitter Comment']] = pd.DataFrame(ckb['Tel_voorzitter'].astype(str).apply(helper.telephone_number_cleansing).values.tolist(), columns=['telephone_number_1', 'telephone_number_2', 'comment'])
 
-  ckb[['Tel_CKB_secretaris_1', 'Tel_CKB_secretaris_2', 'Tel_CKB_secretaris_Comment']] = pd.DataFrame(ckb['Tel_CKB_secretaris'].astype(str).apply(helper.telephone_number_cleansing).values.tolist(), columns=['telephone_number_1', 'telephone_number_2', 'comment'])
+  ckb[['Tel_secretaris 1', 'Tel_secretaris 2', 'Tel_secretaris Comment']] = pd.DataFrame(ckb['Tel_secretaris'].astype(str).apply(helper.telephone_number_cleansing).values.tolist(), columns=['telephone_number_1', 'telephone_number_2', 'comment'])
 
   return ckb

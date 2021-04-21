@@ -21,8 +21,12 @@ mu = Namespace('http://mu.semte.ch/vocabularies/core/')
 
 lblod = Namespace('http://contacthub-dev.lblod.info/id/')
 #lblod = Namespace('http://contacthub-qa.lblod.info/id/')
-os = Namespace('http://data.vlaanderen.be/id/concept/OrganisatieStatus/')
+lblod = Namespace('http://data.lblod.info/id/')
+
 oc = Namespace('http://data.vlaanderen.be/id/concept/OrganisatieClassificatie/')
+os = Namespace('http://data.vlaanderen.be/id/conceptscheme/OrganisatieStatusCode')
+boc = Namespace('http://data.vlaanderen.be/id/concept/BestuursorgaanClassificatieCode/')
+bec = Namespace('http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/')
 bf = Namespace('http://data.vlaanderen.be/id/concept/BestuursfunctieCode/')
 
 # Predefined concepts:
