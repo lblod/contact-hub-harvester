@@ -4,13 +4,15 @@ import numpy as np
 
 def main(df):
 
+  df = df[df['Decretale functie' != 'Griffier']]
+
   df[['Titel Cleansed', 'Titel Comment']] = pd.DataFrame(df['Titel'].astype(str).apply(helper.mail_cleansing).values.tolist(), columns=['titel_cleansed','comment'])
 
   df[['Referentieorganisatie Cleansed']] = pd.DataFrame(df['Referentieorganisatie'].astype(str).apply(helper.referentieorganisatie_cleansing).values.tolist())
 
   df['Decretale functie Cleansed'] = df[df['Decretale functie'] != 'Griffier']['Decretale functie'].str.title().replace('GEEN of ONBEKEND', np.nan)
 
-  df[['Decretale functie Cleansed', 'Functionaris status']] = pd.DataFrame(df[df['Decretale functie'] != 'Griffier']['Decretale functie'].astype(str).apply(helper.decretale_functie_cleasing).values.tolist(), columns=['decretale cleansed','status'])
+  df[['Decretale functie Cleansed', 'Functionaris status']] = pd.DataFrame(df['Decretale functie'].astype(str).apply(helper.decretale_functie_cleasing).values.tolist(), columns=['decretale cleansed','status'])
 
   df[['Familienaam Contact Cleansed', 'Familienaam Contact Comment']] = pd.DataFrame(df['Familienaam Contact'].astype(str).apply(helper.naam_contact_cleansing).values.tolist(), columns=['naam_contact_cleansed','comment'])
 

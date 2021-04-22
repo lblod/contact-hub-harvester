@@ -3,6 +3,10 @@ import pandas as pd
 import numpy as np
 
 def main(orgs):
+  orgs = orgs[orgs['Organisatiestatus'] != 'Valt niet meer onder Vlaams toezicht']
+
+  orgs['Organisatiestatus cleansed'] = pd.DataFrame(orgs['Organisatiestatus'].astype(str).apply(helper.status_mapping_org).values.toList(), colums=['status_mapped'])
+
   orgs[['KBOnr_cleansed', 'KBOnr_comment']] = pd.DataFrame(orgs['KBOnr'].astype(str).apply(helper.kbo_cleansing).values.tolist(), columns=['kbo_cleansed','comment'])
   
   orgs['organisation_id'] = orgs['KBOnr_cleansed'].fillna(orgs['Unieke Naam'])

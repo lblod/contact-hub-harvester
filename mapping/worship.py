@@ -8,15 +8,6 @@ import cleansing.worship as cls_worship
 from helper.functions import add_literal, concept_uri, export_data, export_df, exists_address, exists_site_role, exists_address_role, exists_contact_role, exists_role, exists_bestuursperiode
 import helper.namespaces as ns
 
-def create_status_uri(g, data):
-  for status in data['Status_EB'].dropna().unique():
-    subject, _ = concept_uri(ns.os, status)
-    g.add((subject, RDF.type, SKOS.Concept))
-    g.add((subject, SKOS.prefLabel, Literal(status, lang='nl')))
-    if status.startswith('Operationeel'):
-      g.add((subject, SKOS.broader, ns.os.actief))
-    else:
-      g.add((subject, SKOS.broader, ns.os.nietactief))
 
 def main(file): 
   worship_raw = pd.read_excel(file)
@@ -25,20 +16,18 @@ def main(file):
   export_df(worship_cleansed, 'worship')
 
   g = Graph()
-
-  create_status_uri(g, worship_cleansed)
   
   for _, row in worship_cleansed.iterrows():
     abb_id, _ = concept_uri(ns.lblod + 'organisatie/', str(row['organization_id']))
     g.add((abb_id, RDF.type, ns.org.Organization))
 
-    status, _ = concept_uri(ns.os, str(row['Status_EB']))
+    status, _ = concept_uri(ns.os, str(row['Status_EB Cleansed']))
     g.add((abb_id, ns.regorg.orgStatus, status))
 
     g.add((abb_id, ns.org.classification, ns.bestuurseenheid_classification_code['eredienst']))
 
     add_literal(g, abb_id, SKOS.prefLabel, str(row['Naam_EB']))
-    add_literal(g, abb_id, ns.regorg.legalName, str(row['Naam_EB']))
+    #add_literal(g, abb_id, ns.regorg.legalName, str(row['Naam_EB']))
 
     if exists_address(row):
       site_id, _ = concept_uri(ns.lblod + 'vestiging/', str(row['organization_id']))
@@ -59,10 +48,17 @@ def main(file):
       g.add((abb_id, ns.org.hasPrimarySite, site_id))
    
     if str(row['KBO_EB Cleansed']) != str(np.nan):
+      id_class = concept_uri(ns.lblod +'identificator/', str(row['KBO_EB Cleansed']))
+      g.add((id_class, RDF.type, ns.adms.Identifier))
+      add_literal(g, id_class, SKOS.notation, 'KBO nummer', XSD.string)
+
       kbo_id, _ = concept_uri(ns.lblod + 'gestructureerdeIdentificator/', str(row['KBO_EB Cleansed']))
       g.add((kbo_id, RDF.type, ns.generiek.GestructureerdeIdentificator))
       add_literal(g, kbo_id, ns.generiek.lokaleIdentificator, str(row['KBO_EB Cleansed']), XSD.string)
-      g.add((abb_id, ns.generiek.gestructureerdeIdentificator, kbo_id))
+      g.add((id_class, ns.generiek.gestructureerdeIdentificator, kbo_id))
+
+      g.add((abb_id, ns.adms.identifier, id_class))
+
 
     roles = ['voorzitter', 'secretaris', 'penningmeester']
     roles_lid = ['Lid4', 'Lid5']

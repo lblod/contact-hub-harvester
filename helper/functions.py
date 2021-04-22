@@ -3,8 +3,9 @@ import numpy as np
 from datetime import datetime
 import dateparser
 import hashlib
-from rdflib import Literal, RDF, URIRef
-from rdflib.namespace import FOAF , XSD, DC, FOAF, SKOS, RDF, RDFS
+from rdflib.plugins.sparql import prepareQuery
+from rdflib import Graph, Literal, URIRef
+from rdflib.namespace import SKOS, XSD
 import re
 
 def concept_uri(base_uri, input):
@@ -19,6 +20,60 @@ def add_literal(g, subject, predicate, object_value, datatype=None):
       g.add((subject, predicate, Literal(object_value, lang='nl')))
     else:
       g.add((subject, predicate, Literal(object_value, datatype=datatype)))
+
+def status_mapping_central(status):
+  status_dict = {'Operationeel': 'Actief', 'Niet actief - Samengevoegd n.a.v. een gemeentefusie': 'Niet Actief', 
+                 'Operationeel – nieuw CKB n.a.v. gemeentefusie': 'Actief', 'Niet actief - opgeheven': 'Niet Actief',
+                 'Niet actief - Niet van toepassing': 'Niet Actief', 'Niet actief - ontbreekt': 'Niet actief - ontbreekt'}
+
+  return status_dict[status]
+
+def status_mapping_worship(status):
+  status_dict = {'Erkenningsaanvraag in behandeling': 'In oprichting', 'Operationeel': 'Actief', 'Niet actief - Samengevoegd (overgenomen)': 'Niet Actief',
+                 'Operationeel - Samengevoegd (met behoud van naam)': 'Actief', 'Niet actief - Samengevoegd (nieuwe entiteit)': 'Niet Actief',
+                 'Operationeel - Samengevoegd (met nieuwe naam)': 'Actief', 'Niet actief - Erkenning niet toegestaan': 'Niet Actief',
+                 'Operationeel - Samenvoeging lopende':	'Actief', 'Niet actief - Ingetrokken': 'Niet Actief', 'Operationeel - Intrekkingsaanvraag lopende':	'Actief'}
+
+  return status_dict[status]
+
+def status_mapping_org(status):
+  status_dict = {'Actief': 'Actief', 'Afgesloten (Vereffend)':  'Niet actief', 'Bijna Afgesloten (In ontbinding, ontbonden of in vereffening)': 'Niet actief',
+                 'Formeel opgericht maar nog niet operationeel': 'Niet actief', 'gefusioneerd': 'Niet actief', 'In oprichting': 'Niet actief'}
+
+  return status_dict[status]
+
+def bestuursorgaan_mapping_central(type):
+  bestuursorgaan_dict = {'Rooms-Katholiek': 'Centraal kerkbestuur', 'Orthodox': 'Centraal kerkbestuur', 'Islamitisch': 'Centraal bestuur'}
+
+  return bestuursorgaan_dict[type]
+
+def bestuursorgaan_mapping_worship(type):
+  bestuursorgaan_dict = {'Rooms-Katholiek': 'Kerkraad', 'Rooms-Katholiek Kathedraal': 'Kathedrale kerkraad', 'Protestants eredienst': 'Bestuursraad', 'Orthodox': 'Kerkfabriekraad',
+                         'Islamitisch': 'Comité', 'Israëlitisch': 'Bestuursraad', 'Anglicaans': 'Kerkraad'}
+
+  return bestuursorgaan_dict[type]
+
+def load_graph(name):
+  cl = Graph()
+
+  cl.parse(f'input/codelists/{name}.ttl', format='ttl')
+
+  return cl
+
+def get_concept_id(graph, label):
+  
+  qres = graph.query('SELECT ?concept WHERE { ?concept skos:prefLabel ?label .}',
+          initNs = { "skos": SKOS }, initBindings={'label': Literal(label)})
+  
+  return qres.bindings[0]['concept']
+
+def get_label_role(role):
+  label_role_dict = {'voorzitter worship':'Voorzitter van het bestuur van de eredienst', 'voorzitter central': 'Voorzitter van het centraal bestuur van de eredienst', 
+  'secretaris worship': 'Secretaris van het bestuur van de eredienst', 'secretaris central': 'Secretaris van het centraal bestuur van de eredienst', 
+  'penningmeester worship': 'Penningmeester van het bestuur van de eredienst', 'lid worship': 'Bestuurslid van het bestuur van de eredienst', 
+  'lid central': 'Bestuurslid van het centraal bestuur van de eredienst'}
+
+  return label_role_dict[role]
 
 def space_cleansing(space):
   return re.sub(r'\s', '', space)

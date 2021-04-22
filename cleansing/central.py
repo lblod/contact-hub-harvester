@@ -4,8 +4,14 @@ import numpy as np
 import re
 
 def main(ckb):
-  ckb['Status_CKB_cleansed'] = ckb['Status_CKB'].replace(to_replace='Niet actief - niet van toepassing', value='Niet actief - Niet van toepassing')
+  ckb['Status_CKB'] = ckb['Status_CKB'].replace('Niet actief - niet van toepassing', 'Niet actief - Niet van toepassing').replace('Niet actief – Opgeheven (door MB)', 'Niet actief - opgeheven')
+  
+  #ckb = ckb.drop(ckb[ckb['Status_CKB'].str.contains('Niet actief - ontbreekt')].index.tolist())
 
+  ckb['Status_CKB_cleansed'] = pd.Series(ckb['Status_CKB'].astype(str).apply(helper.status_mapping_central).values)
+  
+  ckb['Bestuursorgaan Type'] = pd.Series(ckb['Type_eredienst_CKB'].astype(str).apply(helper.bestuursorgaan_mapping_central).values)
+  
   ckb['KBO_CKB_cleansed'] = ckb['KBO_CKB'].str.replace(r'\D', '')
 
   ckb[['KBO_CKB_cleansed', 'KBO_CKB_comment']] = pd.DataFrame(ckb['KBO_CKB'].astype(str).apply(helper.kbo_cleansing).values.tolist(), columns=['kbo_cleansed','comment'])
@@ -44,5 +50,7 @@ def main(ckb):
   ckb[['Tel_voorzitter 1', 'Tel_voorzitter 2', 'Tel_voorzitter Comment']] = pd.DataFrame(ckb['Tel_voorzitter'].astype(str).apply(helper.telephone_number_cleansing).values.tolist(), columns=['telephone_number_1', 'telephone_number_2', 'comment'])
 
   ckb[['Tel_secretaris 1', 'Tel_secretaris 2', 'Tel_secretaris Comment']] = pd.DataFrame(ckb['Tel_secretaris'].astype(str).apply(helper.telephone_number_cleansing).values.tolist(), columns=['telephone_number_1', 'telephone_number_2', 'comment'])
+
+  ckb = ckb[ckb['Status_CKB_cleansed'] != 'DELETE RECORD']
 
   return ckb
