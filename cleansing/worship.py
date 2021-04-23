@@ -17,7 +17,7 @@ def main(eb):
 
   eb[['KBO_EB Cleansed', 'KBO_EB Comment']] = pd.DataFrame(eb['KBO_EB'].astype(str).apply(helper.kbo_cleansing).values.tolist(), columns=['kbo_cleansed','comment'])
   
-  eb['organization_id'] = eb['KBO_EB Cleansed'].fillna(eb['Titel'])
+  eb['organization_id'] = eb['KBO_EB Cleansed'].fillna(eb['Titel Cleansed'])
 
   eb[['Huisnr Cleansed', 'Busnummer Cleansed', 'Huisnr_EB Comment']] = pd.DataFrame(eb['Huisnr_EB'].astype(str).apply(helper.split_house_bus_number).values.tolist(), columns=['house_number', 'bus_number', 'comment'])
 

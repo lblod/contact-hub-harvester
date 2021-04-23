@@ -48,8 +48,8 @@ def bestuursorgaan_mapping_central(type):
   return bestuursorgaan_dict[type]
 
 def bestuursorgaan_mapping_worship(type):
-  bestuursorgaan_dict = {'Rooms-Katholiek': 'Kerkraad', 'Rooms-Katholiek Kathedraal': 'Kathedrale kerkraad', 'Protestants eredienst': 'Bestuursraad', 'Orthodox': 'Kerkfabriekraad',
-                         'Islamitisch': 'Comité', 'Israëlitisch': 'Bestuursraad', 'Anglicaans': 'Kerkraad'}
+  bestuursorgaan_dict = {'Rooms-Katholiek': 'Kerkraad', 'Rooms-Katholiek Kathedraal': 'Kathedrale kerkraad', 'Protestants': 'Bestuursraad', 'Orthodox': 'Kerkfabriekraad',
+                         'Islamitisch': 'Comité', 'Israëlitisch': 'Bestuursraad', 'Anglicaans': 'Kerkraad', 'nan': 'nan'}
 
   return bestuursorgaan_dict[type]
 
