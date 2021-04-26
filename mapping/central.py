@@ -17,6 +17,7 @@ def main(file):
   g = Graph()
   codelist_ere = load_graph('codelist-ere')
   codelist_bestuurseenheid = load_graph('bestuurseenheid-classificatie-code')
+  bestuurseenheid_classification_id = get_concept_id(codelist_bestuurseenheid, 'Centraal bestuur van de eredienst')
 
   for _, row in central_cleansed.iterrows():    
     abb_id, abb_uuid = concept_uri(ns.lblod + 'centraalBestuurVanDeEredienst/', str(row['Titel']))
@@ -28,7 +29,6 @@ def main(file):
     
     #g.add((abb_id, RDFS.subClassOf, ns.org.Organization))
 
-    bestuurseenheid_classification_id = get_concept_id(codelist_bestuurseenheid, 'Centraal bestuur van de eredienst')
     g.add((abb_id, ns.org.classification, bestuurseenheid_classification_id))
 
     status, _ = concept_uri(ns.c + 'OrganisatieStatusCode/', str(row['Status_CKB_cleansed']))

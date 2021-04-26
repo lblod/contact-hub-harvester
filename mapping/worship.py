@@ -11,14 +11,24 @@ import helper.namespaces as ns
 
 def main(file): 
   worship_raw = pd.read_excel(file)
+
+  print("########### Cleansing started #############")
+
   worship_cleansed = cls_worship.main(worship_raw)
+
+  print("########### Cleansing finished #############")
 
   export_df(worship_cleansed, 'worship')
 
   g = Graph()
   codelist_ere = load_graph('codelist-ere')
   codelist_bestuurseenheid = load_graph('bestuurseenheid-classificatie-code')
+  bestuurseenheid_classification_id = get_concept_id(codelist_bestuurseenheid, 'Bestuur van de eredienst')
+
+  print("########### Mapping started #############")
+
   
+
   for _, row in worship_cleansed.iterrows():
     abb_id, abb_uuid = concept_uri(ns.lblod + 'bestuurVanDeEredienst/', str(row['organization_id']))
     g.add((abb_id, RDF.type, ns.ere.BestuurVanDeEredienst))
@@ -29,7 +39,6 @@ def main(file):
 
     #g.add((abb_id, RDFS.subClassOf, ns.org.Organization))
 
-    bestuurseenheid_classification_id = get_concept_id(codelist_bestuurseenheid, 'Bestuur van de eredienst')
     g.add((abb_id, ns.org.classification, bestuurseenheid_classification_id))
 
     status, _ = concept_uri(ns.c + 'OrganisatieStatusCode', str(row['Status_EB Cleansed']))
@@ -202,6 +211,8 @@ def main(file):
 
           g.add((lid_mandaat, ns.org.heldBy, lid_mandataris))
           g.add((lid, ns.mandaat.isAangesteldAls, lid_mandataris))
+
+  print("########### Mapping finished #############")
 
   export_data(g, 'worship-qa')
   

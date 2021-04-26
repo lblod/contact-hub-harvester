@@ -146,7 +146,7 @@ def provincie_cleansing(data, gemeentee_col, provincie_col):
     result = find_city_provincie(gp, city)
     
     if len(result) > 0:
-      if str(result.iloc[0]['Provincie']) != str(row[provincie_col]):
+      if str(result.iloc[0]['Provincie']).lower().strip() != str(row[provincie_col]).lower().strip():
         data.at[index, 'Provincie Cleansed'] = result.iloc[0]['Provincie'].strip().title()
         data.at[index, 'Provincie Comment'] = "Different Provincie"
       else:

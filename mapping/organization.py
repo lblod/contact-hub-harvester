@@ -35,13 +35,15 @@ def main(file):
   create_category_uri(g, orgs_cleansed)
   
   for _, row in orgs_cleansed.iterrows():
-    abb_id, abb_uuid = concept_uri(ns.lblod + 'organisatie/', str(row['organisation_id']))
-    g.add((abb_id, RDF.type, ns.org.Organization))
+    abb_id, abb_uuid = concept_uri(ns.lblod + 'bestuurseenheid/', str(row['organisation_id']))
+    g.add((abb_id, RDF.type, ns.org.Bestuurseenheid))
     add_literal(g, abb_id, ns.mu.uuid, abb_uuid, XSD.string)
 
-    add_literal(g, abb_id, ns.regorg.legalName, str(row['Maatschappelijke Naam']))
-    add_literal(g, abb_id, SKOS.prefLabel, str(row['Titel']))
+    #g.add((abb_id, RDFS.subClassOf, ns.org.Organization))
 
+    add_literal(g, abb_id, SKOS.prefLabel, str(row['Titel']))
+    #add_literal(g, abb_id, ns.regorg.legalName, str(row['Maatschappelijke Naam']))
+   
     classification, _ = concept_uri(ns.oc, row['Type Entiteit'])
     g.add((abb_id, ns.org.classification, classification))
 
@@ -51,11 +53,17 @@ def main(file):
     add_literal(g, abb_id, ns.dbpedia.nisCode, str(row['NIScode_cleansed']), XSD.string)
 
     if str(row['KBOnr_cleansed']) != str(np.nan):
+      id_class, id_uuid = concept_uri(ns.lblod +'identifier/', str(row['KBO_CKB_cleansed']))
+      g.add((id_class, RDF.type, ns.adms.Identifier))
+      add_literal(g, id_class, SKOS.notation, 'KBO nummer', XSD.string)
+      add_literal(g, id_class, ns.mu.uuid, id_uuid, XSD.string)
+
       kbo_id, _ = concept_uri(ns.lblod + 'gestructureerdeIdentificator/', str(row['organisation_id']) + str(row['KBOnr_cleansed']))
       g.add((kbo_id, RDF.type, ns.generiek.GestructureerdeIdentificator))
       add_literal(g, kbo_id, ns.generiek.lokaleIdentificator, str(row['KBOnr_cleansed']), XSD.string)
+      g.add((id_class, ns.generiek.gestructureerdeIdentificator, kbo_id))
 
-      g.add((abb_id, ns.generiek.gestructureerdeIdentificator, kbo_id))
+      g.add((abb_id, ns.adms.identifier, id_class))
     
     if str(row['Unieke Naam']) != str(np.nan):
       unieke_naam_id, _ = concept_uri(ns.lblod + 'gestructureerdeIdentificator/', str(row['organisation_id']) + str(row['Unieke Naam']) + '1')
