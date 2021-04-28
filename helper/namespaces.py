@@ -10,6 +10,7 @@ person = Namespace('http://www.w3.org/ns/person#')
 vcard = Namespace('http://www.w3.org/2006/vcard/ns#')
 dbpedia = Namespace('http://dbpedia.org/ontology/')
 adms = Namespace('http://www.w3.org/ns/adms#')
+euro = Namespace('http://data.europa.eu/m8g/')
 
 organisatie = Namespace('http://data.vlaanderen.be/ns/organisatie#')
 persoon = Namespace('http://data.vlaanderen.be/ns/persoon#')

@@ -1,24 +1,15 @@
 import pandas as pd
 import numpy as np
 from datetime import datetime
-from rdflib import Graph, Literal, RDF
-from rdflib.namespace import FOAF , XSD, DC, FOAF, SKOS, RDF, RDFS
+from rdflib import Graph, Literal
+from rdflib.namespace import FOAF, XSD, FOAF, SKOS, RDF
 
-import cleansing.worship as cls_worship
-from helper.functions import add_literal, concept_uri, export_data, export_df, exists_address, exists_site_role, exists_address_role, exists_contact_role, exists_role, exists_bestuursperiode, load_graph, get_concept_id, get_label_role
+from helper.functions import add_literal, concept_uri, export_data, get_cleansed_data, exists_address, exists_site_role, exists_address_role, exists_contact_role, exists_role, exists_bestuursperiode, load_graph, get_concept_id, get_label_role
 import helper.namespaces as ns
 
 
 def main(file): 
-  worship_raw = pd.read_excel(file)
-
-  print("########### Cleansing started #############")
-
-  worship_cleansed = cls_worship.main(worship_raw)
-
-  print("########### Cleansing finished #############")
-
-  export_df(worship_cleansed, 'worship')
+  worship_cleansed = get_cleansed_data(file, 'worship')
 
   g = Graph()
   codelist_ere = load_graph('codelist-ere')
@@ -26,8 +17,6 @@ def main(file):
   bestuurseenheid_classification_id = get_concept_id(codelist_bestuurseenheid, 'Bestuur van de eredienst')
 
   print("########### Mapping started #############")
-
-  
 
   for _, row in worship_cleansed.iterrows():
     abb_id, abb_uuid = concept_uri(ns.lblod + 'bestuurVanDeEredienst/', str(row['organization_id']))
@@ -41,7 +30,7 @@ def main(file):
 
     g.add((abb_id, ns.org.classification, bestuurseenheid_classification_id))
 
-    status, _ = concept_uri(ns.c + 'OrganisatieStatusCode', str(row['Status_EB Cleansed']))
+    status, _ = concept_uri(ns.c + 'OrganisatieStatusCode/', str(row['Status_EB Cleansed']))
     g.add((abb_id, ns.regorg.orgStatus, status))
 
     bo_id, bo_uuid = concept_uri(ns.lblod + 'eredienstbestuursorgaan/', str(row['organization_id']))
@@ -55,7 +44,7 @@ def main(file):
     g.add((bo_id, ns.besluit.bestuurt, abb_id))    
     
     if str(row['KBO_EB Cleansed']) != str(np.nan):
-      id_class, id_uuid = concept_uri(ns.lblod +'identifier/', str(row['KBO_EB Cleansed']))
+      id_class, id_uuid = concept_uri(ns.lblod +'identificator/', str(row['KBO_EB Cleansed']))
       g.add((id_class, RDF.type, ns.adms.Identifier))
       add_literal(g, id_class, SKOS.notation, 'KBO nummer', XSD.string)
       add_literal(g, id_class, ns.mu.uuid, id_uuid, XSD.string)
@@ -70,7 +59,7 @@ def main(file):
     if str(row['Titel Cleansed']) != str(np.nan):
       id_class, id_uuid = concept_uri(ns.lblod +'identificator/', str(row['Titel Cleansed']))
       g.add((id_class, RDF.type, ns.adms.Identifier))
-      add_literal(g, id_class, SKOS.notation, 'Titel', XSD.string)
+      add_literal(g, id_class, SKOS.notation, 'SharePoint identificator', XSD.string)
       add_literal(g, id_class, ns.mu.uuid, id_uuid, XSD.string)
 
       naam_uri, _ = concept_uri(ns.lblod + 'gestructureerdeIdentificator/', str(row['Titel Cleansed']))

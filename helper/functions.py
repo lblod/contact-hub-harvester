@@ -3,9 +3,9 @@ import numpy as np
 from datetime import datetime
 import dateparser
 import hashlib
-from rdflib.plugins.sparql import prepareQuery
+from cleansing import central, contact, organization, worship
 from rdflib import Graph, Literal, URIRef
-from rdflib.namespace import SKOS, XSD
+from rdflib.namespace import SKOS
 import re
 
 def concept_uri(base_uri, input):
@@ -520,6 +520,29 @@ def exists_bestuursperiode(row, roles):
       return True
   
   return False
+
+def get_cleansed_data(file, type):
+  try:
+    data_cleansed = pd.read_excel(f'output/{type}_cleansed.xlsx')
+  except FileNotFoundError:
+    data_raw = pd.read_excel(file, encoding='utf-8')
+    
+    print("########### Cleansing started #############")
+
+    if type == 'worship':    
+      data_cleansed = worship.main(data_raw)
+    elif type == 'central':
+      data_cleansed = central.main(data_raw)
+    elif type == 'org':
+      data_cleansed = organization.main(data_raw)
+    else:
+      data_cleansed = contact.main(data_raw)
+
+    print("########### Cleansing finished #############")
+
+    export_df(data_cleansed, type)    
+
+  return data_cleansed
 
 def export_data(g, type):
   now = datetime.now().strftime('%Y%m%d%H%M%S')

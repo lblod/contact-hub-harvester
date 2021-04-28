@@ -2,22 +2,20 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from rdflib import Graph, Literal, RDF
-from rdflib.namespace import XSD, FOAF, SKOS, RDF, RDFS
+from rdflib.namespace import XSD, FOAF, SKOS, RDF
 
-import cleansing.central as cls_central
-from helper.functions import add_literal, concept_uri, exists_address, exists_bestuursperiode, exists_contact_role, exists_role, exists_site_role, load_graph, get_concept_id, get_label_role, export_df, export_data
+from helper.functions import add_literal, concept_uri, exists_address, exists_bestuursperiode, exists_contact_role, exists_role, load_graph, get_concept_id, get_label_role, get_cleansed_data, export_data
 import helper.namespaces as ns
 
 def main(file):
-  central_raw = pd.read_excel(file)
-  central_cleansed = cls_central.main(central_raw)
-
-  export_df(central_cleansed, 'central')
+  central_cleansed = get_cleansed_data(file, 'central')
 
   g = Graph()
   codelist_ere = load_graph('codelist-ere')
   codelist_bestuurseenheid = load_graph('bestuurseenheid-classificatie-code')
   bestuurseenheid_classification_id = get_concept_id(codelist_bestuurseenheid, 'Centraal bestuur van de eredienst')
+
+  print("########### Mapping started #############")
 
   for _, row in central_cleansed.iterrows():    
     abb_id, abb_uuid = concept_uri(ns.lblod + 'centraalBestuurVanDeEredienst/', str(row['Titel']))
@@ -28,6 +26,7 @@ def main(file):
     #add_literal(g, abb_id, ns.regorg.legalName, str(row['Naam_CKB']))
     
     #g.add((abb_id, RDFS.subClassOf, ns.org.Organization))
+    #g.add((abb_id, RDFS.subClassOf, ns.euro.PublicOrganisation))
 
     g.add((abb_id, ns.org.classification, bestuurseenheid_classification_id))
 
@@ -44,7 +43,7 @@ def main(file):
     g.add((bo_id, ns.besluit.bestuurt, abb_id))    
 
     if str(row['KBO_CKB_cleansed']) != str(np.nan):
-      id_class, id_uuid = concept_uri(ns.lblod +'identifier/', str(row['KBO_CKB_cleansed']))
+      id_class, id_uuid = concept_uri(ns.lblod +'identificator/', str(row['KBO_CKB_cleansed']))
       g.add((id_class, RDF.type, ns.adms.Identifier))
       add_literal(g, id_class, SKOS.notation, 'KBO nummer', XSD.string)
       add_literal(g, id_class, ns.mu.uuid, id_uuid, XSD.string)
@@ -59,7 +58,7 @@ def main(file):
     if str(row['Titel']) != str(np.nan):
       id_class, id_uuid = concept_uri(ns.lblod +'identificator/', str(row['Titel']))
       g.add((id_class, RDF.type, ns.adms.Identifier))
-      add_literal(g, id_class, SKOS.notation, 'Titel', XSD.string)
+      add_literal(g, id_class, SKOS.notation, 'SharePoint identificator', XSD.string)
       add_literal(g, id_class, ns.mu.uuid, id_uuid, XSD.string)
 
       naam_uri, _ = concept_uri(ns.lblod + 'gestructureerdeIdentificator/', str(row['Titel']))
@@ -157,7 +156,8 @@ def main(file):
 
           g.add((person_role_mandaat, ns.org.heldBy, person_role_mandataris))
           g.add((person_role, ns.mandaat.isAangesteldAls, person_role_mandataris))
-          
+
+  print("########### Mapping finished #############")       
 
   export_data(g, 'central-qa')
 
