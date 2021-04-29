@@ -1,14 +1,14 @@
 import pandas as pd
 import numpy as np
 from datetime import datetime
-from rdflib import Graph, Literal
+from rdflib import Graph
 from rdflib.namespace import FOAF, XSD, FOAF, SKOS, RDF
 
 from helper.functions import add_literal, concept_uri, export_data, get_cleansed_data, exists_address, exists_site_role, exists_address_role, exists_contact_role, exists_role, exists_bestuursperiode, load_graph, get_concept_id, get_label_role
 import helper.namespaces as ns
 
 
-def main(file): 
+def main(file, mode): 
   worship_cleansed = get_cleansed_data(file, 'worship')
 
   g = Graph()
@@ -24,14 +24,14 @@ def main(file):
     add_literal(g, abb_id, ns.mu.uuid, abb_uuid, XSD.string)
 
     add_literal(g, abb_id, SKOS.prefLabel, str(row['Naam_EB']))
-    #add_literal(g, abb_id, ns.regorg.legalName, str(row['Naam_EB']))
+    #add_literal(g, abb_id, ns.rov.legalName, str(row['Naam_EB']))
 
     #g.add((abb_id, RDFS.subClassOf, ns.org.Organization))
 
     g.add((abb_id, ns.org.classification, bestuurseenheid_classification_id))
 
     status, _ = concept_uri(ns.c + 'OrganisatieStatusCode/', str(row['Status_EB Cleansed']))
-    g.add((abb_id, ns.regorg.orgStatus, status))
+    g.add((abb_id, ns.rov.orgStatus, status))
 
     bo_id, bo_uuid = concept_uri(ns.lblod + 'eredienstbestuursorgaan/', str(row['organization_id']))
     g.add((bo_id, RDF.type, ns.ere.Eredienstbestuursorgaan))
@@ -84,7 +84,7 @@ def main(file):
       add_literal(g, address_id, ns.locn.postCode, str(row['Postcode Cleansed']), XSD.string)
       add_literal(g, address_id, ns.adres.gemeentenaam, str(row['Gemeente Cleansed']), XSD.string)
       add_literal(g, address_id, ns.locn.adminUnitL2, str(row['Provincie Cleansed']))
-      g.add((address_id, ns.adres.land, Literal('België', lang='nl')))
+      add_literal(g, address_id, ns.adres.land, 'België')
 
       g.add((site_id, ns.organisatie.bestaatUit, address_id))
       g.add((abb_id, ns.org.hasPrimarySite, site_id))
@@ -203,5 +203,5 @@ def main(file):
 
   print("########### Mapping finished #############")
 
-  export_data(g, 'worship-qa')
+  export_data(g, f'worship-{mode}')
   

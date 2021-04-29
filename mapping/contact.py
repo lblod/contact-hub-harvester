@@ -5,18 +5,15 @@ from rdflib import Graph, Literal, URIRef
 from rdflib.namespace import FOAF , XSD, DC, FOAF, SKOS, RDF, RDFS
 
 import cleansing.contact as cls_contact
-from helper.functions import add_literal, concept_uri, export_data, export_df, exists_contact_cont
+from helper.functions import add_literal, concept_uri, export_data, export_df, exists_contact_cont, get_cleansed_data
 import helper.namespaces as ns
 
-def main(file):
-  contact_raw = pd.read_excel(file)
-  contact_cleansed = cls_contact.main(contact_raw)
-
-  export_df(contact_cleansed, 'contact')
+def main(file, mode):
+  contact_cleansed = get_cleansed_data(file)
 
   g = Graph()
 
-  for index, row in contact_cleansed.iterrows():
+  for _, row in contact_cleansed.iterrows():
     abb_id, abb_uuid = concept_uri(ns.lblod + 'persoon/', str(row['Voornaam Contact Cleansed']) + str(row['Familienaam Contact Cleansed']))
 
     g.add((abb_id, RDF.type, ns.person.Person))
@@ -112,4 +109,4 @@ def main(file):
       g.add((person_bestuursfunctie, ns.org.postIn, bestuur_temporary))
 
 
-  export_data(g, 'contact-dev')
+  export_data(g, f'contact-{mode}')

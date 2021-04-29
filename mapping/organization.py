@@ -1,38 +1,16 @@
 import pandas as pd
 import numpy as np
-from rdflib import Graph, Literal, RDF
+from rdflib import Graph, Literal
 from rdflib.namespace import FOAF , XSD, DC, SKOS, RDF
 
-import cleansing.organization as cls_org
-from helper.functions import add_literal, concept_uri, export_data, export_df, exists_site_org, exists_contact_org, exists_address
+from helper.functions import add_literal, concept_uri, export_data, exists_site_org, exists_contact_org, exists_address, get_cleansed_data
 import helper.namespaces as ns
 
-def create_status_uri(g, data):
-  for status in data['Organisatiestatus'].dropna().unique():
-    subject, _ = concept_uri(ns.os, status)
-    g.add((subject, RDF.type, SKOS.Concept))
-    g.add((subject, SKOS.prefLabel, Literal(status, lang='nl')))
-    if status.startswith('Actief') or status.startswith('Valt Niet Meer'):
-      g.add((subject, SKOS.broader, ns.os.actief))
-    else:
-      g.add((subject, SKOS.broader, ns.os.nietactief))
-
-def create_category_uri(g, data):
-  for category in data['Type Entiteit'].dropna().unique():
-    category, _ = concept_uri(ns.oc, category)
-    g.add((category, RDF.type, SKOS.Concept))
-    g.add((category, SKOS.prefLabel, Literal(category, lang='nl')))
-
-def main(file): 
-  org_raw = pd.read_excel(file)
-  orgs_cleansed = cls_org.main(org_raw)
-
-  export_df(orgs_cleansed, 'org')
+def main(file, mode): 
+  
+  orgs_cleansed = get_cleansed_data(file)
 
   g = Graph()
-
-  create_status_uri(g, orgs_cleansed)
-  create_category_uri(g, orgs_cleansed)
   
   for _, row in orgs_cleansed.iterrows():
     abb_id, abb_uuid = concept_uri(ns.lblod + 'bestuurseenheid/', str(row['organisation_id']))
@@ -42,13 +20,13 @@ def main(file):
     #g.add((abb_id, RDFS.subClassOf, ns.org.Organization))
 
     add_literal(g, abb_id, SKOS.prefLabel, str(row['Titel']))
-    #add_literal(g, abb_id, ns.regorg.legalName, str(row['Maatschappelijke Naam']))
+    #add_literal(g, abb_id, ns.rov.legalName, str(row['Maatschappelijke Naam']))
    
     classification, _ = concept_uri(ns.oc, row['Type Entiteit'])
     g.add((abb_id, ns.org.classification, classification))
 
     status, _ = concept_uri(ns.os, str(row['Organisatiestatus']))
-    g.add((abb_id, ns.regorg.orgStatus, status))
+    g.add((abb_id, ns.rov.orgStatus, status))
 
     add_literal(g, abb_id, ns.dbpedia.nisCode, str(row['NIScode_cleansed']), XSD.string)
 
@@ -102,7 +80,7 @@ def main(file):
         add_literal(g, address_id, ns.locn.postCode, str(row['Postcode van de organisatie_cleansed']), XSD.string)
         add_literal(g, address_id, ns.adres.gemeentenaam, str(row['Gemeente van de organisatie']))
         add_literal(g, address_id, ns.locn.adminUnitL2, str(row['Provincie Cleansed']))
-        g.add((address_id, ns.adres.land, Literal('België', lang='nl')))
+        add_literal(g, address_id, ns.adres.land, 'België')
 
         g.add((site_id, ns.organisatie.bestaatUit, address_id))
       
@@ -116,7 +94,7 @@ def main(file):
 
     if pd.notna(row['Actief vanaf']):
       change_event_open_id, _ = concept_uri(ns.lblod + 'veranderingsgebeurtenis/', str(row['organisation_id']) + str(row['Actief vanaf']))
-      g.add((change_event_open_id, RDF.type, ns.organisatie.Oprichting))
+      g.add((change_event_open_id, RDF.type, ns.euro.FoundationEvent))
       add_literal(g, change_event_open_id, DC.date, str(row['Actief vanaf']), XSD.dateTime)
       g.add((abb_id, ns.org.resultedFrom, change_event_open_id))
 
@@ -143,4 +121,4 @@ def main(file):
       add_literal(g, change_event_close_id, DC.date, str(row['Actief tot']), XSD.dateTime)
       g.add((abb_id, ns.org.changedBy, change_event_close_id))
   
-  export_data(g, 'org-dev')
+  export_data(g, f'org-{mode}')

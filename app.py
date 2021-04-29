@@ -10,15 +10,15 @@ import mapping.codelist as codelist
 
 def main(*args):  
   if args[0] == 'org':
-    org.main(input)
+    org.main(args[1], args[2])
   elif args[0] == 'contact':
-    contact.main(args[1])
+    contact.main(args[1], args[2])
   elif args[0] == 'worship':
-    worship.main(args[1])
+    worship.main(args[1], args[2])
   elif args[0] == 'central':
-    central.main(args[1])
+    central.main(args[1], args[2])
   elif args[0] == 'national':
-    national.main(args[1])
+    national.main(args[1], args[2])
   elif args[0] == 'codelist':
     codelist.main()
 

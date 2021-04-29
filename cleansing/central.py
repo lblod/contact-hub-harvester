@@ -16,7 +16,7 @@ def main(ckb):
 
   ckb[['KBO_CKB_cleansed', 'KBO_CKB_comment']] = pd.DataFrame(ckb['KBO_CKB'].astype(str).apply(helper.kbo_cleansing).values.tolist(), columns=['kbo_cleansed','comment'])
 
-  ckb['Straat'] = ckb['Straat_CKB'].str.strip().str.title().str.replace('--', np.nan) 
+  ckb['Straat'] = ckb['Straat_CKB'].str.strip().str.title().str.replace('--', 'nan') 
 
   ckb[['Huisnr Cleansed', 'Busnummer Cleansed', 'Huisnr_CKB_Comment']] = pd.DataFrame(ckb['Huisnr_CKB'].astype(str).apply(helper.split_house_bus_number).values.tolist(), columns=['house_number', 'bus_number', 'comment'])
 

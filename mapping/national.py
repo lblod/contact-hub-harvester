@@ -6,19 +6,10 @@ from rdflib.namespace import XSD, FOAF, SKOS, RDF
 from helper.functions import add_literal, concept_uri, export_data
 import helper.namespaces as ns
 
-
-def create_category_uri(g, data):
-  for category in data['Classification'].unique():
-    category_id, _ = concept_uri(ns.oc, category)
-    g.add((category_id, RDF.type, SKOS.Concept))
-    g.add((category_id, SKOS.prefLabel, Literal(category, lang='nl')))
-
-def main(file):
+def main(file, mode):
   national_raw = pd.read_excel(file)
 
   g = Graph()
-
-  create_category_uri(g, national_raw)
 
   for _, row in national_raw.iterrows():
     abb_id, _ = concept_uri(ns.lblod + 'organisatie/', str(row['representatief orgaan']))
@@ -48,12 +39,13 @@ def main(file):
     add_literal(g, address_id, ns.locn.postCode, str(row['Postcode']), XSD.string)
     add_literal(g, address_id, ns.adres.gemeentenaam, str(row['Gemeentenaam']))
     add_literal(g, address_id, ns.locn.adminUnitL2, str(row['Provincie']))
-    g.add((address_id, ns.adres.land, Literal('België', lang='nl')))
+    add_literal(g, address_id, ns.adres.land, 'België')
+    
     g.add((site_id, ns.organisatie.bestaatUit, address_id))
 
     g.add((abb_id, ns.org.hasPrimarySite, site_id))
 
-    g.add((abb_id, ns.regorg.orgStatus, ns.os.actief))    
+    g.add((abb_id, ns.rov.orgStatus, ns.os.actief))    
 
     #Bestuur
     #bestuur = concept_uri(ns.lblod + 'bestuursorgaan/', str(row['representatief orgaan']))
@@ -87,7 +79,7 @@ def main(file):
     #einde
     #status ~ cf loket lokale besturen PoC https://poc-form-builder.relance.s.redpencil.io/codelijsten
   
-  export_data(g, 'national-dev')
+  export_data(g, f'national-{mode}')
 
     
 

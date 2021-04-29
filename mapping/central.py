@@ -1,13 +1,13 @@
 import pandas as pd
 import numpy as np
 from datetime import datetime
-from rdflib import Graph, Literal, RDF
+from rdflib import Graph
 from rdflib.namespace import XSD, FOAF, SKOS, RDF
 
 from helper.functions import add_literal, concept_uri, exists_address, exists_bestuursperiode, exists_contact_role, exists_role, load_graph, get_concept_id, get_label_role, get_cleansed_data, export_data
 import helper.namespaces as ns
 
-def main(file):
+def main(file, mode):
   central_cleansed = get_cleansed_data(file, 'central')
 
   g = Graph()
@@ -23,7 +23,7 @@ def main(file):
     add_literal(g, abb_id, ns.mu.uuid, abb_uuid, XSD.string)
 
     add_literal(g, abb_id, SKOS.prefLabel, str(row['Naam_CKB']))
-    #add_literal(g, abb_id, ns.regorg.legalName, str(row['Naam_CKB']))
+    #add_literal(g, abb_id, ns.rov.legalName, str(row['Naam_CKB']))
     
     #g.add((abb_id, RDFS.subClassOf, ns.org.Organization))
     #g.add((abb_id, RDFS.subClassOf, ns.euro.PublicOrganisation))
@@ -31,7 +31,7 @@ def main(file):
     g.add((abb_id, ns.org.classification, bestuurseenheid_classification_id))
 
     status, _ = concept_uri(ns.c + 'OrganisatieStatusCode/', str(row['Status_CKB_cleansed']))
-    g.add((abb_id, ns.regorg.orgStatus, status))
+    g.add((abb_id, ns.rov.orgStatus, status))
 
     bo_id, bo_uuid = concept_uri(ns.lblod + 'centraleBestuursorgaan/', str(row['Titel']))
     g.add((bo_id, RDF.type, ns.ere.CentraleBestuursorgaan))
@@ -83,7 +83,7 @@ def main(file):
       add_literal(g, address_uri, ns.locn.postCode, str(row['Postcode Cleansed']), XSD.string)
       add_literal(g, address_uri, ns.adres.gemeentenaam, str(row['Gemeente Cleansed']))
       add_literal(g, address_uri, ns.locn.adminUnitL2, str(row['Provincie Cleansed']))
-      g.add((address_uri, ns.adres.land, Literal('België', lang='nl')))
+      add_literal(g, address_uri, ns.adres.land, 'België')
 
       g.add((vestiging_uri, ns.organisatie.bestaatUit, address_uri))
       g.add((abb_id, ns.org.hasPrimarySite, vestiging_uri))
@@ -159,6 +159,6 @@ def main(file):
 
   print("########### Mapping finished #############")       
 
-  export_data(g, 'central-qa')
+  export_data(g, f'central-{mode}')
 
 

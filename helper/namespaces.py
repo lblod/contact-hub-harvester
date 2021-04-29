@@ -5,7 +5,7 @@ org = Namespace('http://www.w3.org/ns/org#')
 locn = Namespace('http://www.w3.org/ns/locn#')
 dc_terms= Namespace('http://purl.org/dc/terms/')
 schema = Namespace('http://schema.org/')
-regorg = Namespace('http://www.w3.org/ns/regorg#')
+rov = Namespace('http://www.w3.org/ns/regorg#')
 person = Namespace('http://www.w3.org/ns/person#')
 vcard = Namespace('http://www.w3.org/2006/vcard/ns#')
 dbpedia = Namespace('http://dbpedia.org/ontology/')
@@ -23,11 +23,12 @@ ere = Namespace('http://data.lblod.info/vocabularies/erediensten/')
 mu = Namespace('http://mu.semte.ch/vocabularies/core/')
 
 #lblod = Namespace('http://contacthub-dev.lblod.info/id/')
-lblod = Namespace('http://contacthub-qa.lblod.info/id/')
-#lblod = Namespace('http://data.lblod.info/id/')
+#lblod = Namespace('http://contacthub-qa.lblod.info/id/')
+lblod = Namespace('http://data.lblod.info/id/')
 
 cs = Namespace('http://data.vlaanderen.be/id/conceptscheme/')
-c = Namespace('http://data.vlaanderen.be/id/concepts/')
+c = Namespace('http://data.vlaanderen.be/id/concept/')
+gift = Namespace('http://lblod.data.gift/')
 
 functionaris_status = {
   "Waarnemend": URIRef("https://data.vlaanderen.be/id/concept/MandatarisStatusCode/e1ca6edd-55e1-4288-92a5-53f4cf71946a"),

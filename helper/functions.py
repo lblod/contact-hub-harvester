@@ -525,7 +525,7 @@ def get_cleansed_data(file, type):
   try:
     data_cleansed = pd.read_excel(f'output/{type}_cleansed.xlsx')
   except FileNotFoundError:
-    data_raw = pd.read_excel(file, encoding='utf-8')
+    data_raw = pd.read_excel(file)
     
     print("########### Cleansing started #############")
 
@@ -547,6 +547,10 @@ def get_cleansed_data(file, type):
 def export_data(g, type):
   now = datetime.now().strftime('%Y%m%d%H%M%S')
   g.serialize(f'output/{now}-{type}.ttl',format='turtle')
+
+  f = open(f'output/{now}-{type}.graph', 'w')
+  f.write("http://mu.semte.ch/graphs/public")
+  f.close()
 
 def export_df(data, type):
   data.to_excel(f'output/{type}_cleansed.xlsx', index=False)
