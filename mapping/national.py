@@ -7,7 +7,7 @@ from helper.functions import add_literal, concept_uri, export_data
 import helper.namespaces as ns
 
 def main(file, mode):
-  national_raw = pd.read_excel(file)
+  national_raw = pd.read_excel(file, 'national')
 
   g = Graph()
 

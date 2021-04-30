@@ -24,6 +24,10 @@ def main(eb):
   eb[['Postcode Cleansed', 'Postcode_EB Comment']] = pd.DataFrame(eb['Postcode_EB'].astype(str).apply(helper.postcode_cleansing).values.tolist(), columns=['postcode_cleansed','comment'])
 
   eb['Straat'] = eb['Straat_EB'].str.replace('x000D_', '').str.replace('<br>', '').str.strip()
+
+  eb = helper.voting_cleansing(eb, 'Verkiezingen17_Opmerkingen')
+
+  eb = helper.voting_cleansing(eb, 'Verkiezingen2020_Opmerkingen')
   
   first_names = helper.load_possible_first_names()
 

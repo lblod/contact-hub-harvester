@@ -53,6 +53,12 @@ def bestuursorgaan_mapping_worship(type):
 
   return bestuursorgaan_dict[type]
 
+def bestuurseenheid_mapping_org(type):
+  bestuurseenheid_dict = {'AGB': 'Autonoom gemeentebedrijf', 'APB': 'Autonoom provinciebedrijf', 'HVZ': 'Hulpverleningszone', 'PZ': 'Politiezone', 
+                          'IGS_PV': 'Projectvereniging', 'IGS_DV': 'Dienstverlenende vereniging', 'IGS_OV': 'Opdrachthoudende vereniging'}
+
+  return bestuurseenheid_dict[type]
+  
 def load_graph(name):
   cl = Graph()
 
@@ -268,29 +274,6 @@ def check_telephone_number_lenght(telephone_number):
   else:
     return True
 
-def date_cleansing(date):
-    dates_parsed = []
-
-    if date != "nan":
-      print(">> " + date)
-      
-      match = re.findall(r'\d{1,2}.\d{1,2}.\d{2,4}', date)
-      if match:
-        for m in match:
-          date_parsed_match = dateparser.parse(m, settings={'DATE_ORDER': 'DMY'})
-          dates_parsed.append(date_parsed_match)
-
-      match = re.findall(r'\d{1,2} \w* \d{2,4}', date)
-      if match:
-        for m in match:
-          date_parsed_match = dateparser.parse(m, settings={'DATE_ORDER': 'DMY'})
-          dates_parsed.append(date_parsed_match)
-
-      for item in dates_parsed:
-          print("..." + str(item))
-
-    return dates_parsed
-
 def kbo_cleansing(kbo):
 
   kbo_cleansed = comment = np.nan
@@ -398,95 +381,45 @@ def org_status_cleansing(orgs):
 
   return orgs
 
-def voting_2020_cleansing(data):
+def date_cleansing(date):
+    dates_parsed = []
+
+    if str(date) != str(np.nan):      
+      match = re.findall(r'\d{1,2}.\d{1,2}.\d{2,4}', date)
+      if match:
+        for m in match:
+          date_parsed_match = dateparser.parse(m, settings={'DATE_ORDER': 'DMY'}).isoformat()
+          dates_parsed.append(date_parsed_match)
+
+      match = re.findall(r'\d{1,2} \w* \d{2,4}', date)
+      if match:
+        for m in match:
+          date_parsed_match = dateparser.parse(m, settings={'DATE_ORDER': 'DMY'}).isoformat()
+          dates_parsed.append(date_parsed_match)
+
+    return dates_parsed
+
+def voting_cleansing(data, col_name):
+  data[f'{col_name} Comment'] = None
+  data[f'{col_name} Cleansed'] = None
+
   for index, row in data.iterrows():
-    date = str(row['Verkiezingen2020_Opmerkingen'])
+    date = str(row[col_name])
     
-    if date != 'nan':
+    if date != str(np.nan):
       dates_parsed = date_cleansing(date)
 
-      if dates_parsed :
-        data.at[index, 'Verkiezingen2020_Opmerkingen Cleansed'] = dates_parsed[0]
+      if dates_parsed:
+        data.at[index, f'{col_name} Cleansed'] = dates_parsed[0]
         if len(dates_parsed) > 1:
-          comment = []
-          for i in range(1, len(dates_parsed)):
-            comment.append(str(dates_parsed[i]))
-            data.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = ' - '.join(comment)
+          data.at[index, f'{col_name} Comment'] = ' - '.join([str(date) for date in dates_parsed[1:]])
         else:
-          data.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = np.NaN
+          data.at[index, f'{col_name} Comment'] = np.nan
       else:
-        data.at[index, 'Verkiezingen2020_Opmerkingen Cleansed'] = np.NaN
+        data.at[index, f'{col_name} Cleansed'] = np.nan
+        data[f'{col_name} Comment'] = data[f'{col_name} Comment'].astype(object)
+        data.at[index, f'{col_name} Comment'] = 'Wrong date format. Check it.'
 
-        data['Verkiezingen2020_Opmerkingen Comment'] = data['Verkiezingen2020_Opmerkingen Comment'].astype(object)
-        data.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = 'Wrong date format. Check it.'
-  return data
-
-def voting_2020_ckb_cleansing(data):
-  for index, row in data.iterrows():
-    date = str(row['Verkiezingen2020_Opmerkingen'])
-
-    if date != "nan":
-      dates_parsed = date_cleansing(date)
-      if dates_parsed :
-        data.at[index, 'Verkiezingen2020_Opmerkingen Cleansed'] = dates_parsed[0]
-        if len(dates_parsed) > 1:
-          comment = []
-          for i in range(1, len(dates_parsed)):
-            comment.append(str(dates_parsed[i]))
-            data.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = ' - '.join(comment)
-        else:
-          data.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = np.NaN
-      else:
-        data.at[index, 'Verkiezingen2020_Opmerkingen Cleansed'] = np.NaN
-
-        data['Verkiezingen2020_Opmerkingen Comment'] = data['Verkiezingen2020_Opmerkingen Comment'].astype(object)
-        data.at[index, 'Verkiezingen2020_Opmerkingen Comment'] = 'Wrong date format. Check it.'
-
-  return data
-
-def voting_ckb_2017_cleansing(data):
-  for index, row in data.iterrows():
-    date = str(row['Verkiezingen17_Opmerkingen'])
-
-    if date != 'nan':
-      dates_parsed = date_cleansing(date)
-
-      if dates_parsed :
-        data.at[index, 'Verkiezingen17_Opmerkingen Cleansed'] = dates_parsed[0]
-        if len(dates_parsed) > 1:
-          comment = []
-          for i in range(1, len(dates_parsed)):
-            comment.append(str(dates_parsed[i]))
-            data.at[index, 'Verkiezingen17_Opmerkingen Comment'] = ' - '.join(comment)
-        else:
-          data.at[index, 'Verkiezingen17_Opmerkingen Comment'] = np.NaN
-      else:
-        data.at[index, 'Verkiezingen17_Opmerkingen Cleansed'] = np.NaN
-
-        data['Verkiezingen17_Opmerkingen Comment'] = data['Verkiezingen17_Opmerkingen Comment'].astype(object)
-        data.at[index, 'Verkiezingen17_Opmerkingen Comment'] = 'Wrong date format. Check it.'
-
-def voting_2017_cleansing(data):
-  for index, row in data.iterrows():
-    date = str(row['Verkiezingen17_Opmerkingen'])
-
-    if date != 'nan':
-      dates_parsed = date_cleansing(date)
-
-      if dates_parsed :
-        data.at[index, 'Verkiezingen17_Opmerkingen Cleansed'] = dates_parsed[0]
-        if len(dates_parsed) > 1:
-          comment = []
-          for i in range(1, len(dates_parsed)):
-            comment.append(str(dates_parsed[i]))
-            data.at[index, 'Verkiezingen17_Opmerkingen Comment'] = ' - '.join(comment)
-        else:
-          data.at[index, 'Verkiezingen17_Opmerkingen Comment'] = np.NaN
-      else:
-        data.at[index, 'Verkiezingen17_Opmerkingen Cleansed'] = np.NaN
-
-        data['Verkiezingen17_Opmerkingen Comment'] = data['Verkiezingen17_Opmerkingen Comment'].astype(object)
-        data.at[index, 'Verkiezingen17_Opmerkingen Comment'] = 'Wrong date format. Check it.'
   return data
 
 def exists_contact_org(row):

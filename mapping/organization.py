@@ -1,20 +1,23 @@
 import pandas as pd
 import numpy as np
-from rdflib import Graph, Literal
+from rdflib import Graph
 from rdflib.namespace import FOAF , XSD, DC, SKOS, RDF
 
-from helper.functions import add_literal, concept_uri, export_data, exists_site_org, exists_contact_org, exists_address, get_cleansed_data
+from helper.functions import add_literal, concept_uri, export_data, exists_site_org, exists_contact_org, exists_address, get_cleansed_data, get_concept_id, load_graph
 import helper.namespaces as ns
 
 def main(file, mode): 
   
-  orgs_cleansed = get_cleansed_data(file)
+  orgs_cleansed = get_cleansed_data(file, 'org')
+
+  codelist_bestuurseenheid = load_graph('bestuurseenheid-classificatie-code')
 
   g = Graph()
   
   for _, row in orgs_cleansed.iterrows():
+    #there are more than one type in the file
     abb_id, abb_uuid = concept_uri(ns.lblod + 'bestuurseenheid/', str(row['organisation_id']))
-    g.add((abb_id, RDF.type, ns.org.Bestuurseenheid))
+    #g.add((abb_id, RDF.type, ns.org.Bestuurseenheid))
     add_literal(g, abb_id, ns.mu.uuid, abb_uuid, XSD.string)
 
     #g.add((abb_id, RDFS.subClassOf, ns.org.Organization))
@@ -22,8 +25,8 @@ def main(file, mode):
     add_literal(g, abb_id, SKOS.prefLabel, str(row['Titel']))
     #add_literal(g, abb_id, ns.rov.legalName, str(row['Maatschappelijke Naam']))
    
-    classification, _ = concept_uri(ns.oc, row['Type Entiteit'])
-    g.add((abb_id, ns.org.classification, classification))
+    bestuurseenheid_classification_id = get_concept_id(codelist_bestuurseenheid, str(row['Type Entiteit']))
+    g.add((abb_id, ns.org.classification, bestuurseenheid_classification_id))
 
     status, _ = concept_uri(ns.os, str(row['Organisatiestatus']))
     g.add((abb_id, ns.rov.orgStatus, status))

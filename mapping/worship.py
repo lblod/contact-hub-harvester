@@ -94,6 +94,7 @@ def main(file, mode):
 
     if exists_bestuursperiode(row, roles+roles_lid):
       # Bestuursorgaan (in bestuursperiode)
+      
       bestuur_temporary, bestuur_temporary_uuid = concept_uri(ns.lblod + 'bestuursorgaan/', str(row['organization_id']) + str(datetime.now().year))
       g.add((bestuur_temporary, RDF.type, ns.besluit.Bestuursorgaan))
       add_literal(g, bestuur_temporary, ns.mu.uuid, bestuur_temporary_uuid, XSD.string)

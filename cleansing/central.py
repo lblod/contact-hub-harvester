@@ -26,6 +26,10 @@ def main(ckb):
   
   ckb['Gemeente Cleansed'] = ckb['Gemeente_CKB'].str.strip().str.title()
 
+  ckb = helper.voting_cleansing(ckb, 'Verkiezingen17_Opmerkingen')
+
+  ckb = helper.voting_cleansing(ckb, 'Verkiezingen2020_Opmerkingen')
+
   ckb['Naam_voorzitter_cleansed'] = ckb['Naam_Voorzitter_CKB'].str.replace('<br>', '').str.strip()
   ckb['Naam_secretaris_cleansed'] = ckb['Naam_secretaris_CKB'].str.replace('<br>', '').str.strip()
 

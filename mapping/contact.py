@@ -9,7 +9,7 @@ from helper.functions import add_literal, concept_uri, export_data, export_df, e
 import helper.namespaces as ns
 
 def main(file, mode):
-  contact_cleansed = get_cleansed_data(file)
+  contact_cleansed = get_cleansed_data(file, 'contact')
 
   g = Graph()
 
