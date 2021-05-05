@@ -28,6 +28,8 @@ def main(eb):
   eb = helper.voting_cleansing(eb, 'Verkiezingen17_Opmerkingen')
 
   eb = helper.voting_cleansing(eb, 'Verkiezingen2020_Opmerkingen')
+
+  eb['Type_eredienst Cleansed'] = eb['Type_eredienst_EB'].replace('Rooms-Katholiek Kathedraal', 'Rooms-Katholiek') 
   
   first_names = helper.load_possible_first_names()
 

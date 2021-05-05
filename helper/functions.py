@@ -384,7 +384,7 @@ def org_status_cleansing(orgs):
 def date_cleansing(date):
     dates_parsed = []
 
-    if str(date) != str(np.nan):      
+    if str(date) != str(np.nan):    
       match = re.findall(r'\d{1,2}.\d{1,2}.\d{2,4}', date)
       if match:
         for m in match:

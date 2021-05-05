@@ -1,6 +1,6 @@
-import pandas as pd
 import numpy as np
 from datetime import datetime
+import dateparser
 from rdflib import Graph
 from rdflib.namespace import XSD, FOAF, SKOS, RDF
 
@@ -29,6 +29,8 @@ def main(file, mode):
     #g.add((abb_id, RDFS.subClassOf, ns.euro.PublicOrganisation))
 
     g.add((abb_id, ns.org.classification, bestuurseenheid_classification_id))
+
+    add_literal(g, abb_id, ns.ere.typeEredienst, str(row['Type_eredienst_CKB']))
 
     status, _ = concept_uri(ns.c + 'OrganisatieStatusCode/', str(row['Status_CKB_cleansed']))
     g.add((abb_id, ns.rov.orgStatus, status))
@@ -92,11 +94,19 @@ def main(file, mode):
 
     if exists_bestuursperiode(row, roles):    
       # Bestuursorgaan (in bestuursperiode)
-      bestuur_temporary, bestuur_temporary_uuid = concept_uri(ns.lblod + 'bestuursorgaan/', str(row['Titel']) + str(datetime.now().year))
-      g.add((bestuur_temporary, RDF.type, ns.besluit.Bestuursorgaan))
-      add_literal(g, bestuur_temporary, ns.mu.uuid, bestuur_temporary_uuid, XSD.string)
-      g.add((bestuur_temporary, ns.generiek.isTijdspecialisatieVan, bo_id))
-      #start
+
+      bestuur_temporary_17, bestuur_temporary_17_uuid = concept_uri(ns.lblod + 'bestuursorgaan/', str(row['Titel']) + '2017')
+      g.add((bestuur_temporary_17, RDF.type, ns.besluit.Bestuursorgaan))
+      add_literal(g, bestuur_temporary_17, ns.mu.uuid, bestuur_temporary_17_uuid, XSD.string)
+      g.add((bestuur_temporary_17, ns.generiek.isTijdspecialisatieVan, bo_id))
+      add_literal(g, bestuur_temporary_17, ns.mandaat.bindingStart, dateparser.parse(str(row['Verkiezingen17_Opmerkingen Cleansed'])).isoformat())
+      add_literal(g, bestuur_temporary_17, ns.mandaat.bindingEinde, dateparser.parse(str(row['Verkiezingen2020_Opmerkingen Cleansed'])).isoformat())
+
+      bestuur_temporary_20, bestuur_temporary_20_uuid = concept_uri(ns.lblod + 'bestuursorgaan/', str(row['Titel']) + '2020')
+      g.add((bestuur_temporary_20, RDF.type, ns.besluit.Bestuursorgaan))
+      add_literal(g, bestuur_temporary_20, ns.mu.uuid, bestuur_temporary_20_uuid, XSD.string)
+      g.add((bestuur_temporary_20, ns.generiek.isTijdspecialisatieVan, bo_id))
+      add_literal(g, bestuur_temporary_20, ns.mandaat.bindingStart, dateparser.parse(str(row['Verkiezingen2020_Opmerkingen Cleansed'])).isoformat())
       #end
 
        # Mandaat / Mandataris
@@ -140,8 +150,10 @@ def main(file, mode):
 
           bestuurfunctie_id = get_concept_id(codelist_ere, get_label_role(role + ' central'))
           g.add((person_role_mandaat, ns.org.role, bestuurfunctie_id))
-          g.add((person_role_mandaat, ns.org.postIn, bestuur_temporary))
-          g.add((bestuur_temporary, ns.org.hasPost, person_role_mandaat))
+
+          #TODO: correct bestuursorgaan periode
+          #g.add((person_role_mandaat, ns.org.postIn, bestuur_temporary))
+          #g.add((bestuur_temporary, ns.org.hasPost, person_role_mandaat))
 
           ## Mandataris
           person_role_mandataris, person_role_mandataris_uuid = concept_uri(ns.lblod + 'mandataris/', str(row['Titel'] + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']) + role))
