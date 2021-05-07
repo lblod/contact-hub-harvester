@@ -25,9 +25,11 @@ def main(eb):
 
   eb['Straat'] = eb['Straat_EB'].str.replace('x000D_', '').str.replace('<br>', '').str.strip()
 
-  eb = helper.voting_cleansing(eb, 'Verkiezingen17_Opmerkingen')
+  #eb = helper.voting_cleansing(eb, 'Verkiezingen17_Opmerkingen')
+  eb[['Verkiezingen17_Opmerkingen Cleansed', 'Verkiezingen17_Opmerkingen Comment']] = pd.DataFrame(eb['Verkiezingen17_Opmerkingen'].astype(str).apply(helper.voting_cleansing).values.tolist(), columns=['date_election','comment'])
 
-  eb = helper.voting_cleansing(eb, 'Verkiezingen2020_Opmerkingen')
+  #eb = helper.voting_cleansing(eb, 'Verkiezingen2020_Opmerkingen')
+  eb[['Verkiezingen2020_Opmerkingen Cleansed', 'Verkiezingen2020_Opmerkingen Comment']] = pd.DataFrame(eb['Verkiezingen2020_Opmerkingen'].astype(str).apply(helper.voting_cleansing).values.tolist(), columns=['date_election','comment'])
 
   eb['Type_eredienst Cleansed'] = eb['Type_eredienst_EB'].replace('Rooms-Katholiek Kathedraal', 'Rooms-Katholiek') 
   

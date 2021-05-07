@@ -384,7 +384,7 @@ def org_status_cleansing(orgs):
 def date_cleansing(date):
     dates_parsed = []
 
-    if str(date) != str(np.nan):    
+    if date != str(np.nan):    
       match = re.findall(r'\d{1,2}.\d{1,2}.\d{2,4}', date)
       if match:
         for m in match:
@@ -394,33 +394,48 @@ def date_cleansing(date):
       match = re.findall(r'\d{1,2} \w* \d{2,4}', date)
       if match:
         for m in match:
-          date_parsed_match = dateparser.parse(m, settings={'DATE_ORDER': 'DMY'}).isoformat()
-          dates_parsed.append(date_parsed_match)
+          date_parsed_match = dateparser.parse(m, settings={'DATE_ORDER': 'DMY'}, languages=['nl'])
+          if date_parsed_match != None:
+            dates_parsed.append(date_parsed_match.isoformat())
 
     return dates_parsed
 
-def voting_cleansing(data, col_name):
-  data[f'{col_name} Comment'] = None
-  data[f'{col_name} Cleansed'] = None
+# def voting_cleansing(data, col_name):
+#   data[f'{col_name} Comment'] = data[f'{col_name} Cleansed'] = np.nan
 
-  for index, row in data.iterrows():
-    date = str(row[col_name])
+#   for index, row in data.iterrows():
+#     date = str(row[col_name])
     
-    if date != str(np.nan):
-      dates_parsed = date_cleansing(date)
+#     if date != str(np.nan):
+#       dates_parsed = date_cleansing(date)
 
-      if dates_parsed:
-        data.at[index, f'{col_name} Cleansed'] = dates_parsed[0]
-        if len(dates_parsed) > 1:
-          data.at[index, f'{col_name} Comment'] = ' - '.join([str(date) for date in dates_parsed[1:]])
-        else:
-          data.at[index, f'{col_name} Comment'] = np.nan
-      else:
-        data.at[index, f'{col_name} Cleansed'] = np.nan
-        data[f'{col_name} Comment'] = data[f'{col_name} Comment'].astype(object)
-        data.at[index, f'{col_name} Comment'] = 'Wrong date format. Check it.'
+#       if dates_parsed:
+#         data.at[index, f'{col_name} Cleansed'] = dates_parsed[0]
+#         if len(dates_parsed) > 1:
+#           data.at[index, f'{col_name} Comment'] = ' - '.join([str(date) for date in dates_parsed[1:]])
+#         else:
+#           data.at[index, f'{col_name} Comment'] = np.nan
+#       else:
+#         data.at[index, f'{col_name} Cleansed'] = np.nan
+#         data[f'{col_name} Comment'] = data[f'{col_name} Comment'].astype(object)
+#         data.at[index, f'{col_name} Comment'] = 'Wrong date format. Check it.'
 
-  return data
+#   return data
+
+def voting_cleansing(date):
+  date_cleansed = comment = np.nan
+
+  if date != str(np.nan):
+    dates_parsed = date_cleansing(date)
+
+    if dates_parsed:
+      date_cleansed = dates_parsed[0]
+      if len(dates_parsed) > 1:
+        comment = ' - '.join([str(date) for date in dates_parsed[1:]])
+    else:
+      comment = 'Wrong date format. Check it.'
+
+  return [date_cleansed, comment]
 
 def exists_contact_org(row):
   return ((str(row['Website Cleansed']) != str(np.nan)) or (str(row['Algemeen telefoonnr']) != str(np.nan)) or (str(row['Algemeen mailadres']) != str(np.nan)))

@@ -22,10 +22,6 @@ lblodlg = Namespace('https://data.lblod.info/vocabularies/leidinggevenden/')
 ere = Namespace('http://data.lblod.info/vocabularies/erediensten/')
 mu = Namespace('http://mu.semte.ch/vocabularies/core/')
 
-#lblod = Namespace('http://contacthub-dev.lblod.info/id/')
-#lblod = Namespace('http://contacthub-qa.lblod.info/id/')
-lblod = Namespace('http://data.lblod.info/id/')
-
 cs = Namespace('http://data.vlaanderen.be/id/conceptscheme/')
 c = Namespace('http://data.vlaanderen.be/id/concept/')
 gift = Namespace('http://lblod.data.gift/')
@@ -34,3 +30,12 @@ functionaris_status = {
   "Waarnemend": URIRef("https://data.vlaanderen.be/id/concept/MandatarisStatusCode/e1ca6edd-55e1-4288-92a5-53f4cf71946a"),
   "Effectief": URIRef("https://data.vlaanderen.be/id/concept/MandatarisStatusCode/21063a5b-912c-4241-841c-cc7fb3c73e75")
 }
+
+namespace_dict = {
+  'dev': Namespace('http://contacthub-dev.lblod.info/id/'),
+  'qa': Namespace('http://contacthub-qa.lblod.info/id/'),
+  'local': Namespace('http://data.lblod.info/id/')
+}
+
+def get_namespace(mode):
+  return namespace_dict[mode]
