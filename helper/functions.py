@@ -382,23 +382,24 @@ def org_status_cleansing(orgs):
   return orgs
 
 def date_cleansing(date):
-    dates_parsed = []
+  dates_parsed = []
 
-    if date != str(np.nan):    
-      match = re.findall(r'\d{1,2}.\d{1,2}.\d{2,4}', date)
-      if match:
-        for m in match:
-          date_parsed_match = dateparser.parse(m, settings={'DATE_ORDER': 'DMY'}).isoformat()
-          dates_parsed.append(date_parsed_match)
+  if date != str(np.nan):    
+    match = re.findall(r'\d{1,2}.\d{1,2}.\d{2,4}', date)
+    if match:
+      for m in match:
+        date_parsed_match = dateparser.parse(m, settings={'DATE_ORDER': 'DMY'})
+        if date_parsed_match != None:
+          dates_parsed.append(date_parsed_match.isoformat())
 
-      match = re.findall(r'\d{1,2} \w* \d{2,4}', date)
-      if match:
-        for m in match:
-          date_parsed_match = dateparser.parse(m, settings={'DATE_ORDER': 'DMY'}, languages=['nl'])
-          if date_parsed_match != None:
-            dates_parsed.append(date_parsed_match.isoformat())
+    match = re.findall(r'\d{1,2} \w* \d{2,4}', date)
+    if match:
+      for m in match:
+        date_parsed_match = dateparser.parse(m, settings={'DATE_ORDER': 'DMY'}, languages=['nl'])
+        if date_parsed_match != None:
+          dates_parsed.append(date_parsed_match.isoformat())
 
-    return dates_parsed
+  return dates_parsed
 
 # def voting_cleansing(data, col_name):
 #   data[f'{col_name} Comment'] = data[f'{col_name} Cleansed'] = np.nan

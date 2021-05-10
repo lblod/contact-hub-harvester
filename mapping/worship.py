@@ -5,7 +5,7 @@ import dateparser
 from rdflib import Graph
 from rdflib.namespace import FOAF, XSD, FOAF, SKOS, RDF
 
-from helper.functions import add_literal, concept_uri, export_data, get_cleansed_data, exists_address, exists_site_role, exists_address_role, exists_contact_role, exists_role, exists_bestuursperiode, load_graph, get_concept_id, get_label_role
+from helper.functions import add_literal, concept_uri, export_data, get_cleansed_data, exists_address, exists_address_role, exists_contact_role, exists_role, exists_bestuursperiode, load_graph, get_concept_id, get_label_role
 import helper.namespaces as ns
 
 
@@ -107,9 +107,9 @@ def main(file, mode):
       g.add((bestuur_temporary_17, ns.generiek.isTijdspecialisatieVan, bo_id))
       
       if str(row['Verkiezingen17_Opmerkingen Cleansed']) != str(np.nan):
-        add_literal(g, bestuur_temporary_17, ns.mandaat.bindingStart, dateparser.parse(str(row['Verkiezingen17_Opmerkingen Cleansed'])).isoformat(), XSD.dateTime)
+        add_literal(g, bestuur_temporary_17, ns.mandaat.bindingStart, dateparser.parse(str(row['Verkiezingen17_Opmerkingen Cleansed'])), XSD.dateTime)
       if str(row['Verkiezingen2020_Opmerkingen Cleansed']) != str(np.nan):
-        add_literal(g, bestuur_temporary_17, ns.mandaat.bindingEinde, dateparser.parse(str(row['Verkiezingen2020_Opmerkingen Cleansed'])).isoformat(), XSD.dateTime)
+        add_literal(g, bestuur_temporary_17, ns.mandaat.bindingEinde, dateparser.parse(str(row['Verkiezingen2020_Opmerkingen Cleansed'])), XSD.dateTime)
       elif str(row['Verkiezingen17_Opmerkingen Cleansed']) != str(np.nan):
         # end date = start date + 3 years
         add_literal(g, bestuur_temporary_17, ns.mandaat.bindingEinde, (dateparser.parse(str(row['Verkiezingen17_Opmerkingen Cleansed'])) + timedelta(days=1095)).isoformat(), XSD.dateTime)
@@ -120,7 +120,8 @@ def main(file, mode):
         add_literal(g, bestuur_temporary_20, ns.mu.uuid, bestuur_temporary_20_uuid, XSD.string)
         g.add((bestuur_temporary_20, ns.generiek.isTijdspecialisatieVan, bo_id))
         
-        add_literal(g, bestuur_temporary_20, ns.mandaat.bindingStart, dateparser.parse(str(row['Verkiezingen2020_Opmerkingen Cleansed'])).isoformat(), XSD.dateTime)
+        if str(row['Verkiezingen2020_Opmerkingen Cleansed']) != str(np.nan):
+          add_literal(g, bestuur_temporary_20, ns.mandaat.bindingStart, dateparser.parse(str(row['Verkiezingen2020_Opmerkingen Cleansed'])), XSD.dateTime)
       
         # From 2023 the next bestuursorgaan in bestuursperiode will begin the same day
         if str(row['Type_eredienst Cleansed']) != 'Israëlitisch':

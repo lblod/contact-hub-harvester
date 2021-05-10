@@ -1,5 +1,5 @@
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 import dateparser
 from rdflib import Graph
 from rdflib.namespace import XSD, FOAF, SKOS, RDF
@@ -8,6 +8,7 @@ from helper.functions import add_literal, concept_uri, exists_address, exists_be
 import helper.namespaces as ns
 
 def main(file, mode):
+  # To have a new cleansed data, delete the previous xlsx in the output folder
   central_cleansed = get_cleansed_data(file, 'central')
 
   lblod = ns.get_namespace(mode)
@@ -103,12 +104,14 @@ def main(file, mode):
       g.add((bestuur_temporary_17, ns.generiek.isTijdspecialisatieVan, bo_id))
 
       if str(row['Verkiezingen17_Opmerkingen Cleansed']) != str(np.nan):
-        add_literal(g, bestuur_temporary_17, ns.mandaat.bindingStart, dateparser.parse(str(row['Verkiezingen17_Opmerkingen Cleansed'])).isoformat())
+        add_literal(g, bestuur_temporary_17, ns.mandaat.bindingStart, dateparser.parse(str(row['Verkiezingen17_Opmerkingen Cleansed'])), XSD.dateTime)
       if str(row['Verkiezingen2020_Opmerkingen Cleansed']) != str(np.nan):
-        add_literal(g, bestuur_temporary_17, ns.mandaat.bindingEinde, dateparser.parse(str(row['Verkiezingen2020_Opmerkingen Cleansed'])).isoformat())
+        add_literal(g, bestuur_temporary_17, ns.mandaat.bindingEinde, dateparser.parse(str(row['Verkiezingen2020_Opmerkingen Cleansed'])), XSD.dateTime)
       elif str(row['Verkiezingen17_Opmerkingen Cleansed']) != str(np.nan):
         # end date = start date + 3 years
-        add_literal(g, bestuur_temporary_17, ns.mandaat.bindingEinde, (dateparser.parse(str(row['Verkiezingen17_Opmerkingen Cleansed'])) + datetime.timedelta(days=1095)).isoformat())
+        add_literal(g, bestuur_temporary_17, ns.mandaat.bindingEinde, (dateparser.parse(str(row['Verkiezingen17_Opmerkingen Cleansed'])) + timedelta(days=1095)).isoformat(), XSD.dateTime)
+      elif str(row['Status_CKB_cleansed']) == 'Niet Actief':
+        add_literal(g, bestuur_temporary_17, ns.mandaat.bindingEinde, dateparser.parse(str(row['Opmerkingen_CKB Date'])), XSD.dateTime)
 
       if str(row['Status_CKB_cleansed']) == 'Actief':
         bestuur_temporary_20, bestuur_temporary_20_uuid = concept_uri(lblod + 'bestuursorgaan/', str(row['Titel']) + '2020')
@@ -116,13 +119,14 @@ def main(file, mode):
         add_literal(g, bestuur_temporary_20, ns.mu.uuid, bestuur_temporary_20_uuid, XSD.string)
         g.add((bestuur_temporary_20, ns.generiek.isTijdspecialisatieVan, bo_id))
 
-        add_literal(g, bestuur_temporary_20, ns.mandaat.bindingStart, dateparser.parse(str(row['Verkiezingen2020_Opmerkingen Cleansed'])).isoformat())
+        if str(row['Verkiezingen2020_Opmerkingen Cleansed']) != str(np.nan):
+          add_literal(g, bestuur_temporary_20, ns.mandaat.bindingStart, dateparser.parse(str(row['Verkiezingen2020_Opmerkingen Cleansed'])), XSD.dateTime)
 
         # From 2023 the next bestuursorgaan in bestuursperiode will begin the same day
-        if str(row['Type_eredienst Cleansed']) != 'Israëlitisch':
-          add_literal(g, bestuur_temporary_20, ns.mandaat.bindingEinde, datetime.datetime(2023, 4, 30).isoformat())
+        if str(row['Type_eredienst_CKB']) != 'Israëlitisch':
+          add_literal(g, bestuur_temporary_20, ns.mandaat.bindingEinde, datetime(2023, 4, 30).isoformat(), XSD.dateTime)
         else:
-          add_literal(g, bestuur_temporary_20, ns.mandaat.bindingEinde, datetime.datetime(2023, 5, 31).isoformat())
+          add_literal(g, bestuur_temporary_20, ns.mandaat.bindingEinde, datetime(2023, 5, 31).isoformat(), XSD.dateTime)
     
        # Mandaat / Mandataris
       for role in roles:
@@ -143,8 +147,12 @@ def main(file, mode):
           g.add((person_role_mandaat, ns.org.role, bestuurfunctie_id))
 
           #TODO: correct bestuursorgaan periode
-          #g.add((person_role_mandaat, ns.org.postIn, bestuur_temporary))
-          #g.add((bestuur_temporary, ns.org.hasPost, person_role_mandaat))
+          if str(row['Verkiezingen2020_Opmerkingen Cleansed']) != str(np.nan):
+            g.add((person_role_mandaat, ns.org.postIn, bestuur_temporary_20))
+            g.add((bestuur_temporary_20, ns.org.hasPost, person_role_mandaat))
+          else:
+            g.add((person_role_mandaat, ns.org.postIn, bestuur_temporary_17))
+            g.add((bestuur_temporary_17, ns.org.hasPost, person_role_mandaat))
 
           ## Mandataris
           person_role_mandataris, person_role_mandataris_uuid = concept_uri(lblod + 'mandataris/', str(row['Titel'] + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']) + role))
@@ -153,12 +161,6 @@ def main(file, mode):
 
           ## Mandataris - Contact punt
           if exists_contact_role(row, role):
-            # person_role_vestiging_uri, person_role_vestiging_uuid = concept_uri(lblod + 'vestiging/', str(row['Titel']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']))
-            # g.add((person_role_vestiging_uri, RDF.type, ns.org.Site))
-            # add_literal(g, person_role_vestiging_uri, ns.mu.uuid, person_role_vestiging_uuid, XSD.string)
-            # g.add((person_role, ns.org.basedAt, person_role_vestiging_uri))
-
-            #Contact
             person_role_contact_uri, person_role_contact_uuid = concept_uri(lblod + 'contactpunt/', str(row['Titel']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']) + str(row[f'Tel_{role} 1']))
             g.add((person_role_contact_uri, RDF.type, ns.schema.ContactPoint))
             add_literal(g, person_role_contact_uri, ns.mu.uuid, person_role_contact_uuid, XSD.string)

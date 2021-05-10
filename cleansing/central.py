@@ -1,18 +1,15 @@
 import helper.functions as helper
 import pandas as pd
-import numpy as np
 import re
 
 def main(ckb):
   ckb['Status_CKB'] = ckb['Status_CKB'].replace('Niet actief - niet van toepassing', 'Niet actief - Niet van toepassing').replace('Niet actief – Opgeheven (door MB)', 'Niet actief - opgeheven')
-  
-  #ckb = ckb.drop(ckb[ckb['Status_CKB'].str.contains('Niet actief - ontbreekt')].index.tolist())
 
   ckb['Status_CKB_cleansed'] = pd.Series(ckb['Status_CKB'].astype(str).apply(helper.status_mapping_central).values)
   
   ckb['Bestuursorgaan Type'] = pd.Series(ckb['Type_eredienst_CKB'].astype(str).apply(helper.bestuursorgaan_mapping_central).values)
   
-  ckb['KBO_CKB_cleansed'] = ckb['KBO_CKB'].str.replace(r'\D', '')
+  ckb['KBO_CKB_cleansed'] = ckb['KBO_CKB'].replace(r'\D', '')
 
   ckb[['KBO_CKB_cleansed', 'KBO_CKB_comment']] = pd.DataFrame(ckb['KBO_CKB'].astype(str).apply(helper.kbo_cleansing).values.tolist(), columns=['kbo_cleansed','comment'])
 
@@ -26,12 +23,14 @@ def main(ckb):
   
   ckb['Gemeente Cleansed'] = ckb['Gemeente_CKB'].str.strip().str.title()
 
-  ckb = helper.voting_cleansing(ckb, 'Verkiezingen17_Opmerkingen')
+  ckb[['Verkiezingen17_Opmerkingen Cleansed', 'Verkiezingen17_Opmerkingen Comment']] = pd.DataFrame(ckb['Verkiezingen17_Opmerkingen'].astype(str).apply(helper.voting_cleansing).values.tolist(), columns=['date_election','comment'])
 
-  ckb = helper.voting_cleansing(ckb, 'Verkiezingen2020_Opmerkingen')
+  ckb[['Verkiezingen2020_Opmerkingen Cleansed', 'Verkiezingen2020_Opmerkingen Comment']] = pd.DataFrame(ckb['Verkiezingen2020_Opmerkingen'].astype(str).apply(helper.voting_cleansing).values.tolist(), columns=['date_election','comment'])
 
-  ckb['Naam_voorzitter_cleansed'] = ckb['Naam_Voorzitter_CKB'].str.replace('<br>', '').str.strip()
-  ckb['Naam_secretaris_cleansed'] = ckb['Naam_secretaris_CKB'].str.replace('<br>', '').str.strip()
+  ckb[['Opmerkingen_CKB Date', 'Opmerkingen_CKB Comment']] = pd.DataFrame(ckb['Opmerkingen_CKB'].astype(str).apply(helper.voting_cleansing).values.tolist(), columns=['date','comment'])
+
+  ckb['Naam_voorzitter_cleansed'] = ckb['Naam_Voorzitter_CKB'].replace('<br>', '').str.strip()
+  ckb['Naam_secretaris_cleansed'] = ckb['Naam_secretaris_CKB'].replace('<br>', '').str.strip()
 
   first_names = helper.load_possible_first_names()
 
