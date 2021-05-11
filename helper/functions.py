@@ -24,7 +24,7 @@ def add_literal(g, subject, predicate, object_value, datatype=None):
 def status_mapping_central(status):
   status_dict = {'Operationeel': 'Actief', 'Niet actief - Samengevoegd n.a.v. een gemeentefusie': 'Niet Actief', 
                  'Operationeel – nieuw CKB n.a.v. gemeentefusie': 'Actief', 'Niet actief - opgeheven': 'Niet Actief',
-                 'Niet actief - Niet van toepassing': 'Niet Actief', 'Niet actief - ontbreekt': 'Niet actief - ontbreekt'}
+                 'Niet actief - Niet van toepassing': 'Niet Actief', 'Niet actief - ontbreekt': 'DELETE RECORD'}
 
   return status_dict[status]
 

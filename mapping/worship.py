@@ -36,7 +36,7 @@ def main(file, mode):
 
     add_literal(g, abb_id, ns.ere.typeEredienst, str(row['Type_eredienst Cleansed']))
 
-    status, _ = concept_uri(ns.c + 'OrganisatieStatusCode/', str(row['Status_EB Cleansed']))
+    status = get_concept_id(codelist_ere, str(row['Status_EB Cleansed']))
     g.add((abb_id, ns.rov.orgStatus, status))
 
     bo_id, bo_uuid = concept_uri(lblod + 'eredienstbestuursorgaan/', str(row['organization_id']))
@@ -193,7 +193,8 @@ def main(file, mode):
           if str(row[f'Datum verkiezing {role}']) != 'NaT':
             add_literal(g, person_role_mandataris, ns.mandaat.start, dateparser.parse(str(row[f'Datum verkiezing {role}'])).isoformat(), XSD.dateTime)
           #einde
-          #status
+          g.add((person_role_mandataris, ns.mandaat.status, ns.mandataris_status['Effectief']))
+
           g.add((person_role, ns.mandaat.isAangesteldAls, person_role_mandataris))
           g.add((person_role_mandaat, ns.org.heldBy, person_role_mandataris))
 

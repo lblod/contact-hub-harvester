@@ -5,7 +5,7 @@ from helper.functions import concept_uri, export_data
 import helper.namespaces as ns
 
 def create_status_uri(g):
-  status_list = ['In oprichting', 'Actief', 'Niet actief']
+  status_list = ['In oprichting', 'Actief', 'Niet Actief']
 
   status_concept_scheme, uuid = concept_uri(ns.gift + 'concept-schemes/', 'OrganizationStatusCode')
   g.add((status_concept_scheme, RDF.type, SKOS.ConceptScheme))

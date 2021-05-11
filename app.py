@@ -7,6 +7,7 @@ import mapping.central as central
 import mapping.national as national
 
 import mapping.codelist as codelist
+import mapping.vocabulary as vocab
 
 def main(*args):  
   if args[0] == 'org':
@@ -21,6 +22,8 @@ def main(*args):
     national.main(args[1], args[2])
   elif args[0] == 'codelist':
     codelist.main()
+  elif args[0] == 'vocab':
+    vocab.main(args[1])
 
 if __name__ == '__main__':
   args = sys.argv[1:]

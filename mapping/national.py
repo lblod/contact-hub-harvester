@@ -3,13 +3,15 @@ import numpy as np
 from rdflib import Graph
 from rdflib.namespace import XSD, FOAF, SKOS, RDF
 
-from helper.functions import add_literal, concept_uri, export_data
+from helper.functions import add_literal, concept_uri, export_data, get_concept_id, load_graph
 import helper.namespaces as ns
 
 def main(file, mode):
   national_raw = pd.read_excel(file)
 
   lblod = ns.get_namespace(mode)
+
+  codelist_ere = load_graph('codelist-ere')
 
   g = Graph()
 
@@ -25,7 +27,7 @@ def main(file, mode):
     
     add_literal(g, abb_id, ns.ere.typeEredienst, str(row['Type Eredienst']))
 
-    status, _ = concept_uri(ns.c + 'OrganisatieStatusCode/', str(row['Status']))
+    status = get_concept_id(codelist_ere, str(row['Status']))
     g.add((abb_id, ns.rov.orgStatus, status))
 
     id_class, id_uuid = concept_uri(lblod +'identificator/', str(row['KBO_nr']))

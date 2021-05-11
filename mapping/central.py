@@ -35,7 +35,7 @@ def main(file, mode):
 
     add_literal(g, abb_id, ns.ere.typeEredienst, str(row['Type_eredienst_CKB']))
 
-    status, _ = concept_uri(ns.c + 'OrganisatieStatusCode/', str(row['Status_CKB_cleansed']))
+    status = get_concept_id(codelist_ere, str(row['Status_CKB_cleansed']))
     g.add((abb_id, ns.rov.orgStatus, status))
 
     bo_id, bo_uuid = concept_uri(lblod + 'centraleBestuursorgaan/', str(row['Titel']))
@@ -146,7 +146,6 @@ def main(file, mode):
           bestuurfunctie_id = get_concept_id(codelist_ere, get_label_role(role + ' central'))
           g.add((person_role_mandaat, ns.org.role, bestuurfunctie_id))
 
-          #TODO: correct bestuursorgaan periode
           if str(row['Verkiezingen2020_Opmerkingen Cleansed']) != str(np.nan):
             g.add((person_role_mandaat, ns.org.postIn, bestuur_temporary_20))
             g.add((bestuur_temporary_20, ns.org.hasPost, person_role_mandaat))
@@ -179,9 +178,12 @@ def main(file, mode):
           
           g.add((person_role_mandataris, ns.mandaat.isBestuurlijkeAliasVan, person_role))
           g.add((person_role_mandataris, ns.org.holds, person_role_mandaat))
-          #start
+          if str(row['Verkiezingen2020_Opmerkingen Cleansed']) != str(np.nan):
+            add_literal(g, person_role_mandataris, ns.mandaat.start, dateparser.parse(str(row['Verkiezingen2020_Opmerkingen Cleansed'])), XSD.dateTime)
+          else:
+            add_literal(g, person_role_mandataris, ns.mandaat.start, dateparser.parse(str(row['Verkiezingen17_Opmerkingen Cleansed'])), XSD.dateTime)
           #einde
-          #status
+          g.add((person_role_mandataris, ns.mandaat.status, ns.mandataris_status['Effectief']))
 
           g.add((person_role_mandaat, ns.org.heldBy, person_role_mandataris))
           g.add((person_role, ns.mandaat.isAangesteldAls, person_role_mandataris))
