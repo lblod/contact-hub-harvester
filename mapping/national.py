@@ -78,31 +78,31 @@ def main(file, mode):
 
     g.add((abb_id, ns.org.hasPrimarySite, site_id))  
 
-    person_id, person_uuid = concept_uri(lblod + 'persoon/', str(row['Gebruikte Voornaam']) + str(row['Achternaam']))
+    person_id, person_uuid = concept_uri(lblod + 'persoon/', str(row['Voornaam']) + str(row['Achternaam']))
     g.add((person_id, RDF.type, ns.person.Person))
     add_literal(g, person_id, ns.mu.uuid, person_uuid, XSD.string)
-    add_literal(g, person_id, FOAF.givenName, str(row['Gebruikte Voornaam']))
+    add_literal(g, person_id, FOAF.givenName, str(row['Voornaam']))
     add_literal(g, person_id, FOAF.familyName, str(row['Achternaam']))
+    add_literal(g, person_id, ns.persoon.gebruikteVoornaam, str(row['Gebruikte Voornaam']))
 
     role_id, role_uuid = concept_uri(lblod + 'rol/', str(row['Rol']))
     g.add((role_id, RDF.type, SKOS.Concept))
     add_literal(g, role_id, ns.mu.uuid, role_uuid, XSD.string)
     add_literal(g, role_id, SKOS.prefLabel, str(row['Rol']))
 
-    position_id, position_uuid = concept_uri(lblod + 'positie/', str(row['Rol']))
+    position_id, position_uuid = concept_uri(lblod + 'positie/', str(row['representatief orgaan']) + str(row['Rol']))
     g.add((position_id, RDF.type, ns.org.Post))
     add_literal(g, position_id, ns.mu.uuid, position_uuid, XSD.string)
     g.add((position_id, ns.org.role, role_id))
+    g.add((position_id, ns.org.postIn, abb_id))
+    g.add((abb_id, ns.org.hasPost, position_id))
 
-    person_position_id, person_position_uuid = concept_uri(lblod + 'agentInPositie/', str(row['Gebruikte Voornaam']) + str(row['Achternaam']) + str(row['Rol']))
+    person_position_id, person_position_uuid = concept_uri(lblod + 'agentInPositie/', str(row['Voornaam']) + str(row['Achternaam']) + str(row['Rol']))
     g.add((person_position_id, RDF.type, ns.organisatie.AgentInPositie))
     add_literal(g, person_position_id, ns.mu.uuid, person_position_uuid, XSD.string)
     g.add((person_position_id, ns.org.holds, position_id))
     g.add((person_position_id, ns.org.heldBy, person_id))
-    g.add((person_position_id, ns.org.postIn, abb_id))
     
-    g.add((abb_id, ns.org.hasPost, person_position_id))
-
   export_data(g, f'national-{mode}')
 
     

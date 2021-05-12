@@ -1,19 +1,22 @@
 from rdflib import Graph, Literal, URIRef
-from rdflib.namespace import SKOS, RDF, XSD
+from rdflib.namespace import SKOS, RDF
 
 from helper.functions import concept_uri, export_data
 import helper.namespaces as ns
 
-def create_status_uri(g):
+def create_status_uri(g, mode):
   status_list = ['In oprichting', 'Actief', 'Niet Actief']
+  lblod = ns.get_namespace(mode)
 
-  status_concept_scheme, uuid = concept_uri(ns.gift + 'concept-schemes/', 'OrganizationStatusCode')
+  # status_concept_scheme, uuid = concept_uri(ns.gift + 'concept-schemes/', 'OrganizationStatusCode')
+  status_concept_scheme, uuid = concept_uri(lblod + 'concept-schemes/', 'OrganizationStatusCode')
   g.add((status_concept_scheme, RDF.type, SKOS.ConceptScheme))
   g.add((status_concept_scheme, SKOS.prefLabel, Literal('Organisatie status code')))
   g.add((status_concept_scheme, ns.mu.uuid, Literal(uuid)))
 
   for status in status_list:
-    concept, uuid = concept_uri(ns.gift + 'concepts/', status)
+    # concept, uuid = concept_uri(ns.gift + 'concepts/', status)
+    concept, uuid = concept_uri(lblod + 'concepts/', status)
     g.add((concept, RDF.type, SKOS.Concept))
     g.add((concept, SKOS.prefLabel, Literal(status)))
     g.add((concept, SKOS.topConceptOf, status_concept_scheme))
@@ -54,10 +57,10 @@ def create_bestuursorgaan_ere(g):
     g.add((concept, ns.mu.uuid, Literal(uuid)))
 
 
-def main():
+def main(mode):
   g = Graph()
 
-  create_status_uri(g)
+  create_status_uri(g, mode)
   
   create_bestuursfuncie_ere(g)
 

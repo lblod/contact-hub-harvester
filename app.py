@@ -21,7 +21,7 @@ def main(*args):
   elif args[0] == 'national':
     national.main(args[1], args[2])
   elif args[0] == 'codelist':
-    codelist.main()
+    codelist.main(args[1])
   elif args[0] == 'vocab':
     vocab.main(args[1])
 
