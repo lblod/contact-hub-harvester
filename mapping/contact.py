@@ -33,6 +33,8 @@ def main(file, mode):
       add_literal(g, contact_id, ns.schema.email, str(row['Titel Cleansed']), XSD.string)
       add_literal(g, contact_id, ns.schema.email, str(row['Mail nr2 Cleansed']), XSD.string)
       add_literal(g, contact_id, ns.schema.telephone, str(row['Telefoonnr Contact 1']), XSD.string) 
+      add_literal(g, contact_id, ns.vcard.honorix-prefix, str(row['Honorix-prefix']))
+
       g.add((site_id, ns.schema.siteAddress, contact_id))
 
       if str(row['Telefoonnr Contact 2']) != str(np.nan):
@@ -81,13 +83,13 @@ def main(file, mode):
       # Bestuur temporary
       bestuur_temporary, bestuur_uuid = concept_uri(ns.lblod + 'bestuursorgaan/', str(row['organisation_id']) + str(datetime.now()))
       g.add((bestuur_temporary, RDF.type, ns.besluit.Bestuursorgaan))
-      add_literal(g, bestuur_temporary, ns.mu.uuid, bestuur_uuid, XSD.string)
       g.add((bestuur_temporary, ns.generiek.isTijdspecialisatieVan, org_id))
 
       ## Functionaris
       person_functionaris, _ = concept_uri(ns.lblod + 'functionaris/',  str(row['Voornaam Contact Cleansed']) + str(row['Familienaam Contact Cleansed']) + str(row['organisation_id']) + str(row['Decretale functie Cleansed'].lower().replace(" ", "")))
       g.add((person_functionaris, RDF.type, ns.lblodlg.Functionaris))
       g.add((person_functionaris, ns.mandaat.isBestuurlijkeAliasVan, abb_id))
+      
       #start
       #einde
       #status ~ cf loket lokale besturen PoC https://poc-form-builder.relance.s.redpencil.io/codelijsten

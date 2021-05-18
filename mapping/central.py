@@ -183,6 +183,8 @@ def main(file, mode):
           else:
             add_literal(g, person_role_mandataris, ns.mandaat.start, dateparser.parse(str(row['Verkiezingen17_Opmerkingen Cleansed'])), XSD.dateTime)
           #einde
+          add_literal(g, person_role_mandataris, ns.mandaat.einde, dateparser.parse(str(row['MandatEinde'])), XSD.dateTime)
+
           g.add((person_role_mandataris, ns.mandaat.status, ns.mandataris_status['Effectief']))
 
           g.add((person_role_mandaat, ns.org.heldBy, person_role_mandataris))

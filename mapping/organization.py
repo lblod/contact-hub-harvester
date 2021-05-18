@@ -32,7 +32,8 @@ def main(file, mode):
     g.add((abb_id, ns.rov.orgStatus, status))
 
     add_literal(g, abb_id, ns.dbpedia.nisCode, str(row['NIScode_cleansed']), XSD.string)
-
+    add_literal(g, abb_id, DC.description, str(row['BestuurseenheidDescription']))
+    add_literal(g, abb_id, SKOS.atLabel, str(row['atLabel']))
     if str(row['KBOnr_cleansed']) != str(np.nan):
       id_class, id_uuid = concept_uri(ns.lblod +'identifier/', str(row['KBO_CKB_cleansed']))
       g.add((id_class, RDF.type, ns.adms.Identifier))
@@ -44,6 +45,9 @@ def main(file, mode):
       add_literal(g, kbo_id, ns.generiek.lokaleIdentificator, str(row['KBOnr_cleansed']), XSD.string)
       g.add((id_class, ns.generiek.gestructureerdeIdentificator, kbo_id))
 
+      #registered organizatie 
+      #g.add((abb_id, ns.regorg.registration, id_class))
+    
       g.add((abb_id, ns.adms.identifier, id_class))
     
     if str(row['Unieke Naam']) != str(np.nan):
@@ -88,6 +92,7 @@ def main(file, mode):
         g.add((site_id, ns.organisatie.bestaatUit, address_id))
       
       g.add((abb_id, ns.org.hasPrimarySite, site_id))
+      g.add((abb_id, ns.org.hasSite, site_id))
 
     if row['Unieke Naam'] != row['Moederentiteit']:
       find_moeder_kboid = orgs_cleansed[orgs_cleansed['Unieke Naam'] == row['Moederentiteit']]
@@ -99,6 +104,7 @@ def main(file, mode):
       change_event_open_id, _ = concept_uri(ns.lblod + 'veranderingsgebeurtenis/', str(row['organisation_id']) + str(row['Actief vanaf']))
       g.add((change_event_open_id, RDF.type, ns.euro.FoundationEvent))
       add_literal(g, change_event_open_id, DC.date, str(row['Actief vanaf']), XSD.dateTime)
+      add_literal(g, change_event_open_id, DC.description, str(row['EventDescription']))
       g.add((abb_id, ns.org.resultedFrom, change_event_open_id))
 
     if row['Organisatiestatus'] == 'Valt niet meer onder Vlaams toezicht':
