@@ -10,11 +10,7 @@ import mapping.vocabulary as vocab
 
 import dummymapping.organization as dummyorg
 import dummymapping.contact as dummycontact
-import dummymapping.worship as dummyworship
 import dummymapping.central as dummycentral
-import dummymapping.national as dummynational
-import dummymapping.codelist as dummycodelist
-import dummymapping.vocabulary as dummyvocab
 
 def main(*args):  
   if args[0] == 'org':
