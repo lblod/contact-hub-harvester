@@ -5,7 +5,9 @@ import numpy as np
 def main(orgs):
   orgs = orgs[orgs['Organisatiestatus'] != 'Valt niet meer onder Vlaams toezicht']
 
-  orgs['Organisatiestatus cleansed'] = pd.DataFrame(orgs['Organisatiestatus'].astype(str).apply(helper.status_mapping_org).values.toList(), colums=['status_mapped'])
+  orgs['Organisatiestatus cleansed'] = pd.DataFrame(orgs['Organisatiestatus'].astype(str).apply(helper.status_mapping_org).values)
+
+  orgs['Bestuurseenheid Type'] = pd.Series(orgs['Type Entiteit'].astype(str).apply(helper.bestuurseenheid_mapping_org).values)
 
   orgs[['KBOnr_cleansed', 'KBOnr_comment']] = pd.DataFrame(orgs['KBOnr'].astype(str).apply(helper.kbo_cleansing).values.tolist(), columns=['kbo_cleansed','comment'])
   
@@ -17,7 +19,7 @@ def main(orgs):
 
   orgs = helper.provincie_cleansing(orgs, 'Gemeente van de organisatie', 'Provincie van de organisatie')
 
-  orgs['Gemeente Cleansed'] = orgs['Gemeente van de organisatie'].str.strip().title()
+  orgs['Gemeente Cleansed'] = orgs['Gemeente van de organisatie'].str.strip().str.title()
 
   orgs['Postcode Cleansed'] = orgs['Postcode van de organisatie'].astype(str).str.replace('\.0', '').replace('nan', np.nan)
 

@@ -55,7 +55,7 @@ def bestuursorgaan_mapping_worship(type):
 
 def bestuurseenheid_mapping_org(type):
   bestuurseenheid_dict = {'AGB': 'Autonoom gemeentebedrijf', 'APB': 'Autonoom provinciebedrijf', 'HVZ': 'Hulpverleningszone', 'PZ': 'Politiezone', 
-                          'IGS_PV': 'Projectvereniging', 'IGS_DV': 'Dienstverlenende vereniging', 'IGS_OV': 'Opdrachthoudende vereniging'}
+                          'IGS_PV': 'Projectvereniging', 'IGS_DV': 'Dienstverlenende vereniging', 'IGS_OV': 'Opdrachthoudende vereniging', 'Gemeente': 'Gemeente', 'OCMW': 'OCMW'}
 
   return bestuurseenheid_dict[type]
   
