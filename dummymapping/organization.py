@@ -11,6 +11,7 @@ def main(file, mode):
 
   orgs_cleansed = get_cleansed_data(file, 'org')
 
+  codelist_ere = load_graph('codelist-ere')
   codelist_bestuurseenheid = load_graph('bestuurseenheid-classificatie-code')
 
   g = Graph()
@@ -26,17 +27,18 @@ def main(file, mode):
     add_literal(g, abb_id, SKOS.prefLabel, str(row['Titel']))
     #add_literal(g, abb_id, ns.rov.legalName, str(row['Maatschappelijke Naam']))
    
-    bestuurseenheid_classification_id = get_concept_id(codelist_bestuurseenheid, str(row['Type Entiteit']))
+    bestuurseenheid_classification_id = get_concept_id(codelist_bestuurseenheid, str(row['Bestuurseenheid Type']))
     g.add((abb_id, ns.org.classification, bestuurseenheid_classification_id))
 
-    status, _ = concept_uri(ns.os, str(row['Organisatiestatus']))
+    status = get_concept_id(codelist_ere, str(row['Organisatiestatus cleansed']))
     g.add((abb_id, ns.rov.orgStatus, status))
 
     add_literal(g, abb_id, ns.dbpedia.nisCode, str(row['NIScode_cleansed']), XSD.string)
     add_literal(g, abb_id, DC.description, str(row['BestuurseenheidDescription']))
-    add_literal(g, abb_id, SKOS.atLabel, str(row['atLabel']))
+    add_literal(g, abb_id, SKOS.altLabel, str(row['atLabel']))
+
     if str(row['KBOnr_cleansed']) != str(np.nan):
-      id_class, id_uuid = concept_uri(lblod +'identifier/', str(row['KBO_CKB_cleansed']))
+      id_class, id_uuid = concept_uri(lblod +'identifier/', str(row['KBOnr_cleansed']))
       g.add((id_class, RDF.type, ns.adms.Identifier))
       add_literal(g, id_class, SKOS.notation, 'KBO nummer', XSD.string)
       add_literal(g, id_class, ns.mu.uuid, id_uuid, XSD.string)
@@ -58,12 +60,12 @@ def main(file, mode):
 
       g.add((abb_id, ns.generiek.gestructureerdeIdentificator, unieke_naam_id))
 
-    if str(row['Unieke Naam van actieve organisaties']) != str(np.nan):
-      unieke_naam_active_id, _ = concept_uri(lblod + 'gestructureerdeIdentificator/', str(row['organisation_id']) + str(row['Unieke Naam van actieve organisaties']) + '2')
-      g.add((unieke_naam_active_id, RDF.type, ns.generiek.GestructureerdeIdentificator))
-      add_literal(g, unieke_naam_active_id, ns.generiek.lokaleIdentificator, str(row['Unieke Naam van actieve organisaties']), XSD.string)
+    # if str(row['Unieke Naam van actieve organisaties']) != str(np.nan):
+    #   unieke_naam_active_id, _ = concept_uri(lblod + 'gestructureerdeIdentificator/', str(row['organisation_id']) + str(row['Unieke Naam van actieve organisaties']) + '2')
+    #   g.add((unieke_naam_active_id, RDF.type, ns.generiek.GestructureerdeIdentificator))
+    #   add_literal(g, unieke_naam_active_id, ns.generiek.lokaleIdentificator, str(row['Unieke Naam van actieve organisaties']), XSD.string)
 
-      g.add((abb_id, ns.generiek.gestructureerdeIdentificator, unieke_naam_id))
+    #   g.add((abb_id, ns.generiek.gestructureerdeIdentificator, unieke_naam_id))
 
     if exists_site_org(row):
       site_id, _ = concept_uri(lblod + 'vesting/', str(row['organisation_id']))
@@ -83,10 +85,10 @@ def main(file, mode):
         address_id, _ = concept_uri(lblod + 'adresvoorstelling/', str(row['organisation_id']))
         g.add((address_id, RDF.type, ns.locn.Address))
         add_literal(g, address_id, ns.locn.thoroughfare, str(row['Straat']))
-        add_literal(g, address_id, ns.adres['Adresvoorstelling.huisnummer'], str(row['Huisnr_cleansed']), XSD.string)
-        add_literal(g, address_id, ns.adres['Adresvoorstelling.busnummer'], str(row['Busnr_new']), XSD.string)
-        add_literal(g, address_id, ns.locn.postCode, str(row['Postcode van de organisatie_cleansed']), XSD.string)
-        add_literal(g, address_id, ns.adres.gemeentenaam, str(row['Gemeente van de organisatie']))
+        add_literal(g, address_id, ns.adres['Adresvoorstelling.huisnummer'], str(row['Huisnr Cleansed']), XSD.string)
+        add_literal(g, address_id, ns.adres['Adresvoorstelling.busnummer'], str(row['Busnummer Cleansed']), XSD.string)
+        add_literal(g, address_id, ns.locn.postCode, str(row['Postcode Cleansed']), XSD.string)
+        add_literal(g, address_id, ns.adres.gemeentenaam, str(row['Gemeente Cleansed']))
         add_literal(g, address_id, ns.locn.adminUnitL2, str(row['Provincie Cleansed']))
         add_literal(g, address_id, ns.adres.land, 'België')
 

@@ -4,8 +4,6 @@ import numpy as np
 
 def main(df):
 
-  df = df[df['Decretale functie' != 'Griffier']]
-
   df[['Titel Cleansed', 'Titel Comment']] = pd.DataFrame(df['Titel'].astype(str).apply(helper.mail_cleansing).values.tolist(), columns=['titel_cleansed','comment'])
 
   df[['Referentieorganisatie Cleansed']] = pd.DataFrame(df['Referentieorganisatie'].astype(str).apply(helper.referentieorganisatie_cleansing).values.tolist())

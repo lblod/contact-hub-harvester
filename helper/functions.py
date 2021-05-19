@@ -37,8 +37,8 @@ def status_mapping_worship(status):
   return status_dict[status]
 
 def status_mapping_org(status):
-  status_dict = {'Actief': 'Actief', 'Afgesloten (Vereffend)':  'Niet actief', 'Bijna Afgesloten (In ontbinding, ontbonden of in vereffening)': 'Niet actief',
-                 'Formeel opgericht maar nog niet operationeel': 'Niet actief', 'gefusioneerd': 'Niet actief', 'In oprichting': 'Niet actief'}
+  status_dict = {'Actief': 'Actief', 'Afgesloten (Vereffend)':  'Niet Actief', 'Bijna Afgesloten (In ontbinding, ontbonden of in vereffening)': 'Niet Actief',
+                 'Formeel opgericht maar nog niet operationeel': 'Niet Actief', 'gefusioneerd': 'Niet Actief', 'In oprichting': 'Niet Actief'}
 
   return status_dict[status]
 
@@ -67,7 +67,7 @@ def load_graph(name):
   return cl
 
 def get_concept_id(graph, label):
-  
+
   qres = graph.query('SELECT ?concept WHERE { ?concept skos:prefLabel ?label .}',
           initNs = { "skos": SKOS }, initBindings={'label': Literal(label)})
   
