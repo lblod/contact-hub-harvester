@@ -16,6 +16,9 @@ To run the mapping for each file, it depends on the type of file. The general co
 |central      |         |
 |national     |         |
 |codelist     |         |
+|dummyorg     |         |
+|dummycontact |         |
+|dummycentral |         |
 
 If type_file is codelist, do not include an input file and mode.
 

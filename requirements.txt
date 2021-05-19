@@ -2,3 +2,4 @@ rdflib
 pandas
 dateparser
 openpyxl
+xlrd
