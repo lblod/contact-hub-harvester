@@ -58,7 +58,12 @@ def bestuurseenheid_mapping_org(type):
                           'IGS_PV': 'Projectvereniging', 'IGS_DV': 'Dienstverlenende vereniging', 'IGS_OV': 'Opdrachthoudende vereniging', 'Gemeente': 'Gemeente', 'OCMW': 'OCMW'}
 
   return bestuurseenheid_dict[type]
+
+def bestuursfunctie_mapping(type):
+  bestuurseenheid_dict = {'Algemeen Directeur':'Algemeen directeur', 'Adjunct Financieel Directeur':'Adjunct Financieel Directeur', 'Financieel beheerder':'Financieel beheerder'}
   
+  return bestuurseenheid_dict[type]
+
 def load_graph(name):
   cl = Graph()
 

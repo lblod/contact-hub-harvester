@@ -12,6 +12,8 @@ def main(df):
 
   df[['Decretale functie Cleansed', 'Functionaris status']] = pd.DataFrame(df['Decretale functie'].astype(str).apply(helper.decretale_functie_cleasing).values.tolist(), columns=['decretale cleansed','status'])
 
+  df['Decretale functie Cleansed'] = pd.Series(df['Decretale functie Cleansed'].astype(str).apply(helper.bestuursfunctie_mapping).values)
+  
   df[['Familienaam Contact Cleansed', 'Familienaam Contact Comment']] = pd.DataFrame(df['Familienaam Contact'].astype(str).apply(helper.naam_contact_cleansing).values.tolist(), columns=['naam_contact_cleansed','comment'])
 
   df[['Voornaam Contact Cleansed', 'Voornaam Contact Comment']] = pd.DataFrame(df['Voornaam Contact'].astype(str).apply(helper.naam_contact_cleansing).values.tolist(), columns=['naam_contact_cleansed','comment'])
