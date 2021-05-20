@@ -38,7 +38,7 @@ def status_mapping_worship(status):
 
 def status_mapping_org(status):
   status_dict = {'Actief': 'Actief', 'Afgesloten (Vereffend)':  'Niet Actief', 'Bijna Afgesloten (In ontbinding, ontbonden of in vereffening)': 'Niet Actief',
-                 'Formeel opgericht maar nog niet operationeel': 'Niet Actief', 'gefusioneerd': 'Niet Actief', 'In oprichting': 'Niet Actief'}
+                 'Formeel opgericht maar nog niet operationeel': 'Niet Actief', 'gefusioneerd': 'Niet Actief', 'In oprichting': 'Niet Actief', 'nan':'nan'}
 
   return status_dict[status]
 
@@ -55,12 +55,13 @@ def bestuursorgaan_mapping_worship(type):
 
 def bestuurseenheid_mapping_org(type):
   bestuurseenheid_dict = {'AGB': 'Autonoom gemeentebedrijf', 'APB': 'Autonoom provinciebedrijf', 'HVZ': 'Hulpverleningszone', 'PZ': 'Politiezone', 
-                          'IGS_PV': 'Projectvereniging', 'IGS_DV': 'Dienstverlenende vereniging', 'IGS_OV': 'Opdrachthoudende vereniging', 'Gemeente': 'Gemeente', 'OCMW': 'OCMW'}
+                          'IGS_PV': 'Projectvereniging', 'IGS_DV': 'Dienstverlenende vereniging', 'IGS_OV': 'Opdrachthoudende vereniging', 'Gemeente': 'Gemeente', 'OCMW': 'OCMW','Provincie':'Provincie'}
 
   return bestuurseenheid_dict[type]
 
 def bestuursfunctie_mapping(type):
-  bestuurseenheid_dict = {'Algemeen Directeur':'Algemeen directeur', 'Adjunct Financieel Directeur':'Adjunct Financieel Directeur', 'Financieel beheerder':'Financieel beheerder'}
+  bestuurseenheid_dict = {'Algemeen Directeur':'Algemeen directeur', 'Adjunct Financieel Directeur':'Adjunct Financieel Directeur', 'Financieel beheerder':'Financieel beheerder', 
+  'nan': 'nan', 'Financieel Directeur':'Financieel directeur', 'Adjunct Algemeen Directeur':'Adjunct Algemeen Directeur', 'Griffier':'Griffier'}
   
   return bestuurseenheid_dict[type]
 
