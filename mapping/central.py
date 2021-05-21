@@ -180,8 +180,7 @@ def main(file, mode):
           g.add((person_role_mandataris, ns.org.holds, person_role_mandaat))
           if str(row['Verkiezingen2020_Opmerkingen Cleansed']) != str(np.nan):
             add_literal(g, person_role_mandataris, ns.mandaat.start, dateparser.parse(str(row['Verkiezingen2020_Opmerkingen Cleansed'])), XSD.dateTime)
-          else:
-            add_literal(g, person_role_mandataris, ns.mandaat.start, dateparser.parse(str(row['Verkiezingen17_Opmerkingen Cleansed'])), XSD.dateTime)
+          
           #einde
           g.add((person_role_mandataris, ns.mandaat.status, ns.mandataris_status['Effectief']))
 

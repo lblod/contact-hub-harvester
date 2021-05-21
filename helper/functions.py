@@ -124,14 +124,14 @@ def postcode_cleansing(postcode):
   postcode_cleansed = comment = np.NaN
 
   if str(postcode) != str(np.nan):
-    if re.match(r'\w', postcode):
+    if re.search(r'\b[^\d\W]+\b', postcode):
       postcode_extract = re.sub(r'\D', '', postcode)
       comment = "Wrong postcode format. Check it."
-      postcode_cleansed = postcode_extract
-    elif  re.match(r'\d{4}', postcode):
+      postcode_cleansed = postcode_extract.strip()
+    elif re.match(r'\d{4}', postcode):
       postcode_cleansed = postcode
-    else: 
-      comment = 'Wrong postcode format. Check it.'
+  else:
+    comment = 'No postcode found.'
 
   return [postcode_cleansed, comment]
 
@@ -401,28 +401,6 @@ def date_cleansing(date):
 
   return dates_parsed
 
-# def voting_cleansing(data, col_name):
-#   data[f'{col_name} Comment'] = data[f'{col_name} Cleansed'] = np.nan
-
-#   for index, row in data.iterrows():
-#     date = str(row[col_name])
-    
-#     if date != str(np.nan):
-#       dates_parsed = date_cleansing(date)
-
-#       if dates_parsed:
-#         data.at[index, f'{col_name} Cleansed'] = dates_parsed[0]
-#         if len(dates_parsed) > 1:
-#           data.at[index, f'{col_name} Comment'] = ' - '.join([str(date) for date in dates_parsed[1:]])
-#         else:
-#           data.at[index, f'{col_name} Comment'] = np.nan
-#       else:
-#         data.at[index, f'{col_name} Cleansed'] = np.nan
-#         data[f'{col_name} Comment'] = data[f'{col_name} Comment'].astype(object)
-#         data.at[index, f'{col_name} Comment'] = 'Wrong date format. Check it.'
-
-#   return data
-
 def voting_cleansing(date):
   date_cleansed = comment = np.nan
 
@@ -472,7 +450,7 @@ def exists_bestuursperiode(row, roles):
 
 def get_cleansed_data(file, type):
   try:
-    data_cleansed = pd.read_excel(f'output/{type}_cleansed.xlsx')
+    data_cleansed = pd.read_excel(f'output/{type}_cleansed.xlsx', dtype=str)
   except FileNotFoundError:
     data_raw = pd.read_excel(file)
     
