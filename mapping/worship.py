@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import dateparser
 from rdflib import Graph
 from rdflib.namespace import FOAF, XSD, FOAF, SKOS, RDF
+from rdflib.term import _XSD_BOOLEAN
 
 from helper.functions import add_literal, concept_uri, export_data, get_cleansed_data, exists_address, exists_address_role, exists_contact_role, exists_role, exists_bestuursperiode, load_graph, get_concept_id, get_label_role
 import helper.namespaces as ns
@@ -24,17 +25,18 @@ def main(file, mode):
   for _, row in worship_cleansed.iterrows():
     abb_id, abb_uuid = concept_uri(lblod + 'bestuurVanDeEredienst/', str(row['organization_id']))
     g.add((abb_id, RDF.type, ns.ere.BestuurVanDeEredienst))
+    g.add((abb_id, RDF.type, ns.org.Organization))
+    #g.add((abb_id, RDF.type, ns.euro.PublicOrganisation))
     add_literal(g, abb_id, ns.mu.uuid, abb_uuid, XSD.string)
 
     add_literal(g, abb_id, SKOS.prefLabel, str(row['Naam_EB']))
     #add_literal(g, abb_id, ns.rov.legalName, str(row['Naam_EB']))
 
-    #g.add((abb_id, RDFS.subClassOf, ns.org.Organization))
-    #g.add((abb_id, RDFS.subClassOf, ns.euro.PublicOrganisation))
-
     g.add((abb_id, ns.org.classification, bestuurseenheid_classification_id))
 
     add_literal(g, abb_id, ns.ere.typeEredienst, str(row['Type_eredienst Cleansed']))
+
+    add_literal(g, abb_id, ns.ere.grensoverschrijdend, str(row['Grensoverschrijdend']), XSD.boolean)
 
     status = get_concept_id(codelist_ere, str(row['Status_EB Cleansed']))
     g.add((abb_id, ns.rov.orgStatus, status))

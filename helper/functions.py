@@ -284,7 +284,7 @@ def kbo_cleansing(kbo):
       kbo_cleansed = kbo
     elif re.match(r'\d{6,9}', kbo):
       kbo_cleansed = kbo
-      comment = f'only {len(kbo)} digits. Missing some digits?'
+      comment = f'Only {len(kbo)} digits. Missing some digits?'
     else: 
       comment = 'Wrong KBO format. Check it.'
   else :
@@ -415,6 +415,60 @@ def voting_cleansing(date):
       comment = 'Wrong date format. Check it.'
 
   return [date_cleansed, comment]
+
+# final data will be [municipality_name:number]
+def extract_municipality_percentage(data):
+  m_p = re.search(r'[a-zA-Z]+(\-[a-zA-Z]+)*', data).group() + ':'
+
+  if re.search(r'\d+(\,?\d+)?', data):
+    m_p += re.search(r'\d+(\,?\.?\d+)?', data).group().replace(',', '.')
+  
+  return m_p
+
+def remarks_cleansing(row):
+  division = []
+  sl = None
+  info = row['Opmerkingen_EB']
+  cross_border = row['Grensoverschrijdend']
+  
+  if cross_border and info != 'nan':
+    print(info)
+    info = re.sub(r'\ben\b', ';', info)
+    if 'mschrijving' in info:
+      info = re.sub(r'(Zelfbedruipend - )?([gG]ebiedso[p]?mschrijving)', '', info)
+      
+      if ';' in info:
+        sl = info.split(';')
+      elif ', ' in info:
+        sl = info.split(', ')
+      elif ' - ' in info:
+        sl = info.split(' - ')
+      else:
+        sl = info
+    elif 'Gebiedsverdeling' in info:
+      info = re.sub(r'(Vroeger:)?(Gebiedsverdeling:)', '', info)
+      sl = info.split(';')
+    elif 'Verdeelsleutel' in info:
+      info = re.sub(r'(Verdeelsleutel:)', '', info)
+      sl = info.split(', ')
+    else:
+      if ' - ' in info:
+        sl = info.split(' - ')
+      elif ', ' in info:
+        sl = info.split(', ')
+      elif re.search(r'\d+(\,?\d+)?', info):
+        sl = info
+  else:
+    sl = None
+
+  if sl != None:
+    if isinstance(sl, list):
+      for data in sl:
+        division.append(extract_municipality_percentage(data))
+    else:
+      division.append(extract_municipality_percentage(sl))
+    
+  return ';'.join(division)
 
 def exists_contact_org(row):
   return ((str(row['Website Cleansed']) != str(np.nan)) or (str(row['Algemeen telefoonnr']) != str(np.nan)) or (str(row['Algemeen mailadres']) != str(np.nan)))

@@ -3,10 +3,12 @@ import pandas as pd
 import numpy as np
 
 def main(eb):
+  eb['Public Involvement Cleansed'] = pd.Series(eb[['Opmerkingen_EB','Grensoverschrijdend']].astype(str).apply(helper.remarks_cleansing, axis=1).values)
+  
   eb['Status_EB Cleansed'] = pd.Series(eb['Status_EB'].astype(str).apply(helper.status_mapping_worship).values)
 
   eb['Bestuursorgaan Type'] = pd.Series(eb['Type_eredienst_EB'].astype(str).apply(helper.bestuursorgaan_mapping_worship).values)
-  
+
   eb[['Titel Cleansed']] = pd.DataFrame(eb['Titel'].astype(str).apply(helper.space_cleansing).values.tolist())
 
   eb['Gemeente Cleansed'] = eb['Gemeente_EB'].str.strip().str.title().replace('Antwerpen (Deurne', 'Antwerpen (Deurne)')
