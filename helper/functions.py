@@ -427,48 +427,85 @@ def extract_municipality_percentage(data):
 
 def remarks_cleansing(row):
   division = []
-  sl = None
-  info = row['Opmerkingen_EB']
+  sl = np.nan
+  info = row['Opmerkingen_EB'][:]
   cross_border = row['Grensoverschrijdend']
   
   if cross_border and info != 'nan':
-    print(info)
-    info = re.sub(r'\ben\b', ';', info)
-    if 'mschrijving' in info:
-      info = re.sub(r'(Zelfbedruipend - )?([gG]ebiedso[p]?mschrijving)', '', info)
+    info_ = re.sub(r'\ben\b', ';', info)
+    if 'mschrijving' in info_:
+      info_ = re.sub(r'(Zelfbedruipend - )?([gG]ebiedso[p]?mschrijving)', '', info_)
       
-      if ';' in info:
-        sl = info.split(';')
+      if ';' in info_:
+        sl = info_.split(';')
       elif ', ' in info:
-        sl = info.split(', ')
+        sl = info_.split(', ')
       elif ' - ' in info:
-        sl = info.split(' - ')
+        sl = info_.split(' - ')
       else:
-        sl = info
-    elif 'Gebiedsverdeling' in info:
-      info = re.sub(r'(Vroeger:)?(Gebiedsverdeling:)', '', info)
-      sl = info.split(';')
-    elif 'Verdeelsleutel' in info:
-      info = re.sub(r'(Verdeelsleutel:)', '', info)
-      sl = info.split(', ')
+        sl = info_
+    elif 'Gebiedsverdeling' in info_:
+      info_ = re.sub(r'(Vroeger:)?(Gebiedsverdeling:)', '', info_)
+      sl = info_.split(';')
+    elif 'Verdeelsleutel' in info_:
+      info_ = re.sub(r'(Verdeelsleutel:)', '', info_)
+      sl = info_.split(', ')
     else:
-      if ' - ' in info:
-        sl = info.split(' - ')
-      elif ', ' in info:
-        sl = info.split(', ')
-      elif re.search(r'\d+(\,?\d+)?', info):
-        sl = info
-  else:
-    sl = None
-
-  if sl != None:
-    if isinstance(sl, list):
-      for data in sl:
-        division.append(extract_municipality_percentage(data))
-    else:
-      division.append(extract_municipality_percentage(sl))
+      if ' - ' in info_:
+        sl = info_.split(' - ')
+      elif ', ' in info_:
+        sl = info_.split(', ')
+      elif ';' in info_:
+        sl = info_.split(';')
+      elif re.search(r'\d+(\,?\d+)?', info_):
+        sl = info_
+      else:
+        sl = None
+  
+    if sl != None:
+      if isinstance(sl, list):
+        for data in sl:
+          division.append(extract_municipality_percentage(data))
+      else:
+        division.append(extract_municipality_percentage(sl))
     
   return ';'.join(division)
+
+def mapping_change_event_type_worship(status):
+  change_event_dict = {'Erkenningsaanvraag in behandeling': 'Erkenning aangevraagd', 'Niet actief - Samengevoegd (overgenomen)': 'Samenvoeging',
+                        'Operationeel - Samengevoegd (met behoud van naam)': 'Samenvoeging', 'Niet actief - Samengevoegd (nieuwe entiteit)': 'Samenvoeging',
+                        'Operationeel - Samengevoegd (met nieuwe naam)': 'Samenvoeging', 'Niet actief - Erkenning niet toegestaan': 'Erkenning niet toegekend',
+                        'Niet actief - Ingetrokken': 'Erkenning opgeheven'}
+  
+  return [change_event_dict[status]]
+
+def extract_change_event(status_info):
+  result_changes = []
+  matchs = {'Erkend door ': 'Erkenning toegekend', 'Koninklijke erkenning': 'Erkenning toegekend', 'naamswijziging': 'Naamswijziging', 
+            'fusie': 'Samenvoeging', 'ebiedsomschrijving': 'Wijziging Gebiedsomschrijving', 'gebiedsuitbreiding': 'Wijziging Gebiedsomschrijving'
+          }
+  matchs.setdefault('missing_key', '')
+
+  for key, value in matchs.items():
+    if key in status_info:
+      result_changes.append(value)
+  
+  return result_changes
+
+def change_event_cleansing(row):
+  status = row['Status_EB']
+  status_info = row['Statusinfo']
+  change_events = dates = np.nan
+
+  if status == 'Operationeel' or status == 'Operationeel - Intrekkingsaanvraag lopende' or status == 'Operationeel - Samenvoeging lopende':
+    change_events = extract_change_event(status_info)
+    dates = date_cleansing(status_info)
+  else:
+    change_events = mapping_change_event_type_worship(status)
+    dates = date_cleansing(status_info)
+
+  return str(dict(zip(change_events, dates)))
+
 
 def exists_contact_org(row):
   return ((str(row['Website Cleansed']) != str(np.nan)) or (str(row['Algemeen telefoonnr']) != str(np.nan)) or (str(row['Algemeen mailadres']) != str(np.nan)))

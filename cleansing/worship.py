@@ -3,7 +3,9 @@ import pandas as pd
 import numpy as np
 
 def main(eb):
-  eb['Public Involvement Cleansed'] = pd.Series(eb[['Opmerkingen_EB','Grensoverschrijdend']].astype(str).apply(helper.remarks_cleansing, axis=1).values)
+  eb['Public Involvement Cleansed'] = pd.Series(eb[['Opmerkingen_EB','Grensoverschrijdend']].astype({'Opmerkingen_EB': str, 'Grensoverschrijdend': bool}).apply(helper.remarks_cleansing, axis=1).values)
+
+  eb['Change Event Cleansed'] = pd.Series(eb[['Status_EB', 'Statusinfo']].astype(str).apply(helper.change_event_cleansing, axis=1).values)
   
   eb['Status_EB Cleansed'] = pd.Series(eb['Status_EB'].astype(str).apply(helper.status_mapping_worship).values)
 
