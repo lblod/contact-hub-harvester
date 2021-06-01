@@ -3,7 +3,6 @@ from helper.functions import concept_uri
 
 org = Namespace('http://www.w3.org/ns/org#')
 locn = Namespace('http://www.w3.org/ns/locn#')
-dc_terms= Namespace('http://purl.org/dc/terms/')
 schema = Namespace('http://schema.org/')
 rov = Namespace('http://www.w3.org/ns/regorg#')
 person = Namespace('http://www.w3.org/ns/person#')
@@ -21,6 +20,7 @@ mandaat = Namespace('http://data.vlaanderen.be/ns/mandaat#')
 besluit = Namespace('http://data.vlaanderen.be/ns/besluit#')
 lblodlg = Namespace('https://data.lblod.info/vocabularies/leidinggevenden/')
 ere = Namespace('http://data.lblod.info/vocabularies/erediensten/')
+ch = Namespace('http://data.lblod.info/vocabularies/contacthub/')
 mu = Namespace('http://mu.semte.ch/vocabularies/core/')
 
 cs = Namespace('http://data.vlaanderen.be/id/conceptscheme/')

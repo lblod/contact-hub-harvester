@@ -1,10 +1,9 @@
-import pandas as pd
+import json
 import numpy as np
 from datetime import datetime, timedelta
 import dateparser
 from rdflib import Graph
-from rdflib.namespace import FOAF, XSD, FOAF, SKOS, RDF
-from rdflib.term import _XSD_BOOLEAN
+from rdflib.namespace import FOAF, XSD, FOAF, SKOS, RDF, DCTERMS
 
 from helper.functions import add_literal, concept_uri, export_data, get_cleansed_data, exists_address, exists_address_role, exists_contact_role, exists_role, exists_bestuursperiode, load_graph, get_concept_id, get_label_role
 import helper.namespaces as ns
@@ -25,7 +24,7 @@ def main(file, mode):
   for _, row in worship_cleansed.iterrows():
     abb_id, abb_uuid = concept_uri(lblod + 'bestuurVanDeEredienst/', str(row['organization_id']))
     g.add((abb_id, RDF.type, ns.ere.BestuurVanDeEredienst))
-    g.add((abb_id, RDF.type, ns.org.Organization))
+    #g.add((abb_id, RDF.type, ns.org.Organization))
     #g.add((abb_id, RDF.type, ns.euro.PublicOrganisation))
     add_literal(g, abb_id, ns.mu.uuid, abb_uuid, XSD.string)
 
@@ -76,6 +75,29 @@ def main(file, mode):
       g.add((id_class, ns.generiek.gestructureerdeIdentificator, naam_uri))
 
       g.add((abb_id, ns.adms.identifier, id_class))
+
+    if row['Change Event Cleansed'] != '{}':
+      change_events_ = row['Change Event Cleansed']
+      json_acceptable_string = change_events_.replace("'", "\"")
+      change_events = json.loads(json_acceptable_string)
+      
+      for key, value in change_events.items():
+        change_event_id = get_concept_id(codelist_ere, key)
+
+        ce_id, ce_uuid = concept_uri(lblod + 'veranderingsgebeurtenis/', abb_uuid + row['Change Event Cleansed'])
+        g.add((ce_id, RDF.type, ns.org.ChangeEvent))
+        add_literal(g, ce_id, ns.mu.uuid, ce_uuid, XSD.string)
+        g.add((ce_id, ns.ch.typeWijziging, change_event_id))
+        add_literal(g, ce_id, DCTERMS.date, value, XSD.dateTime)
+        add_literal(g, ce_id, DCTERMS.description, row['Statusinfo'], XSD.string)
+        
+        if key == 'Opschorting Erkenning':
+          g.add((ce_id, ns.org.originalOrganization, abb_id))
+          g.add((abb_id, ns.org.changedBy, ce_id))
+        else:
+          g.add((ce_id, ns.org.resultingOrganization, abb_id))
+          g.add((abb_id, ns.org.resultedFrom, ce_id))
+          
 
     # Vestiging
     if exists_address(row):
