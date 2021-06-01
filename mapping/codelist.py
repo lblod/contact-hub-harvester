@@ -4,19 +4,16 @@ from rdflib.namespace import SKOS, RDF
 from helper.functions import concept_uri, export_data
 import helper.namespaces as ns
 
-def create_status_uri(g, mode):
+def create_status_uri(g):
   status_list = ['In oprichting', 'Actief', 'Niet Actief']
-  lblod = ns.get_namespace(mode)
 
-  # status_concept_scheme, uuid = concept_uri(ns.gift + 'concept-schemes/', 'OrganizationStatusCode')
-  status_concept_scheme, uuid = concept_uri(lblod + 'concept-schemes/', 'OrganizationStatusCode')
+  status_concept_scheme, uuid = concept_uri(ns.gift + 'concept-schemes/', 'OrganizationStatusCode')
   g.add((status_concept_scheme, RDF.type, SKOS.ConceptScheme))
   g.add((status_concept_scheme, SKOS.prefLabel, Literal('Organisatie status code')))
   g.add((status_concept_scheme, ns.mu.uuid, Literal(uuid)))
 
   for status in status_list:
-    # concept, uuid = concept_uri(ns.gift + 'concepts/', status)
-    concept, uuid = concept_uri(lblod + 'concepts/', status)
+    concept, uuid = concept_uri(ns.gift + 'concepts/', status)
     g.add((concept, RDF.type, SKOS.Concept))
     g.add((concept, SKOS.prefLabel, Literal(status)))
     g.add((concept, SKOS.topConceptOf, status_concept_scheme))
@@ -57,35 +54,61 @@ def create_bestuursorgaan_ere(g):
     g.add((concept, SKOS.inScheme, ere_bo_concept_scheme))
     g.add((concept, ns.mu.uuid, Literal(uuid)))
 
-def create_change_event_ere(g, mode):
+def create_type_ere(g):
+  type_list = ['Islamitisch', 'Orthodox', 'Protestants', 'Rooms-Katholiek', 'Anglicaans', 'Israëlitisch']
+
+  ere_te_concept_scheme = URIRef(ns.gift + 'TypeEredienst')
+  g.add((ere_te_concept_scheme, RDF.type, SKOS.ConceptScheme))
+  g.add((ere_te_concept_scheme, SKOS.prefLabel, Literal('Type eredienst')))
+
+  for type_ere in type_list:
+    concept, uuid = concept_uri(ns.gift + 'concepts/', type_ere)
+    g.add((concept, RDF.type, SKOS.Concept))
+    g.add((concept, SKOS.prefLabel, Literal(type_ere)))
+    g.add((concept, SKOS.topConceptOf, ere_te_concept_scheme))
+    g.add((concept, SKOS.inScheme, ere_te_concept_scheme))
+    g.add((concept, ns.mu.uuid, Literal(uuid)))
+
+def create_type_helft(g):
+  type_helft_list = ['Kleine helft', 'Grote helft']
+
+  ere_th_concept_scheme = URIRef(ns.gift + 'concepts/', 'helftVerkiezing')
+  g.add((ere_th_concept_scheme, RDF.type, SKOS.ConceptScheme))
+  g.add((ere_th_concept_scheme, SKOS.prefLabel, Literal('Helft verkiezing')))
+
+  for type_helft in type_helft_list:
+    concept, uuid = concept_uri(ns.gift + 'concepts/', type_helft)
+    g.add((concept, RDF.type, SKOS.Concept))
+    g.add((concept, SKOS.prefLabel, Literal(type_helft)))
+    g.add((concept, SKOS.topConceptOf, ere_th_concept_scheme))
+    g.add((concept, SKOS.inScheme, ere_th_concept_scheme))
+    g.add((concept, ns.mu.uuid, Literal(uuid)))
+                                                          
+
+def create_change_event_ere(g):
   change_event_type_list = ['Erkenning aangevraagd', 'Erkenning toegekend', 'Erkenning niet toegekend', 'Samenvoeging', 
                             'Wijziging Gebiedsomschrijving', 'Naamswijziging', 'Erkenning opgeheven', 'Onder sanctieregime',
                             'Opschorting Erkenning']
 
-  lblod = ns.get_namespace(mode)
-
-  # change_event_concept_scheme, uuid = concept_uri(ns.gift + 'concept-schemes/', 'OrganizationStatusCode')
-  change_event_concept_scheme, uuid = concept_uri(lblod + 'concept-schemes/', 'Veranderingsgebeurtenis')
+  change_event_concept_scheme, uuid = concept_uri(ns.gift + 'concept-schemes/', 'Veranderingsgebeurtenis')
   g.add((change_event_concept_scheme, RDF.type, SKOS.ConceptScheme))
   g.add((change_event_concept_scheme, SKOS.prefLabel, Literal('Veranderingsgebeurtenis types')))
   g.add((change_event_concept_scheme, ns.mu.uuid, Literal(uuid)))
 
   for change_event in change_event_type_list:
-    # concept, uuid = concept_uri(ns.gift + 'concepts/', change_event)
-    concept, uuid = concept_uri(lblod + 'concepts/', change_event)
+    concept, uuid = concept_uri(ns.gift + 'concepts/', change_event)
     g.add((concept, RDF.type, SKOS.Concept))
     g.add((concept, SKOS.prefLabel, Literal(change_event)))
     g.add((concept, SKOS.topConceptOf, change_event_concept_scheme))
     g.add((concept, SKOS.inScheme, change_event_concept_scheme))
-    g.add((concept, ns.mu.uuid, Literal(uuid)))  
-
+    g.add((concept, ns.mu.uuid, Literal(uuid)))
 
 def main(mode):
   g = Graph()
 
-  create_status_uri(g, mode)
+  create_status_uri(g)
 
-  create_change_event_ere(g, mode)
+  create_change_event_ere(g)
   
   create_bestuursfuncie_ere(g)
 

@@ -17,6 +17,7 @@ def main(file, mode):
 
   for _, row in national_raw.iterrows():
     abb_id, abb_uuid = concept_uri(lblod + 'representatiefOrgaan/', str(row['representatief orgaan']))
+    g.add((abb_id, RDF.type, ns.org.Organization))
     g.add((abb_id, RDF.type, ns.ere.RepresentatiefOrgaan))
     add_literal(g, abb_id, ns.mu.uuid, abb_uuid, XSD.string)
 
@@ -25,7 +26,8 @@ def main(file, mode):
     #g.add((abb_id, RDFS.subClassOf, ns.org.Organization))
     #g.add((abb_id, RDFS.subClassOf, ns.org.RegisteredOrganization))
     
-    add_literal(g, abb_id, ns.ere.typeEredienst, str(row['Type Eredienst']))
+    type_ere = get_concept_id(codelist_ere, str(row['Type Eredienst']))
+    g.add((abb_id, ns.ere.typeEredienst, type_ere)) 
 
     status = get_concept_id(codelist_ere, str(row['Status']))
     g.add((abb_id, ns.rov.orgStatus, status))
@@ -47,7 +49,7 @@ def main(file, mode):
     g.add((site_id, RDF.type, ns.org.Site))
     add_literal(g, site_id, ns.mu.uuid, site_uuid, XSD.string)
 
-    contact_id, contact_uuid = concept_uri(lblod + 'contactpunt/', str(row['representatief orgaan']) + '1')
+    contact_id, contact_uuid = concept_uri(lblod + 'contact-punten/', str(row['representatief orgaan']) + '1')
     g.add((contact_id, RDF.type, ns.schema.ContactPoint))
     add_literal(g, contact_id, ns.mu.uuid, contact_uuid, XSD.string)
     add_literal(g, contact_id, FOAF.page, str(row['Website']), XSD.anyURI)
@@ -56,14 +58,14 @@ def main(file, mode):
     g.add((site_id, ns.schema.siteAddress, contact_id))
 
     if str(row['Telefoon 2']) != str(np.nan) or str(row['Fax 2']) != str(np.nan):
-      contact_2_id, contact_2_uuid = concept_uri(lblod + 'contactpunt/', str(row['representatief orgaan']) + '2')
+      contact_2_id, contact_2_uuid = concept_uri(lblod + 'contact-punten/', str(row['representatief orgaan']) + '2')
       g.add((contact_2_id, RDF.type, ns.schema.ContactPoint))
       add_literal(g, contact_2_id, ns.mu.uuid, contact_2_uuid, XSD.string)
       add_literal(g, contact_2_id, ns.schema.telephone, str(row['Telefoon 2']), XSD.string)
       add_literal(g, contact_2_id, ns.schema.faxNumber, str(row['Fax 2']), XSD.string)
       g.add((site_id, ns.schema.siteAddress, contact_2_id))
 
-    address_id, address_uuid = concept_uri(lblod + 'adres/', str(row['representatief orgaan']))
+    address_id, address_uuid = concept_uri(lblod + 'adressen/', str(row['representatief orgaan']))
     g.add((address_id, RDF.type, ns.locn.Address))
     add_literal(g, address_id, ns.mu.uuid, address_uuid, XSD.string)
     add_literal(g, address_id, ns.locn.thoroughfare, str(row['Straatnaam']))
@@ -78,7 +80,7 @@ def main(file, mode):
 
     g.add((abb_id, ns.org.hasPrimarySite, site_id))  
 
-    person_id, person_uuid = concept_uri(lblod + 'persoon/', str(row['Voornaam']) + str(row['Achternaam']))
+    person_id, person_uuid = concept_uri(lblod + 'personen/', str(row['Voornaam']) + str(row['Achternaam']))
     g.add((person_id, RDF.type, ns.person.Person))
     add_literal(g, person_id, ns.mu.uuid, person_uuid, XSD.string)
     add_literal(g, person_id, FOAF.givenName, str(row['Voornaam']))

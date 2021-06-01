@@ -47,6 +47,8 @@ def main(eb):
 
   eb[['Tel_voorzitter 1', 'Tel_voorzitter 2', 'Tel_voorzitter Comment']] = pd.DataFrame(eb['Tel_voorzitter_EB'].astype(str).apply(helper.telephone_number_cleansing).values.tolist(), columns=['telephone_number_1', 'telephone_number_2', 'comment'])
 
+  eb['Type Helft Cleansed voorzitter'] = eb['Grote helft/kleine helft voorzitter'].replace('Onbekend', np.nan)
+  
   eb['Naam_penningmeester Cleansed'] = eb['Naam_penningmeester_EB'].replace('<br>', '').str.strip()
 
   eb[['Naam_penningmeester First', 'Naam_penningmeester Last', 'Naam_penningmeester Comment']] = pd.DataFrame(eb['Naam_penningmeester Cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
@@ -57,6 +59,10 @@ def main(eb):
 
   eb[['Tel_penningmeester 1', 'Tel_penningmeester 2', 'Tel_penningmeester Comment']] = pd.DataFrame(eb['Tel_penningmeester_EB'].astype(str).apply(helper.telephone_number_cleansing).values.tolist(), columns=['telephone_number_1', 'telephone_number_2', 'comment'])
 
+  eb['Datum verkiezing penningmeester'] = eb['Datum verkiezing penningmeester'].replace(' ', np.nan)
+
+  eb['Type Helft Cleansed penningmeester'] = eb['Grote helft/kleine helft penningmeester'].replace('Onbekend', np.nan)
+  
   eb['Naam_secretaris Cleansed'] = eb['Naam_secretaris_EB'].replace('<br>', '').str.strip()
   
   eb[['Naam_secretaris First', 'Naam_secretaris Last', 'Naam_secretaris Comment']] = pd.DataFrame(eb['Naam_secretaris Cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
@@ -67,6 +73,8 @@ def main(eb):
 
   eb[['Tel_secretaris 1', 'Tel_secretaris 2', 'Tel_secretaris Comment']] = pd.DataFrame(eb['Tel_secretaris_EB'].astype(str).apply(helper.telephone_number_cleansing).values.tolist(), columns=['telephone_number_1', 'telephone_number_2', 'comment'])
 
+  eb['Type Helft Cleansed secretaris'] = eb['Grote helft/kleine helft secretaris'].replace('Onbekend', np.nan) 
+
   eb['Naam_Lid4 Cleansed'] = eb['Naam_Lid4'].replace('<br>', '').str.strip()
   
   eb[['Naam_Lid4 First', 'Naam_Lid4 Last', 'Naam_Lid4 Comment']] = pd.DataFrame(eb['Naam_Lid4 Cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
@@ -74,11 +82,13 @@ def main(eb):
   eb['Naam_Lid5 Cleansed'] = eb['Naam_Lid5'].replace('<br>', '').str.strip()
   
   eb[['Naam_Lid5 First', 'Naam_Lid5 Last', 'Naam_Lid5 Comment']] = pd.DataFrame(eb['Naam_Lid5 Cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
-  
-  eb['Datum verkiezing penningmeester'] = eb['Datum verkiezing penningmeester'].replace(' ', np.nan)
 
   eb['Datum verkiezing Lid4'] = eb['Datum verkiezing lid 4']
 
+  eb['Type Helft Cleansed Lid4'] = eb['Grote helft/kleine helft lid 4'].replace('Onbekend', np.nan)
+
   eb['Datum verkiezing Lid5'] = eb['Datum verkiezing lid 5']
+
+  eb['Type Helft Cleansed Lid5'] = eb['Grote helft/kleine helft lid 5'].replace('Onbekend', np.nan)
 
   return eb

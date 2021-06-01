@@ -22,23 +22,25 @@ def main(file, mode):
 
   for _, row in central_cleansed.iterrows():    
     abb_id, abb_uuid = concept_uri(lblod + 'centraalBestuurVanDeEredienst/', str(row['Titel']))
+    g.add((abb_id, RDF.type, ns.org.Organization))
+    g.add((abb_id, RDF.type, ns.euro.PublicOrganisation))
+    g.add((abb_id, RDF.type, ns.besluit.Bestuurseenheid))
     g.add((abb_id, RDF.type, ns.ere.CentraalBestuurVanDeEredienst))
     add_literal(g, abb_id, ns.mu.uuid, abb_uuid, XSD.string)
 
     add_literal(g, abb_id, SKOS.prefLabel, str(row['Naam_CKB']))
     #add_literal(g, abb_id, ns.rov.legalName, str(row['Naam_CKB']))
-    
-    #g.add((abb_id, RDFS.subClassOf, ns.org.Organization))
-    #g.add((abb_id, RDFS.subClassOf, ns.euro.PublicOrganisation))
 
     g.add((abb_id, ns.org.classification, bestuurseenheid_classification_id))
 
-    add_literal(g, abb_id, ns.ere.typeEredienst, str(row['Type_eredienst_CKB']))
+    type_ere = get_concept_id(codelist_ere, str(row['Type_eredienst_CKB']))
+    g.add((abb_id, ns.ere.typeEredienst, type_ere))
 
     status = get_concept_id(codelist_ere, str(row['Status_CKB_cleansed']))
     g.add((abb_id, ns.rov.orgStatus, status))
 
     bo_id, bo_uuid = concept_uri(lblod + 'centraleBestuursorgaan/', str(row['Titel']))
+    g.add((bo_id, RDF.type, ns.besluit.Bestuursorgaan))
     g.add((bo_id, RDF.type, ns.ere.CentraleBestuursorgaan))
     add_literal(g, bo_id, ns.mu.uuid, bo_uuid, XSD.string)
 
@@ -79,7 +81,7 @@ def main(file, mode):
       g.add((vestiging_uri, RDF.type, ns.org.Site))
       add_literal(g, vestiging_uri, ns.mu.uuid, vestiging_uuid, XSD.string)
 
-      address_uri, _ = concept_uri(lblod + 'adres/', str(row['Titel']))
+      address_uri, _ = concept_uri(lblod + 'adressen/', str(row['Titel']))
       g.add((address_uri, RDF.type, ns.locn.Address))
       
       add_literal(g, address_uri, ns.locn.thoroughfare, str(row['Straat']))
@@ -98,7 +100,7 @@ def main(file, mode):
     if exists_bestuursperiode(row, roles):    
       # Bestuursorgaan (in bestuursperiode)
 
-      bestuur_temporary_17, bestuur_temporary_17_uuid = concept_uri(lblod + 'bestuursorgaan/', str(row['Titel']) + '2017')
+      bestuur_temporary_17, bestuur_temporary_17_uuid = concept_uri(lblod + 'bestuursorganen/', str(row['Titel']) + '2017')
       g.add((bestuur_temporary_17, RDF.type, ns.besluit.Bestuursorgaan))
       add_literal(g, bestuur_temporary_17, ns.mu.uuid, bestuur_temporary_17_uuid, XSD.string)
       g.add((bestuur_temporary_17, ns.generiek.isTijdspecialisatieVan, bo_id))
@@ -114,7 +116,7 @@ def main(file, mode):
         add_literal(g, bestuur_temporary_17, ns.mandaat.bindingEinde, dateparser.parse(str(row['Opmerkingen_CKB Date'])), XSD.dateTime)
 
       if str(row['Status_CKB_cleansed']) == 'Actief':
-        bestuur_temporary_20, bestuur_temporary_20_uuid = concept_uri(lblod + 'bestuursorgaan/', str(row['Titel']) + '2020')
+        bestuur_temporary_20, bestuur_temporary_20_uuid = concept_uri(lblod + 'bestuursorganen/', str(row['Titel']) + '2020')
         g.add((bestuur_temporary_20, RDF.type, ns.besluit.Bestuursorgaan))
         add_literal(g, bestuur_temporary_20, ns.mu.uuid, bestuur_temporary_20_uuid, XSD.string)
         g.add((bestuur_temporary_20, ns.generiek.isTijdspecialisatieVan, bo_id))
@@ -132,14 +134,14 @@ def main(file, mode):
       for role in roles:
         if exists_role(row, role):
           # Person Role
-          person_role, person_uuid = concept_uri(lblod + 'persoon/', str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']))
+          person_role, person_uuid = concept_uri(lblod + 'personen/', str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']))
           g.add((person_role, RDF.type, ns.person.Person))
           add_literal(g, person_role, ns.mu.uuid, person_uuid, XSD.string)
           add_literal(g, person_role, FOAF.givenName, str(row[f'Naam_{role} First']))
           add_literal(g, person_role, FOAF.familyName, str(row[f'Naam_{role} Last']))
 
           ## Mandaat
-          person_role_mandaat, person_role_mandaat_uuid = concept_uri(lblod + 'mandaat/', str(row['Titel']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']))
+          person_role_mandaat, person_role_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['Titel']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']))
           g.add((person_role_mandaat, RDF.type, ns.mandaat.Mandaat))
           add_literal(g, person_role_mandaat, ns.mu.uuid, person_role_mandaat_uuid, XSD.string)
 
@@ -154,13 +156,14 @@ def main(file, mode):
             g.add((bestuur_temporary_17, ns.org.hasPost, person_role_mandaat))
 
           ## Mandataris
-          person_role_mandataris, person_role_mandataris_uuid = concept_uri(lblod + 'mandataris/', str(row['Titel'] + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']) + role))
-          g.add((person_role_mandataris, RDF.type, ns.mandaat.EredienstMandataris))
+          person_role_mandataris, person_role_mandataris_uuid = concept_uri(lblod + 'mandatarissen/', str(row['Titel'] + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']) + role))
+          g.add((person_role_mandataris, RDF.type, ns.mandaat.Mandataris))
+          g.add((person_role_mandataris, RDF.type, ns.ere.EredienstMandataris))
           add_literal(g, person_role_mandataris, ns.mu.uuid, person_role_mandataris_uuid, XSD.string)
 
           ## Mandataris - Contact punt
           if exists_contact_role(row, role):
-            person_role_contact_uri, person_role_contact_uuid = concept_uri(lblod + 'contactpunt/', str(row['Titel']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']) + str(row[f'Tel_{role} 1']))
+            person_role_contact_uri, person_role_contact_uuid = concept_uri(lblod + 'contact-punten/', str(row['Titel']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']) + str(row[f'Tel_{role} 1']))
             g.add((person_role_contact_uri, RDF.type, ns.schema.ContactPoint))
             add_literal(g, person_role_contact_uri, ns.mu.uuid, person_role_contact_uuid, XSD.string)
             g.add((person_role_mandataris, ns.schema.contactPoint, person_role_contact_uri))
@@ -169,7 +172,7 @@ def main(file, mode):
             add_literal(g, person_role_contact_uri, ns.schema.email, str(row[f'Mail_{role} Cleansed']), XSD.string)
           
             if str(row[f'Tel_{role} 2']) != str(np.nan):
-              person_role_contact_2_uri, person_role_contact_2_uuid = concept_uri(lblod + 'contactpunt/', str(row['Titel']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']) + str(row[f'Tel_{role} 2']))
+              person_role_contact_2_uri, person_role_contact_2_uuid = concept_uri(lblod + 'contact-punten/', str(row['Titel']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']) + str(row[f'Tel_{role} 2']))
               g.add((person_role_contact_2_uri, RDF.type, ns.schema.ContactPoint))
               add_literal(g, person_role_contact_2_uri, ns.mu.uuid, person_role_contact_2_uuid, XSD.string)
               
