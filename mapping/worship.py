@@ -2,7 +2,6 @@ import json
 import numpy as np
 from datetime import datetime, timedelta
 import dateparser
-from numpy.lib.function_base import _CORE_DIMENSION_LIST
 from rdflib import Graph
 from rdflib.namespace import FOAF, XSD, FOAF, SKOS, RDF, DCTERMS
 
@@ -23,9 +22,8 @@ def main(file, mode):
   print("########### Mapping started #############")
 
   for _, row in worship_cleansed.iterrows():
-    abb_id, abb_uuid = concept_uri(lblod + 'bestuurVanDeEredienst/', str(row['organization_id']))
+    abb_id, abb_uuid = concept_uri(lblod + 'besturenVanDeEredienst/', str(row['organization_id']))
     g.add((abb_id, RDF.type, ns.org.Organization))
-    g.add((abb_id, RDF.type, ns.euro.PublicOrganisation))
     g.add((abb_id, RDF.type, ns.besluit.Bestuurseenheid))
     g.add((abb_id, RDF.type, ns.ere.BestuurVanDeEredienst))
     
@@ -36,18 +34,19 @@ def main(file, mode):
 
     g.add((abb_id, ns.org.classification, bestuurseenheid_classification_id))
 
-    type_ere = get_concept_id(codelist_ere, str(row['Type_eredienst Cleansed']))
-    g.add((abb_id, ns.ere.typeEredienst, type_ere))    
+    if str(row['Type_eredienst Cleansed']) != str(np.nan):
+      type_ere = get_concept_id(codelist_ere, str(row['Type_eredienst Cleansed']))
+      g.add((abb_id, ns.ere.typeEredienst, type_ere))    
 
     add_literal(g, abb_id, ns.ere.grensoverschrijdend, str(row['Grensoverschrijdend']), XSD.boolean)
 
     status = get_concept_id(codelist_ere, str(row['Status_EB Cleansed']))
     g.add((abb_id, ns.rov.orgStatus, status))
 
-    ckb_id, _ = concept_uri(ns.lblod + 'centraalBestuurVanDeEredienst/', str(row['Naam_CKB_EB1']))
+    ckb_id, _ = concept_uri(lblod + 'centraalBestuurVanDeEredienst/', str(row['Naam_CKB_EB1']))
     g.add((abb_id, ns.org.linkedTo, ckb_id))
 
-    bo_id, bo_uuid = concept_uri(lblod + 'eredienstbestuursorgaan/', str(row['organization_id']))
+    bo_id, bo_uuid = concept_uri(lblod + 'bestuursorganenVanDeBesturenVanDeEredienst/', str(row['organization_id']) + 'bestuursorganenVanDeBesturenVanDeEredienst')
     g.add((bo_id, RDF.type, ns.besluit.Bestuursorgaan))
     g.add((bo_id, RDF.type, ns.ere.Eredienstbestuursorgaan))
     add_literal(g, bo_id, ns.mu.uuid, bo_uuid, XSD.string)
@@ -59,26 +58,28 @@ def main(file, mode):
     g.add((bo_id, ns.besluit.bestuurt, abb_id))    
     
     if str(row['KBO_EB Cleansed']) != str(np.nan):
-      id_class, id_uuid = concept_uri(lblod +'identificator/', str(row['KBO_EB Cleansed']))
+      id_class, id_uuid = concept_uri(lblod +'identificatoren/', str(row['KBO_EB Cleansed']) + 'identificatoren')
       g.add((id_class, RDF.type, ns.adms.Identifier))
       add_literal(g, id_class, SKOS.notation, 'KBO nummer', XSD.string)
       add_literal(g, id_class, ns.mu.uuid, id_uuid, XSD.string)
 
-      kbo_id, _ = concept_uri(lblod + 'gestructureerdeIdentificator/', str(row['KBO_EB Cleansed']))
+      kbo_id, kbo_uuid = concept_uri(lblod + 'gestructureerdeIdentificatoren/', str(row['KBO_EB Cleansed']) + 'gestructureerdeIdentificatoren')
       g.add((kbo_id, RDF.type, ns.generiek.GestructureerdeIdentificator))
+      add_literal(g, kbo_id, ns.mu.uuid, kbo_uuid, XSD.string)
       add_literal(g, kbo_id, ns.generiek.lokaleIdentificator, str(row['KBO_EB Cleansed']), XSD.string)
       g.add((id_class, ns.generiek.gestructureerdeIdentificator, kbo_id))
 
       g.add((abb_id, ns.adms.identifier, id_class))
 
     if str(row['Titel Cleansed']) != str(np.nan):
-      id_class, id_uuid = concept_uri(lblod +'identificator/', str(row['Titel Cleansed']))
+      id_class, id_uuid = concept_uri(lblod +'identificatoren/', str(row['Titel Cleansed']) + 'identificatoren')
       g.add((id_class, RDF.type, ns.adms.Identifier))
       add_literal(g, id_class, SKOS.notation, 'SharePoint identificator', XSD.string)
       add_literal(g, id_class, ns.mu.uuid, id_uuid, XSD.string)
 
-      naam_uri, _ = concept_uri(lblod + 'gestructureerdeIdentificator/', str(row['Titel Cleansed']))
+      naam_uri, naam_uuid = concept_uri(lblod + 'gestructureerdeIdentificator/', str(row['Titel Cleansed']) + 'gestructureerdeIdentificator')
       g.add((naam_uri, RDF.type, ns.generiek.GestructureerdeIdentificator))
+      add_literal(g, naam_uri, ns.mu.uuid, naam_uuid, XSD.string)
       add_literal(g, naam_uri, ns.generiek.lokaleIdentificator, str(row['Titel Cleansed']), XSD.string)
       g.add((id_class, ns.generiek.gestructureerdeIdentificator, naam_uri))
 
@@ -92,7 +93,7 @@ def main(file, mode):
       for key, value in change_events.items():
         change_event_id = get_concept_id(codelist_ere, key)
 
-        ce_id, ce_uuid = concept_uri(lblod + 'veranderingsgebeurtenis/', abb_uuid + row['Change Event Cleansed'])
+        ce_id, ce_uuid = concept_uri(lblod + 'veranderingsgebeurtenissen/', abb_uuid + row['Change Event Cleansed'])
         g.add((ce_id, RDF.type, ns.org.ChangeEvent))
         add_literal(g, ce_id, ns.mu.uuid, ce_uuid, XSD.string)
         g.add((ce_id, ns.ch.typeWijziging, change_event_id))
@@ -108,11 +109,11 @@ def main(file, mode):
           
     # Vestiging
     if exists_address(row):
-      site_id, site_uuid = concept_uri(lblod + 'vestiging/', str(row['organization_id']))
+      site_id, site_uuid = concept_uri(lblod + 'Vestigingen/', str(row['organization_id']) + 'Vestigingen')
       g.add((site_id, RDF.type, ns.org.Site))
       add_literal(g, site_id, ns.mu.uuid, site_uuid, XSD.string)
 
-      address_id, _ = concept_uri(lblod + 'adressen/', str(row['organization_id']))
+      address_id, _ = concept_uri(lblod + 'adressen/', str(row['organization_id']) + 'adressen')
       g.add((address_id, RDF.type, ns.locn.Address))
       
       add_literal(g, address_id, ns.locn.thoroughfare, str(row['Straat']))
@@ -132,7 +133,7 @@ def main(file, mode):
     if exists_bestuursperiode(row, roles+roles_lid):
       # Bestuursorgaan (in bestuursperiode)
       
-      bestuur_temporary_17, bestuur_temporary_17_uuid = concept_uri(lblod + 'bestuursorganen/', str(row['organization_id']) + '2017')
+      bestuur_temporary_17, bestuur_temporary_17_uuid = concept_uri(lblod + 'bestuursorganenVanDeBesturenVanDeEredienst/', str(row['organization_id']) + 'bestuursorganenVanDeBesturenVanDeEredienst/2017')
       g.add((bestuur_temporary_17, RDF.type, ns.besluit.Bestuursorgaan))
       add_literal(g, bestuur_temporary_17, ns.mu.uuid, bestuur_temporary_17_uuid, XSD.string)
       g.add((bestuur_temporary_17, ns.generiek.isTijdspecialisatieVan, bo_id))
@@ -146,7 +147,7 @@ def main(file, mode):
         add_literal(g, bestuur_temporary_17, ns.mandaat.bindingEinde, (dateparser.parse(str(row['Verkiezingen17_Opmerkingen Cleansed'])) + timedelta(days=1095)).isoformat(), XSD.dateTime)
 
       if str(row['Status_EB Cleansed']) == 'Actief':
-        bestuur_temporary_20, bestuur_temporary_20_uuid = concept_uri(lblod + 'bestuursorganen/', str(row['organization_id']) + '2020')
+        bestuur_temporary_20, bestuur_temporary_20_uuid = concept_uri(lblod + 'bestuursorganenVanDeBesturenVanDeEredienst/', str(row['organization_id']) + 'bestuursorganenVanDeBesturenVanDeEredienst/2020')
         g.add((bestuur_temporary_20, RDF.type, ns.besluit.Bestuursorgaan))
         add_literal(g, bestuur_temporary_20, ns.mu.uuid, bestuur_temporary_20_uuid, XSD.string)
         g.add((bestuur_temporary_20, ns.generiek.isTijdspecialisatieVan, bo_id))
@@ -169,23 +170,29 @@ def main(file, mode):
           add_literal(g, person_role, ns.mu.uuid, person_uuid, XSD.string)
           add_literal(g, person_role, FOAF.givenName, str(row[f'Naam_{role} First']))
           add_literal(g, person_role, FOAF.familyName, str(row[f'Naam_{role} Last']))
-          
-          ## Role - Mandaat
-          person_role_mandaat, person_role_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + role)
-          g.add((person_role_mandaat, RDF.type, ns.mandaat.Mandaat))
-          add_literal(g, person_role_mandaat, ns.mu.uuid, person_role_mandaat_uuid, XSD.string)
 
-          bestuurfunctie_id = get_concept_id(codelist_ere, get_label_role(role + ' worship'))
-          g.add((person_role_mandaat, ns.org.role, bestuurfunctie_id))
+          
 
           if str(row[f'Datum verkiezing {role}']) != 'NaT':
             year_election = dateparser.parse(str(row[f'Datum verkiezing {role}'])).year
-            if year_election >= 2017 and year_election <= 2019:
+            person_role_mandaat = None
+
+            if year_election <= 2019:
+              person_role_mandaat, person_role_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'bestuursorganenVanDeBesturenVanDeEredienst/2017' + role)
               g.add((person_role_mandaat, ns.org.postIn, bestuur_temporary_17))
               g.add((bestuur_temporary_17, ns.org.hasPost, person_role_mandaat)) 
             else:
+              person_role_mandaat, person_role_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'bestuursorganenVanDeBesturenVanDeEredienst/2020' + role)
               g.add((person_role_mandaat, ns.org.postIn, bestuur_temporary_20))
               g.add((bestuur_temporary_20, ns.org.hasPost, person_role_mandaat)) 
+
+            if person_role_mandaat != None:
+              ## Role - Mandaat
+              g.add((person_role_mandaat, RDF.type, ns.mandaat.Mandaat))
+              add_literal(g, person_role_mandaat, ns.mu.uuid, person_role_mandaat_uuid, XSD.string)
+
+              bestuurfunctie_id = get_concept_id(codelist_ere, get_label_role(role + ' worship'))
+              g.add((person_role_mandaat, ns.org.role, bestuurfunctie_id))
 
           ## Role - Mandataris
           person_role_mandataris, person_role_mandataris_uuid = concept_uri(lblod + 'mandatarissen/', str(row['organization_id']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']) + role)
@@ -195,7 +202,7 @@ def main(file, mode):
 
           ### Mandataris - Contact punt
           if exists_contact_role(row, role):
-            person_role_contact_uri, person_role_contact_uuid = concept_uri(lblod + 'contact-punten/', str(row['organization_id']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']) + str(row[f'Tel_{role} 1']))
+            person_role_contact_uri, person_role_contact_uuid = concept_uri(lblod + 'contact-punten/', str(row['organization_id']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']) + role + str(row[f'Tel_{role} 1']))
             g.add((person_role_contact_uri, RDF.type, ns.schema.ContactPoint))
             add_literal(g, person_role_contact_uri, ns.mu.uuid, person_role_contact_uuid, XSD.string)
             g.add((person_role_mandataris, ns.schema.contactPoint, person_role_contact_uri))
@@ -204,7 +211,7 @@ def main(file, mode):
             add_literal(g, person_role_contact_uri, ns.schema.email, str(row[f'Mail_{role} Cleansed']), XSD.string)
 
             if str(row[f'Tel_{role} 2']) != str(np.nan):
-              person_role_contact_2_uri, person_role_contact_2_uuid = concept_uri(lblod + 'contact-punten/', str(row['organization_id']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']) + str(row[f'Tel_{role} 2']))
+              person_role_contact_2_uri, person_role_contact_2_uuid = concept_uri(lblod + 'contact-punten/', str(row['organization_id']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']) + role + str(row[f'Tel_{role} 2']))
               g.add((person_role_contact_2_uri, RDF.type, ns.schema.ContactPoint))
               add_literal(g, person_role_contact_2_uri, ns.mu.uuid, person_role_contact_2_uuid, XSD.string)
 
@@ -213,7 +220,7 @@ def main(file, mode):
 
             ### Role - Adres
             if exists_address_role(row, role):
-              person_role_address_id, person_role_address_uuid = concept_uri(lblod + 'adressen/', str(row['organization_id']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last'] + role)) 
+              person_role_address_id, person_role_address_uuid = concept_uri(lblod + 'adressen/', str(row['organization_id']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last'] + role + 'adressen')) 
               g.add((person_role_address_id, RDF.type, ns.locn.Address))
               add_literal(g, person_role_address_id, ns.mu.uuid, person_role_address_uuid, XSD.string)
 
@@ -243,40 +250,41 @@ def main(file, mode):
           add_literal(g, lid, FOAF.familyName, str(row[f'Naam_{role} Last']))
 
           ## Lid - Mandaat
-          lid_mandaat, lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'Lid')
-          g.add((lid_mandaat, RDF.type, ns.mandaat.Mandaat))
-          add_literal(g, lid_mandaat, ns.mu.uuid, lid_mandaat_uuid, XSD.string)
-
-          bestuurfunctie_id = get_concept_id(codelist_ere, get_label_role(role[:-1].lower() + ' worship'))
-          g.add((lid_mandaat, ns.org.role, bestuurfunctie_id))
-
           if str(row[f'Datum verkiezing {role}']) != 'NaT':
             year_election = dateparser.parse(str(row[f'Datum verkiezing {role}'])).year
-          if year_election >= 2017 and year_election <= 2019:
-            g.add((lid_mandaat, ns.org.postIn, bestuur_temporary_17))
-            g.add((bestuur_temporary_17, ns.org.hasPost, lid_mandaat)) 
-          else:
-            g.add((person_role_mandaat, ns.org.postIn, bestuur_temporary_20))
-            g.add((bestuur_temporary_20, ns.org.hasPost, person_role_mandaat)) 
+            lid_mandaat = None
+            if year_election <= 2019:
+              lid_mandaat, lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'bestuursorganen/2017/Lid' ) 
+              g.add((lid_mandaat, ns.org.postIn, bestuur_temporary_17))
+              g.add((bestuur_temporary_17, ns.org.hasPost, lid_mandaat)) 
+            else:
+              lid_mandaat, lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'bestuursorganen/2020/Lid' )
+              g.add((person_role_mandaat, ns.org.postIn, bestuur_temporary_20))
+              g.add((bestuur_temporary_20, ns.org.hasPost, person_role_mandaat)) 
+            
+            if lid_mandaat != None:
+              g.add((lid_mandaat, RDF.type, ns.mandaat.Mandaat))
+              add_literal(g, lid_mandaat, ns.mu.uuid, lid_mandaat_uuid, XSD.string)
+
+              bestuurfunctie_id = get_concept_id(codelist_ere, get_label_role(role[:-1].lower() + ' worship'))
+              g.add((lid_mandaat, ns.org.role, bestuurfunctie_id))
 
           ## Lid - Mandataris
           lid_mandataris, lid_mandataris_uuid = concept_uri(lblod + 'mandatarissen/', str(row['organization_id']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']) + role)
           g.add((lid_mandataris, RDF.type, ns.mandaat.Mandataris))
+          g.add((lid_mandataris, RDF.type, ns.ere.EredienstMandataris))
           add_literal(g, lid_mandataris, ns.mu.uuid, lid_mandataris_uuid, XSD.string)
 
           g.add((lid_mandataris, ns.mandaat.isBestuurlijkeAliasVan, lid))
           g.add((lid_mandataris, ns.org.holds, lid_mandaat))
 
-          type_half = get_concept_id(codelist_ere, str(row[f'Type Helft Cleansed {role}']))
-          g.add((lid_mandataris, ns.ere.typeHelft, type_half))
+          if str(row[f'Type Helft Cleansed {role}']) != str(np.nan):
+            type_half = get_concept_id(codelist_ere, str(row[f'Type Helft Cleansed {role}']))
+            g.add((lid_mandataris, ns.ere.typeHelft, type_half))
 
           if str(row[f'Datum verkiezing {role}']) != 'NaT':
             add_literal(g, lid_mandataris, ns.mandaat.start, dateparser.parse(str(row[f'Datum verkiezing {role}'])).isoformat(), XSD.dateTime)
-
-            if str(row[f'Type Helft Cleansed {role}']) == 'Kleine helft':
-              add_literal(g, person_role_mandataris, ns.ere.geplandeEinddatumAanstelling, (dateparser.parse(str(row[f'Datum verkiezing {role}'])) + timedelta(days=1095)).isoformat(), XSD.dateTime)
-            else:
-              add_literal(g, person_role_mandataris, ns.ere.geplandeEinddatumAanstelling, (dateparser.parse(str(row[f'Datum verkiezing {role}'])) + timedelta(days=2190)).isoformat(), XSD.dateTime)
+            add_literal(g, person_role_mandataris, ns.ere.geplandeEinddatumAanstelling, (dateparser.parse(str(row[f'Datum verkiezing {role}'])) + timedelta(days=2190)).isoformat(), XSD.dateTime)
 
           g.add((lid_mandaat, ns.org.heldBy, lid_mandataris))
           g.add((lid, ns.mandaat.isAangesteldAls, lid_mandataris))

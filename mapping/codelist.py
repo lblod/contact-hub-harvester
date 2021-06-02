@@ -57,9 +57,10 @@ def create_bestuursorgaan_ere(g):
 def create_type_ere(g):
   type_list = ['Islamitisch', 'Orthodox', 'Protestants', 'Rooms-Katholiek', 'Anglicaans', 'Israëlitisch']
 
-  ere_te_concept_scheme = URIRef(ns.gift + 'TypeEredienst')
+  ere_te_concept_scheme, ere_te_uuid = concept_uri(ns.gift + 'concept-schemes/', 'TypeEredienst')
   g.add((ere_te_concept_scheme, RDF.type, SKOS.ConceptScheme))
   g.add((ere_te_concept_scheme, SKOS.prefLabel, Literal('Type eredienst')))
+  g.add((ere_te_concept_scheme, ns.mu.uuid, Literal(ere_te_uuid)))
 
   for type_ere in type_list:
     concept, uuid = concept_uri(ns.gift + 'concepts/', type_ere)
@@ -72,9 +73,10 @@ def create_type_ere(g):
 def create_type_helft(g):
   type_helft_list = ['Kleine helft', 'Grote helft']
 
-  ere_th_concept_scheme = URIRef(ns.gift + 'concepts/', 'helftVerkiezing')
+  ere_th_concept_scheme, ere_th_uuid = concept_uri(ns.gift + 'concept-schemes/', 'helftVerkiezing')
   g.add((ere_th_concept_scheme, RDF.type, SKOS.ConceptScheme))
   g.add((ere_th_concept_scheme, SKOS.prefLabel, Literal('Helft verkiezing')))
+  g.add((ere_th_concept_scheme, ns.mu.uuid, Literal(ere_th_uuid)))
 
   for type_helft in type_helft_list:
     concept, uuid = concept_uri(ns.gift + 'concepts/', type_helft)
@@ -103,7 +105,7 @@ def create_change_event_ere(g):
     g.add((concept, SKOS.inScheme, change_event_concept_scheme))
     g.add((concept, ns.mu.uuid, Literal(uuid)))
 
-def main(mode):
+def main():
   g = Graph()
 
   create_status_uri(g)
@@ -113,6 +115,10 @@ def main(mode):
   create_bestuursfuncie_ere(g)
 
   create_bestuursorgaan_ere(g)
+
+  create_type_ere(g)
+
+  create_type_helft(g)
 
   export_data(g, 'codelist-ere')
 
