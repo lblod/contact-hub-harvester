@@ -113,8 +113,9 @@ def main(file, mode):
       g.add((site_id, RDF.type, ns.org.Site))
       add_literal(g, site_id, ns.mu.uuid, site_uuid, XSD.string)
 
-      address_id, _ = concept_uri(lblod + 'adressen/', str(row['organization_id']) + 'adressen')
+      address_id, address_uuid = concept_uri(lblod + 'adressen/', str(row['organization_id']) + 'adressen')
       g.add((address_id, RDF.type, ns.locn.Address))
+      add_literal(g, address_id, ns.mu.uuid, address_uuid, XSD.string)
       
       add_literal(g, address_id, ns.locn.thoroughfare, str(row['Straat']))
       add_literal(g, address_id, ns.adres['Adresvoorstelling.huisnummer'], str(row['Huisnr Cleansed']), XSD.string)
