@@ -3,7 +3,7 @@ import numpy as np
 from datetime import datetime, timedelta
 import dateparser
 from rdflib import Graph
-from rdflib.namespace import FOAF, XSD, FOAF, SKOS, RDF, DCTERMS
+from rdflib.namespace import FOAF, XSD, FOAF, SKOS, RDF, RDFS, DCTERMS
 
 from helper.functions import add_literal, concept_uri, export_data, get_cleansed_data, exists_address, exists_address_role, exists_contact_role, exists_role, exists_bestuursperiode, load_graph, get_concept_id, get_label_role
 import helper.namespaces as ns
@@ -43,6 +43,18 @@ def main(file, mode):
     status = get_concept_id(codelist_ere, str(row['Status_EB Cleansed']))
     g.add((abb_id, ns.rov.orgStatus, status))
 
+    gemeente_id, gemeente_uuid = concept_uri(lblod + 'werkingsgebieden/', str(row['Gemeente Cleansed']))
+    g.add((gemeente_id, RDF.type, ns.prov.Location))
+    add_literal(g, gemeente_id, ns.mu.uuid, gemeente_uuid, XSD.string)
+    add_literal(g, gemeente_id, RDFS.label, str(row['Gemeente Cleansed']))
+    g.add((abb_id, ns.besluit.werkingsgebied, gemeente_id))
+
+    province_id, province_uuid = concept_uri(lblod + 'werkingsgebieden/', str(row['Provincie Cleansed']))
+    g.add((province_id, RDF.type, ns.prov.Location))
+    add_literal(g, province_id, ns.mu.uuid, province_uuid, XSD.string)
+    add_literal(g, province_id, RDFS.label, str(row['Provincie Cleansed']))
+    g.add((abb_id, ns.vcard.hasRegion, province_id))
+    
     ckb_id, _ = concept_uri(lblod + 'centraalBestuurVanDeEredienst/', str(row['Naam_CKB_EB1']))
     g.add((abb_id, ns.org.linkedTo, ckb_id))
 
@@ -109,7 +121,7 @@ def main(file, mode):
           
     # Vestiging
     if exists_address(row):
-      site_id, site_uuid = concept_uri(lblod + 'Vestigingen/', str(row['organization_id']) + 'Vestigingen')
+      site_id, site_uuid = concept_uri(lblod + 'vestigingen/', str(row['organization_id']) + 'Vestigingen')
       g.add((site_id, RDF.type, ns.org.Site))
       add_literal(g, site_id, ns.mu.uuid, site_uuid, XSD.string)
 
@@ -124,6 +136,7 @@ def main(file, mode):
       add_literal(g, address_id, ns.adres.gemeentenaam, str(row['Gemeente Cleansed']), XSD.string)
       add_literal(g, address_id, ns.locn.adminUnitL2, str(row['Provincie Cleansed']))
       add_literal(g, address_id, ns.adres.land, 'België')
+      add_literal(g, address_id, ns.locn.fullAddress, str(row['Straat']) + ' ' + str(row['Huisnr Cleansed']) + ' ' + str(row['Busnummer Cleansed']) + ', ' + str(row['Postcode Cleansed']) + ' ' + str(row['Gemeente Cleansed']))
 
       g.add((site_id, ns.organisatie.bestaatUit, address_id))
       g.add((abb_id, ns.org.hasPrimarySite, site_id))
@@ -171,8 +184,6 @@ def main(file, mode):
           add_literal(g, person_role, ns.mu.uuid, person_uuid, XSD.string)
           add_literal(g, person_role, FOAF.givenName, str(row[f'Naam_{role} First']))
           add_literal(g, person_role, FOAF.familyName, str(row[f'Naam_{role} Last']))
-
-          
 
           if str(row[f'Datum verkiezing {role}']) != 'NaT':
             year_election = dateparser.parse(str(row[f'Datum verkiezing {role}'])).year

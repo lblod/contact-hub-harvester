@@ -55,8 +55,9 @@ def main(file, mode):
       add_literal(g, id_class, SKOS.notation, 'KBO nummer', XSD.string)
       add_literal(g, id_class, ns.mu.uuid, id_uuid, XSD.string)
 
-      kbo_uri, _  = concept_uri(lblod + 'gestructureerdeIdentificator/', str(row['KBO_CKB_cleansed']))
+      kbo_uri, kbo_uuid  = concept_uri(lblod + 'gestructureerdeIdentificator/', str(row['KBO_CKB_cleansed']))
       g.add((kbo_uri, RDF.type, ns.generiek.GestructureerdeIdentificator))
+      add_literal(g, kbo_uri, ns.mu.uuid, kbo_uuid, XSD.string)
       add_literal(g, kbo_uri, ns.generiek.lokaleIdentificator, str(row['KBO_CKB_cleansed']), XSD.string)
       g.add((id_class, ns.generiek.gestructureerdeIdentificator, kbo_uri))
 
@@ -68,8 +69,9 @@ def main(file, mode):
       add_literal(g, id_class, SKOS.notation, 'SharePoint identificator', XSD.string)
       add_literal(g, id_class, ns.mu.uuid, id_uuid, XSD.string)
 
-      naam_uri, _ = concept_uri(lblod + 'gestructureerdeIdentificator/', str(row['Titel']))
+      naam_uri, naam_uuid = concept_uri(lblod + 'gestructureerdeIdentificator/', str(row['Titel']))
       g.add((naam_uri, RDF.type, ns.generiek.GestructureerdeIdentificator))
+      add_literal(naam_uri, ns.mu.uuid, naam_uuid, XSD.string)
       add_literal(g, naam_uri, ns.generiek.lokaleIdentificator, str(row['Titel']), XSD.string)
       g.add((id_class, ns.generiek.gestructureerdeIdentificator, naam_uri))
 
@@ -81,8 +83,9 @@ def main(file, mode):
       g.add((vestiging_uri, RDF.type, ns.org.Site))
       add_literal(g, vestiging_uri, ns.mu.uuid, vestiging_uuid, XSD.string)
 
-      address_uri, _ = concept_uri(lblod + 'adressen/', str(row['Titel']))
+      address_uri, address_uuid = concept_uri(lblod + 'adressen/', str(row['Titel']))
       g.add((address_uri, RDF.type, ns.locn.Address))
+      add_literal(g, address_uri, ns.mu.uuid, address_uuid, XSD.string)
       
       add_literal(g, address_uri, ns.locn.thoroughfare, str(row['Straat']))
       add_literal(g, address_uri, ns.adres['Adresvoorstelling.huisnummer'], str(row['Huisnr Cleansed']), XSD.string)
