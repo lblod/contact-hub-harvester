@@ -58,9 +58,8 @@ def main(file, mode):
     ckb_id, _ = concept_uri(lblod + 'centraalBestuurVanDeEredienst/', str(row['Naam_CKB_EB1']))
     g.add((abb_id, ns.org.linkedTo, ckb_id))
 
-    bo_id, bo_uuid = concept_uri(lblod + 'bestuursorganenVanDeBesturenVanDeEredienst/', str(row['organization_id']) + 'bestuursorganenVanDeBesturenVanDeEredienst')
+    bo_id, bo_uuid = concept_uri(lblod + 'eredienstbestuursorganen/', str(row['organization_id']) + 'eredienstbestuursorganen')
     g.add((bo_id, RDF.type, ns.besluit.Bestuursorgaan))
-    g.add((bo_id, RDF.type, ns.ere.Eredienstbestuursorgaan))
     add_literal(g, bo_id, ns.mu.uuid, bo_uuid, XSD.string)
 
     if str(row['Bestuursorgaan Type']) != str(np.nan):
@@ -147,7 +146,7 @@ def main(file, mode):
     if exists_bestuursperiode(row, roles+roles_lid):
       # Bestuursorgaan (in bestuursperiode)
       
-      bestuur_temporary_17, bestuur_temporary_17_uuid = concept_uri(lblod + 'bestuursorganenVanDeBesturenVanDeEredienst/', str(row['organization_id']) + 'bestuursorganenVanDeBesturenVanDeEredienst/2017')
+      bestuur_temporary_17, bestuur_temporary_17_uuid = concept_uri(lblod + 'eredienstbestuursorganen/', str(row['organization_id']) + 'eredienstbestuursorganen/2017')
       g.add((bestuur_temporary_17, RDF.type, ns.besluit.Bestuursorgaan))
       add_literal(g, bestuur_temporary_17, ns.mu.uuid, bestuur_temporary_17_uuid, XSD.string)
       g.add((bestuur_temporary_17, ns.generiek.isTijdspecialisatieVan, bo_id))
@@ -161,7 +160,7 @@ def main(file, mode):
         add_literal(g, bestuur_temporary_17, ns.mandaat.bindingEinde, (dateparser.parse(str(row['Verkiezingen17_Opmerkingen Cleansed'])) + timedelta(days=1095)).isoformat(), XSD.dateTime)
 
       if str(row['Status_EB Cleansed']) == 'Actief':
-        bestuur_temporary_20, bestuur_temporary_20_uuid = concept_uri(lblod + 'bestuursorganenVanDeBesturenVanDeEredienst/', str(row['organization_id']) + 'bestuursorganenVanDeBesturenVanDeEredienst/2020')
+        bestuur_temporary_20, bestuur_temporary_20_uuid = concept_uri(lblod + 'eredienstbestuursorganen/', str(row['organization_id']) + 'eredienstbestuursorganen/2020')
         g.add((bestuur_temporary_20, RDF.type, ns.besluit.Bestuursorgaan))
         add_literal(g, bestuur_temporary_20, ns.mu.uuid, bestuur_temporary_20_uuid, XSD.string)
         g.add((bestuur_temporary_20, ns.generiek.isTijdspecialisatieVan, bo_id))

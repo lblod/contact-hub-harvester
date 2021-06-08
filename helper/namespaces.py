@@ -10,6 +10,7 @@ vcard = Namespace('http://www.w3.org/2006/vcard/ns#')
 dbpedia = Namespace('http://dbpedia.org/ontology/')
 adms = Namespace('http://www.w3.org/ns/adms#')
 euro = Namespace('http://data.europa.eu/m8g/')
+prov = Namespace('http://www.w3.org/ns/prov#')
 owl = Namespace('http://www.w3.org/2002/07/owl#')
 
 organisatie = Namespace('https://data.vlaanderen.be/ns/organisatie#')
@@ -28,8 +29,8 @@ c = Namespace('http://data.vlaanderen.be/id/concept/')
 gift = Namespace('http://lblod.data.gift/')
 
 mandataris_status = {
-  "Waarnemend": URIRef("https://data.vlaanderen.be/id/concept/MandatarisStatusCode/e1ca6edd-55e1-4288-92a5-53f4cf71946a"),
-  "Effectief": URIRef("https://data.vlaanderen.be/id/concept/MandatarisStatusCode/21063a5b-912c-4241-841c-cc7fb3c73e75")
+  "Waarnemend": URIRef("http://data.vlaanderen.be/id/concept/MandatarisStatusCode/e1ca6edd-55e1-4288-92a5-53f4cf71946a"),
+  "Effectief": URIRef("http://data.vlaanderen.be/id/concept/MandatarisStatusCode/21063a5b-912c-4241-841c-cc7fb3c73e75")
 }
 
 namespace_dict = {
