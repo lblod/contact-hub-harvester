@@ -3,10 +3,13 @@ import numpy as np
 from datetime import datetime
 import dateparser
 import hashlib
+from SPARQLWrapper import SPARQLWrapper, JSON
 from cleansing import central, contact, organization, worship
 from rdflib import Graph, Literal, URIRef
 from rdflib.namespace import SKOS
 import re
+
+SPARQL = SPARQLWrapper("https://centrale-vindplaats.lblod.info/sparql")
 
 def concept_uri(base_uri, input):
   m = hashlib.md5()
@@ -418,16 +421,19 @@ def voting_cleansing(date):
 
 # final data will be [municipality_name:number]
 def extract_municipality_percentage(data):
-  m_p = re.search(r'[a-zA-Z]+(\-[a-zA-Z]+)*', data).group() + ':'
+  m_p = []
+  m_p.append(re.search(r'[a-zA-Z]+(\-[a-zA-Z]+)*', data).group())
 
   if re.search(r'\d+(\,?\d+)?', data):
-    m_p += re.search(r'\d+(\,?\.?\d+)?', data).group().replace(',', '.')
+    m_p.append(re.search(r'\d+(\,?\.?\d+)?', data).group().replace(',', '.'))
+  else:
+    m_p.append('')
   
   return m_p
 
 def remarks_cleansing(row):
-  division = []
-  sl = np.nan
+  division = {}
+  sl = None
   info = row['Opmerkingen_EB'][:]
   cross_border = row['Grensoverschrijdend']
   
@@ -465,11 +471,13 @@ def remarks_cleansing(row):
     if sl != None:
       if isinstance(sl, list):
         for data in sl:
-          division.append(extract_municipality_percentage(data))
+          mp = extract_municipality_percentage(data)
+          division[mp[0]] = mp[1]
       else:
-        division.append(extract_municipality_percentage(sl))
+        mp = extract_municipality_percentage(sl)
+        division[mp[0]] = mp[1]
     
-  return ';'.join(division)
+  return str(division)
 
 def mapping_change_event_type_worship(status):
   change_event_dict = {'Erkenningsaanvraag in behandeling': 'Erkenning aangevraagd', 'Niet actief - Samengevoegd (overgenomen)': 'Samenvoeging',
@@ -506,6 +514,68 @@ def change_event_cleansing(row):
 
   return str(dict(zip(change_events, dates)))
 
+def get_full_address(straat, huisnr, busnr, postcode, gemeente):
+  full_address = ''
+  if straat != str(np.nan):
+    full_address += straat + ' '
+  if huisnr != str(np.nan):
+    full_address += huisnr
+    if busnr != str(np.nan):
+      full_address += ' '
+    else:
+      full_address += ', '
+  if busnr != str(np.nan):
+    full_address += busnr + ', '
+  if postcode != str(np.nan):
+    full_address += postcode + ' '
+  if gemeente != str(np.nan):
+    full_address += gemeente
+
+  return full_address
+
+def get_adm_unit_concept(adm_label, classification):
+  adm_concept = None
+
+  query = """
+      PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+      PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
+      PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+      SELECT ?s WHERE {{
+        ?s a besluit:Bestuurseenheid; skos:prefLabel "{adm_label}"; besluit:classificatie ?classificatie .
+        ?classificatie skos:prefLabel "{classification}" .
+      }}
+  """.format(adm_label = adm_label, classification = classification)
+  
+  SPARQL.setQuery(query)
+  SPARQL.setReturnFormat(JSON)
+
+  results = SPARQL.query().convert()
+  
+  if len(results['results']['bindings']) > 0:
+    adm_concept = results['results']['bindings'][0]['s']['value']    
+    
+  return adm_concept
+
+def worship_link_ro(row):
+  type_eredienst = row['Type_eredienst Cleansed']
+  province = row['Provincie Cleansed']
+  ro_name = np.nan
+
+  ro_dict = {'Rooms-Katholiek': [{'name': 'Bisdom Antwerpen', 'province': 'Antwerpen'}, {'name': 'Bisdom Brugge', 'province': 'West-Vlaanderen'},
+              {'name': 'Bisdom Gent', 'province': 'Oost-Vlaanderen'}, {'name': 'Bisdom Hasselt', 'province': 'Limburg'}],
+             'Israëlitisch': {'name': 'Centraal Israëlitische Consistorie van België'}, 'Anglicaans': {'name': 'Centraal Comité van de Anglicaanse Eredienst in België'},
+             'Protestants': {'name': 'Administratieve Raad van de Protestants-Evangelische Eredienst (ARPEE)'}, 'Orthodox': {'name':'Oecumenisch Patriarchaat van Konstantinopel'},
+             'Islamitisch': {'name': 'Executief van de Moslims van België'}}
+       
+  if type_eredienst == 'Rooms-Katholiek': 
+    rks = ro_dict['Rooms-Katholiek']
+    for rk in rks:
+      if rk['province'] == province:
+        ro_name = rk['name']
+  elif type_eredienst in ['Israëlitisch', 'Protestants', 'Islamitisch', 'Anglicaans', 'Orthodox']:
+    ro_name = ro_dict[type_eredienst]['name']
+
+  return ro_name
 
 def exists_contact_org(row):
   return ((str(row['Website Cleansed']) != str(np.nan)) or (str(row['Algemeen telefoonnr']) != str(np.nan)) or (str(row['Algemeen mailadres']) != str(np.nan)))

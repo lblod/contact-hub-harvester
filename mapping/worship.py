@@ -1,11 +1,13 @@
 import json
 import numpy as np
+import pandas as pd
 from datetime import datetime, timedelta
 import dateparser
-from rdflib import Graph
+from numpy.core.numeric import full
+from rdflib import Graph, URIRef
 from rdflib.namespace import FOAF, XSD, FOAF, SKOS, RDF, RDFS, DCTERMS
 
-from helper.functions import add_literal, concept_uri, export_data, get_cleansed_data, exists_address, exists_address_role, exists_contact_role, exists_role, exists_bestuursperiode, load_graph, get_concept_id, get_label_role
+from helper.functions import add_literal, concept_uri, export_data, get_cleansed_data, exists_address, exists_address_role, exists_contact_role, exists_role, exists_bestuursperiode, get_adm_unit_concept, load_graph, get_concept_id, get_label_role, get_full_address
 import helper.namespaces as ns
 
 
@@ -37,8 +39,10 @@ def main(file, mode):
     if str(row['Type_eredienst Cleansed']) != str(np.nan):
       type_ere = get_concept_id(codelist_ere, str(row['Type_eredienst Cleansed']))
       g.add((abb_id, ns.ere.typeEredienst, type_ere))    
+  
+    add_literal(g, abb_id, ns.ere.grensoverschrijdend, str(row['Grensoverschrijdend']).title(), XSD.boolean)
 
-    add_literal(g, abb_id, ns.ere.grensoverschrijdend, str(row['Grensoverschrijdend']), XSD.boolean)
+    add_literal(g, abb_id, ns.ere.denominatie, str(row['Strekking Cleansed']), XSD.string)
 
     status = get_concept_id(codelist_ere, str(row['Status_EB Cleansed']))
     g.add((abb_id, ns.rov.orgStatus, status))
@@ -55,8 +59,13 @@ def main(file, mode):
     add_literal(g, province_id, RDFS.label, str(row['Provincie Cleansed']))
     g.add((abb_id, ns.vcard.hasRegion, province_id))
     
-    ckb_id, _ = concept_uri(lblod + 'centraalBestuurVanDeEredienst/', str(row['Naam_CKB_EB1']))
-    g.add((abb_id, ns.org.linkedTo, ckb_id))
+    if str(row['Naam_CKB_EB1']) != str(np.nan):
+      ckb_id, _ = concept_uri(lblod + 'centraalBestuurVanDeEredienst/', str(row['Naam_CKB_EB1']))
+      g.add((abb_id, ns.org.linkedTo, ckb_id))
+
+    if str(row['Representatief orgaan']) != str(np.nan):
+      national_id, _ = concept_uri(lblod + 'representatiefOrgaan/', str(row['Representatief orgaan']))
+      g.add((abb_id, ns.org.linkedTo, national_id))
 
     bo_id, bo_uuid = concept_uri(lblod + 'eredienstbestuursorganen/', str(row['organization_id']) + 'eredienstbestuursorganen')
     g.add((bo_id, RDF.type, ns.besluit.Bestuursorgaan))
@@ -117,6 +126,23 @@ def main(file, mode):
         else:
           g.add((ce_id, ns.org.resultingOrganization, abb_id))
           g.add((abb_id, ns.org.resultedFrom, ce_id))
+
+    if row['Public Involvement Cleansed'] != '{}':
+      public_invs_ = row['Public Involvement Cleansed']
+      json_acceptable_string = public_invs_.replace("'", "\"")
+      public_invs = json.loads(json_acceptable_string)
+
+      for municipality, perc in public_invs.items():
+        municipality_uri = get_adm_unit_concept(municipality, "Gemeente")
+        if municipality_uri != None:
+          pi_id, pi_uuid = concept_uri(lblod + 'publiekeBetrokkenheid/', municipality + abb_uuid)
+          g.add((pi_id, RDF.type, ns.ere.PubliekeBetrokkenheid))
+          add_literal(g, pi_id, ns.mu.uuid, pi_uuid, XSD.string)
+          if perc != '':
+            add_literal(g, pi_id, ns.ere.financieringspercentage, str(perc), XSD.float)
+          g.add((pi_id, ns.org.organization, abb_id))
+          
+          g.add((URIRef(municipality_uri), ns.ere.betrokkenBestuur, pi_id))
           
     # Vestiging
     if exists_address(row):
@@ -135,7 +161,8 @@ def main(file, mode):
       add_literal(g, address_id, ns.adres.gemeentenaam, str(row['Gemeente Cleansed']), XSD.string)
       add_literal(g, address_id, ns.locn.adminUnitL2, str(row['Provincie Cleansed']))
       add_literal(g, address_id, ns.adres.land, 'België')
-      add_literal(g, address_id, ns.locn.fullAddress, str(row['Straat']) + ' ' + str(row['Huisnr Cleansed']) + ' ' + str(row['Busnummer Cleansed']) + ', ' + str(row['Postcode Cleansed']) + ' ' + str(row['Gemeente Cleansed']))
+      
+      add_literal(g, address_id, ns.locn.fullAddress, get_full_address(str(row['Straat']), str(row['Huisnr Cleansed']), str(row['Busnummer Cleansed']), str(row['Postcode Cleansed']), str(row['Gemeente Cleansed'])))
 
       g.add((site_id, ns.organisatie.bestaatUit, address_id))
       g.add((abb_id, ns.org.hasPrimarySite, site_id))
@@ -184,10 +211,10 @@ def main(file, mode):
           add_literal(g, person_role, FOAF.givenName, str(row[f'Naam_{role} First']))
           add_literal(g, person_role, FOAF.familyName, str(row[f'Naam_{role} Last']))
 
+          person_role_mandaat = None
           if str(row[f'Datum verkiezing {role}']) != 'NaT':
             year_election = dateparser.parse(str(row[f'Datum verkiezing {role}'])).year
-            person_role_mandaat = None
-
+            
             if year_election <= 2019:
               person_role_mandaat, person_role_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'bestuursorganenVanDeBesturenVanDeEredienst/2017' + role)
               g.add((person_role_mandaat, ns.org.postIn, bestuur_temporary_17))
@@ -210,6 +237,11 @@ def main(file, mode):
           g.add((person_role_mandataris, RDF.type, ns.mandaat.Mandataris))
           g.add((person_role_mandataris, RDF.type, ns.ere.EredienstMandataris))
           add_literal(g, person_role_mandataris, ns.mu.uuid, person_role_mandataris_uuid, XSD.string)
+
+          g.add((person_role_mandataris, ns.mandaat.isBestuurlijkeAliasVan, person_role))
+
+          if person_role_mandaat != None:
+            g.add((person_role_mandataris, ns.org.holds, person_role_mandaat))
 
           ### Mandataris - Contact punt
           if exists_contact_role(row, role):
@@ -238,8 +270,7 @@ def main(file, mode):
               g.add((person_role_contact_uri, ns.locn.address, person_role_address_id))
               add_literal(g, person_role_address_id, ns.locn.fullAddress, str(row[f'Adres_{role} Cleansed']))
             
-          g.add((person_role_mandataris, ns.mandaat.isBestuurlijkeAliasVan, person_role))
-          g.add((person_role_mandataris, ns.org.holds, person_role_mandaat))
+          
           if str(row[f'Datum verkiezing {role}']) != 'NaT':
             add_literal(g, person_role_mandataris, ns.mandaat.start, dateparser.parse(str(row[f'Datum verkiezing {role}'])).isoformat(), XSD.dateTime)
             # possible end date = start date + 3 years
@@ -248,7 +279,8 @@ def main(file, mode):
           g.add((person_role_mandataris, ns.mandaat.status, ns.mandataris_status['Effectief']))
 
           g.add((person_role, ns.mandaat.isAangesteldAls, person_role_mandataris))
-          g.add((person_role_mandaat, ns.org.heldBy, person_role_mandataris))
+          if person_role_mandaat != None:
+            g.add((person_role_mandaat, ns.org.heldBy, person_role_mandataris))
 
       ####
       # Lids
@@ -265,13 +297,13 @@ def main(file, mode):
             year_election = dateparser.parse(str(row[f'Datum verkiezing {role}'])).year
             lid_mandaat = None
             if year_election <= 2019:
-              lid_mandaat, lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'bestuursorganen/2017/Lid' ) 
+              lid_mandaat, lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'bestuursorganen/2017/Lid') 
               g.add((lid_mandaat, ns.org.postIn, bestuur_temporary_17))
               g.add((bestuur_temporary_17, ns.org.hasPost, lid_mandaat)) 
             else:
-              lid_mandaat, lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'bestuursorganen/2020/Lid' )
-              g.add((person_role_mandaat, ns.org.postIn, bestuur_temporary_20))
-              g.add((bestuur_temporary_20, ns.org.hasPost, person_role_mandaat)) 
+              lid_mandaat, lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'bestuursorganen/2020/Lid')
+              g.add((lid_mandaat, ns.org.postIn, bestuur_temporary_20))
+              g.add((bestuur_temporary_20, ns.org.hasPost, lid_mandaat)) 
             
             if lid_mandaat != None:
               g.add((lid_mandaat, RDF.type, ns.mandaat.Mandaat))

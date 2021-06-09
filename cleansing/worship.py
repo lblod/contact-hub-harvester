@@ -11,13 +11,15 @@ def main(eb):
 
   eb['Bestuursorgaan Type'] = pd.Series(eb['Type_eredienst_EB'].astype(str).apply(helper.bestuursorgaan_mapping_worship).values)
 
-  eb[['Titel Cleansed']] = pd.DataFrame(eb['Titel'].astype(str).apply(helper.space_cleansing).values.tolist())
+  eb[['Titel Cleansed']] = pd.Series(eb['Titel'].astype(str).apply(helper.space_cleansing).values)
 
   eb['Gemeente Cleansed'] = eb['Gemeente_EB'].str.strip().str.title().replace('Antwerpen (Deurne', 'Antwerpen (Deurne)')
 
   eb = helper.provincie_cleansing(eb, 'Gemeente Cleansed', 'Provincie_EB')
 
   eb['Provincie Cleansed'] = eb['Provincie Cleansed'].replace('nan', np.nan)
+
+  eb['Strekking Cleansed'] = eb['Strekking'].str.replace('Denominatie: ', '').str.replace('denominatie ', '').str.strip()
 
   eb[['KBO_EB Cleansed', 'KBO_EB Comment']] = pd.DataFrame(eb['KBO_EB'].astype(str).apply(helper.kbo_cleansing).values.tolist(), columns=['kbo_cleansed','comment'])
   
@@ -27,21 +29,25 @@ def main(eb):
 
   eb[['Postcode Cleansed', 'Postcode_EB Comment']] = pd.DataFrame(eb['Postcode_EB'].astype(str).apply(helper.postcode_cleansing).values.tolist(), columns=['postcode_cleansed','comment'])
 
-  eb['Straat'] = eb['Straat_EB'].replace('x000D_', '').replace('<br>', '').str.strip()
+  eb['Straat'] = eb['Straat_EB'].str.replace('_x000D_', '').str.replace('<br>', ' ').str.strip()
 
   eb[['Verkiezingen17_Opmerkingen Cleansed', 'Verkiezingen17_Opmerkingen Comment']] = pd.DataFrame(eb['Verkiezingen17_Opmerkingen'].astype(str).apply(helper.voting_cleansing).values.tolist(), columns=['date_election','comment'])
 
   eb[['Verkiezingen2020_Opmerkingen Cleansed', 'Verkiezingen2020_Opmerkingen Comment']] = pd.DataFrame(eb['Verkiezingen2020_Opmerkingen'].astype(str).apply(helper.voting_cleansing).values.tolist(), columns=['date_election','comment'])
 
-  eb['Type_eredienst Cleansed'] = eb['Type_eredienst_EB'].replace('Rooms-Katholiek Kathedraal', 'Rooms-Katholiek') 
+  eb['Type_eredienst Cleansed'] = eb['Type_eredienst_EB'].str.replace('Rooms-Katholiek Kathedraal', 'Rooms-Katholiek') 
+
+  eb['Representatief orgaan'] = pd.Series(eb[['Type_eredienst Cleansed','Provincie Cleansed']].astype(str).apply(helper.worship_link_ro, axis=1).values)
   
   first_names = helper.load_possible_first_names()
 
-  eb['Naam_voorzitter Cleansed'] = eb['Naam_voorzitter_EB'].replace('<br>', ' ').str.strip()
+  eb['Naam_voorzitter Cleansed'] = eb['Naam_voorzitter_EB'].str.replace('<br>', ' ').str.strip()
   
   eb[['Naam_voorzitter First', 'Naam_voorzitter Last', 'Naam_voorzitter Comment']] = pd.DataFrame(eb['Naam_voorzitter Cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
 
-  eb['Adres_voorzitter Cleansed'] = eb['Adres_voorzitter_EB'].replace('<br>', '').str.strip()
+  eb['Adres_voorzitter Cleansed'] = eb['Adres_voorzitter_EB'].str.replace('<br>', ' ').str.replace('_x000D_', '').str.strip()
+
+  eb['Mail_voorzitter_EB'] = eb['Mail_voorzitter_EB'].str.replace('<br>', ' ').str.strip()
 
   eb[['Mail_voorzitter Cleansed', 'Mail_voorzitter Comment']] = pd.DataFrame(eb['Mail_voorzitter_EB'].astype(str).apply(helper.mail_cleansing).values.tolist(), columns=['mail_cleansed','comment'])
 
@@ -49,11 +55,13 @@ def main(eb):
 
   eb['Type Helft Cleansed voorzitter'] = eb['Grote helft/kleine helft voorzitter'].replace('Onbekend', np.nan)
   
-  eb['Naam_penningmeester Cleansed'] = eb['Naam_penningmeester_EB'].replace('<br>', '').str.strip()
+  eb['Naam_penningmeester Cleansed'] = eb['Naam_penningmeester_EB'].str.replace('<br>', ' ').str.strip()
 
   eb[['Naam_penningmeester First', 'Naam_penningmeester Last', 'Naam_penningmeester Comment']] = pd.DataFrame(eb['Naam_penningmeester Cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
 
-  eb['Adres_penningmeester Cleansed'] = eb['Adres_penningmeester_EB'].replace('<br>', '').str.strip()
+  eb['Adres_penningmeester Cleansed'] = eb['Adres_penningmeester_EB'].str.replace('<br>', ' ').str.replace('_x000D_', '').str.strip()
+
+  eb['Mail_penningmeester_EB'] = eb['Mail_penningmeester_EB'].str.replace('<br>', ' ').str.strip()
 
   eb[['Mail_penningmeester Cleansed', 'Mail_penningmeester Comment']] = pd.DataFrame(eb['Mail_penningmeester_EB'].astype(str).apply(helper.mail_cleansing).values.tolist(), columns=['mail_cleansed','comment'])
 
@@ -63,11 +71,13 @@ def main(eb):
 
   eb['Type Helft Cleansed penningmeester'] = eb['Grote helft/kleine helft penningmeester'].replace('Onbekend', np.nan)
   
-  eb['Naam_secretaris Cleansed'] = eb['Naam_secretaris_EB'].replace('<br>', '').str.strip()
+  eb['Naam_secretaris Cleansed'] = eb['Naam_secretaris_EB'].str.replace('<br>', ' ').str.strip()
   
   eb[['Naam_secretaris First', 'Naam_secretaris Last', 'Naam_secretaris Comment']] = pd.DataFrame(eb['Naam_secretaris Cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
 
-  eb['Adres_secretaris Cleansed'] = eb['Adres_secretaris_EB'].replace('<br>', '').str.strip()
+  eb['Adres_secretaris Cleansed'] = eb['Adres_secretaris_EB'].str.replace('<br>', ' ').str.replace('_x000D_', '').str.strip()
+
+  eb['Mail_secretaris_EB'] = eb['Mail_secretaris_EB'].str.replace('<br>', ' ').str.strip()
 
   eb[['Mail_secretaris Cleansed', 'Mail_secretaris Comment']] = pd.DataFrame(eb['Mail_secretaris_EB'].astype(str).apply(helper.mail_cleansing).values.tolist(), columns=['mail_cleansed','comment'])
 
@@ -75,11 +85,11 @@ def main(eb):
 
   eb['Type Helft Cleansed secretaris'] = eb['Grote helft/kleine helft secretaris'].replace('Onbekend', np.nan) 
 
-  eb['Naam_Lid4 Cleansed'] = eb['Naam_Lid4'].replace('<br>', '').str.strip()
+  eb['Naam_Lid4 Cleansed'] = eb['Naam_Lid4'].str.replace('<br>', '').str.strip()
   
   eb[['Naam_Lid4 First', 'Naam_Lid4 Last', 'Naam_Lid4 Comment']] = pd.DataFrame(eb['Naam_Lid4 Cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
 
-  eb['Naam_Lid5 Cleansed'] = eb['Naam_Lid5'].replace('<br>', '').str.strip()
+  eb['Naam_Lid5 Cleansed'] = eb['Naam_Lid5'].str.replace('<br>', ' ').str.strip()
   
   eb[['Naam_Lid5 First', 'Naam_Lid5 Last', 'Naam_Lid5 Comment']] = pd.DataFrame(eb['Naam_Lid5 Cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
 
