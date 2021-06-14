@@ -11,6 +11,11 @@ import re
 
 SPARQL = SPARQLWrapper("https://centrale-vindplaats.lblod.info/sparql")
 
+def load_gp():
+  return pd.read_excel('input/gemeente-provincie.xlsx', sheet_name='Feuil2')
+
+GP = load_gp()
+
 def concept_uri(base_uri, input):
   m = hashlib.md5()
   m.update(input.encode('utf-8'))
@@ -138,21 +143,16 @@ def postcode_cleansing(postcode):
 
   return [postcode_cleansed, comment]
 
-def load_gp():
-  return pd.read_excel('input/gemeente-provincie.xlsx', sheet_name='Feuil2')
-
-def find_city_provincie(gp, city):
-  return gp[gp['Gemeente'].str.contains(city)]
+def find_city_provincie(city):
+  return GP[GP['Gemeente'].str.fullmatch(city)]
 
 def provincie_cleansing(data, gemeentee_col, provincie_col):
-  gp = load_gp()
-
   data['Provincie Cleansed'] = None
   data['Provincie Comment'] = None
 
   for index, row in data.iterrows():
     city = str(row[gemeentee_col])
-    result = find_city_provincie(gp, city)
+    result = find_city_provincie(city)
     
     if len(result) > 0:
       if str(result.iloc[0]['Provincie']).lower().strip() != str(row[provincie_col]).lower().strip():
@@ -431,6 +431,14 @@ def extract_municipality_percentage(data):
   
   return m_p
 
+def is_municipality(municipality):
+  res = find_city_provincie(municipality)
+
+  if len(res) > 0:
+    return True
+  else:
+    return False
+
 def remarks_cleansing(row):
   division = {}
   sl = None
@@ -472,7 +480,9 @@ def remarks_cleansing(row):
       if isinstance(sl, list):
         for data in sl:
           mp = extract_municipality_percentage(data)
-          division[mp[0]] = mp[1]
+          
+          if is_municipality(mp[0]):
+            division[mp[0]] = mp[1]
       else:
         mp = extract_municipality_percentage(sl)
         division[mp[0]] = mp[1]
@@ -559,19 +569,24 @@ def get_adm_unit_concept(adm_label, classification):
 def worship_link_ro(row):
   type_eredienst = row['Type_eredienst Cleansed']
   province = row['Provincie Cleansed']
+  municipality = row['Gemeente Cleansed']
   ro_name = np.nan
 
   ro_dict = {'Rooms-Katholiek': [{'name': 'Bisdom Antwerpen', 'province': 'Antwerpen'}, {'name': 'Bisdom Brugge', 'province': 'West-Vlaanderen'},
-              {'name': 'Bisdom Gent', 'province': 'Oost-Vlaanderen'}, {'name': 'Bisdom Hasselt', 'province': 'Limburg'}],
+              {'name': 'Bisdom Gent', 'province': 'Oost-Vlaanderen'}, {'name': 'Bisdom Hasselt', 'province': 'Limburg'},
+              {'name': 'Aartsbisdom Mechelen-Brussel', 'province': 'Vlaams-Brabant'}],
              'Israëlitisch': {'name': 'Centraal Israëlitische Consistorie van België'}, 'Anglicaans': {'name': 'Centraal Comité van de Anglicaanse Eredienst in België'},
              'Protestants': {'name': 'Administratieve Raad van de Protestants-Evangelische Eredienst (ARPEE)'}, 'Orthodox': {'name':'Oecumenisch Patriarchaat van Konstantinopel'},
              'Islamitisch': {'name': 'Executief van de Moslims van België'}}
        
-  if type_eredienst == 'Rooms-Katholiek': 
-    rks = ro_dict['Rooms-Katholiek']
-    for rk in rks:
-      if rk['province'] == province:
-        ro_name = rk['name']
+  if type_eredienst == 'Rooms-Katholiek':
+    if municipality in ['Bonheiden', 'Bornem', 'Duffel', 'Mechelen', 'Puurs-Sint-Amands', 'Sint-Katelijne-Waver', 'Willebroek']:
+      ro_name = 'Aartsbisdom Mechelen-Brussel'
+    else:
+      rks = ro_dict['Rooms-Katholiek']
+      for rk in rks:  
+        if rk['province'] == province:
+          ro_name = rk['name']
   elif type_eredienst in ['Israëlitisch', 'Protestants', 'Islamitisch', 'Anglicaans', 'Orthodox']:
     ro_name = ro_dict[type_eredienst]['name']
 
@@ -587,7 +602,10 @@ def exists_contact_cont(row):
   return ((str(row['Titel Cleansed']) != str(np.nan)) or (str(row['Mail nr2 Cleansed']) != str(np.nan)) or (str(row['Telefoonnr Contact 1']) != str(np.nan)))
 
 def exists_role(row, role):
-  return (str(row[f'Naam_{role} First']) != str(np.nan)) or (str(row[f'Naam_{role} Last']) != str(np.nan))
+  return (str(row[f'Naam_{role} Cleansed']) != str(np.nan))
+
+def exists_given_and_family_name(row, role):
+  return (str(row[f'Naam_{role} First']) != str(np.nan)) and (str(row[f'Naam_{role} Last']) != str(np.nan))
 
 def exists_address(row):
   return ((str(row['Straat']) != str(np.nan)) or (str(row['Huisnr Cleansed']) != str(np.nan)) or (str(row['Busnummer Cleansed']) != str(np.nan)) or

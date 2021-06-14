@@ -27,6 +27,7 @@ mu = Namespace('http://mu.semte.ch/vocabularies/core/')
 cs = Namespace('http://data.vlaanderen.be/id/conceptscheme/')
 c = Namespace('http://data.vlaanderen.be/id/concept/')
 gift = Namespace('http://lblod.data.gift/')
+gift_v = Namespace('http://lblod.data.gift/vocabularies/organization/')
 
 mandataris_status = {
   "Waarnemend": URIRef("http://data.vlaanderen.be/id/concept/MandatarisStatusCode/e1ca6edd-55e1-4288-92a5-53f4cf71946a"),

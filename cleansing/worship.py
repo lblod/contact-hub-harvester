@@ -37,7 +37,7 @@ def main(eb):
 
   eb['Type_eredienst Cleansed'] = eb['Type_eredienst_EB'].str.replace('Rooms-Katholiek Kathedraal', 'Rooms-Katholiek') 
 
-  eb['Representatief orgaan'] = pd.Series(eb[['Type_eredienst Cleansed','Provincie Cleansed']].astype(str).apply(helper.worship_link_ro, axis=1).values)
+  eb['Representatief orgaan'] = pd.Series(eb[['Type_eredienst Cleansed','Provincie Cleansed','Gemeente Cleansed']].astype(str).apply(helper.worship_link_ro, axis=1).values)
   
   first_names = helper.load_possible_first_names()
 
