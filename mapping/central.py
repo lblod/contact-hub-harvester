@@ -2,7 +2,7 @@ import numpy as np
 from datetime import datetime, timedelta
 import dateparser
 from rdflib import Graph
-from rdflib.namespace import XSD, FOAF, SKOS, RDF
+from rdflib.namespace import XSD, FOAF, SKOS, RDF, RDFS
 
 from helper.functions import add_literal, concept_uri, exists_address, exists_bestuursperiode, exists_contact_role, exists_role, load_graph, get_concept_id, get_label_role, get_cleansed_data, export_data
 import helper.namespaces as ns
@@ -21,7 +21,7 @@ def main(file, mode):
   print("########### Mapping started #############")
 
   for _, row in central_cleansed.iterrows():    
-    abb_id, abb_uuid = concept_uri(lblod + 'centraalBestuurVanDeEredienst/', str(row['Titel']))
+    abb_id, abb_uuid = concept_uri(lblod + 'centraleBestuursorganen/', str(row['Titel']))
     g.add((abb_id, RDF.type, ns.org.Organization))
     g.add((abb_id, RDF.type, ns.euro.PublicOrganisation))
     g.add((abb_id, RDF.type, ns.besluit.Bestuurseenheid))
@@ -38,6 +38,16 @@ def main(file, mode):
 
     status = get_concept_id(codelist_ere, str(row['Status_CKB_cleansed']))
     g.add((abb_id, ns.rov.orgStatus, status))
+
+    gemeente_id, gemeente_uuid = concept_uri(lblod + 'werkingsgebieden/', str(row['Gemeente Cleansed']))
+    g.add((gemeente_id, RDF.type, ns.prov.Location))
+    add_literal(g, gemeente_id, ns.mu.uuid, gemeente_uuid, XSD.string)
+    add_literal(g, gemeente_id, RDFS.label, str(row['Gemeente Cleansed']))
+    g.add((abb_id, ns.besluit.werkingsgebied, gemeente_id))
+
+    if str(row['Representatief orgaan']) != str(np.nan):
+      national_id, _ = concept_uri(lblod + 'representatiefOrgaan/', str(row['Representatief orgaan']))
+      g.add((abb_id, ns.org.linkedTo, national_id))
 
     bo_id, bo_uuid = concept_uri(lblod + 'centraleBestuursorgaan/', str(row['Titel']))
     g.add((bo_id, RDF.type, ns.besluit.Bestuursorgaan))
@@ -71,7 +81,7 @@ def main(file, mode):
 
       naam_uri, naam_uuid = concept_uri(lblod + 'gestructureerdeIdentificator/', str(row['Titel']))
       g.add((naam_uri, RDF.type, ns.generiek.GestructureerdeIdentificator))
-      add_literal(naam_uri, ns.mu.uuid, naam_uuid, XSD.string)
+      add_literal(g, naam_uri, ns.mu.uuid, naam_uuid, XSD.string)
       add_literal(g, naam_uri, ns.generiek.lokaleIdentificator, str(row['Titel']), XSD.string)
       g.add((id_class, ns.generiek.gestructureerdeIdentificator, naam_uri))
 

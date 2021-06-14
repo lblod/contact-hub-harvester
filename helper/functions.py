@@ -149,8 +149,8 @@ def find_city_provincie(city):
 def provincie_cleansing(row):
   provincie_cleansed = comment = np.nan
 
-  city = row.index[0]
-  province = row.index[1]
+  city = row[row.index[0]]
+  province = row[row.index[1]]
   
   result = find_city_provincie(city)
     
@@ -564,9 +564,10 @@ def get_adm_unit_concept(adm_label, classification):
   return adm_concept
 
 def worship_link_ro(row):
-  type_eredienst = row['Type_eredienst Cleansed']
-  province = row['Provincie Cleansed']
-  municipality = row['Gemeente Cleansed']
+  
+  type_eredienst = row[row.index[0]]
+  province = row[row.index[1]]
+  municipality = row[row.index[2]]
   ro_name = np.nan
 
   ro_dict = {'Rooms-Katholiek': [{'name': 'Bisdom Antwerpen', 'province': 'Antwerpen'}, {'name': 'Bisdom Brugge', 'province': 'West-Vlaanderen'},

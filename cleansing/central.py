@@ -29,14 +29,16 @@ def main(ckb):
 
   ckb[['Opmerkingen_CKB Date', 'Opmerkingen_CKB Comment']] = pd.DataFrame(ckb['Opmerkingen_CKB'].astype(str).apply(helper.voting_cleansing).values.tolist(), columns=['date','comment'])
 
-  ckb['Naam_voorzitter_cleansed'] = ckb['Naam_Voorzitter_CKB'].replace('<br>', '').str.strip()
-  ckb['Naam_secretaris_cleansed'] = ckb['Naam_secretaris_CKB'].replace('<br>', '').str.strip()
+  ckb['Representatief orgaan'] = pd.Series(ckb[['Type_eredienst_CKB','Provincie Cleansed','Gemeente Cleansed']].astype(str).apply(helper.worship_link_ro, axis=1).values)
+
+  ckb['Naam_voorzitter Cleansed'] = ckb['Naam_Voorzitter_CKB'].replace('<br>', '').str.strip()
+  ckb['Naam_secretaris Cleansed'] = ckb['Naam_secretaris_CKB'].replace('<br>', '').str.strip()
 
   first_names = helper.load_possible_first_names()
 
-  ckb[['Naam_voorzitter First', 'Naam_voorzitter Last', 'Naam_voorzitter Comment']] = pd.DataFrame(ckb['Naam_voorzitter_cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
+  ckb[['Naam_voorzitter First', 'Naam_voorzitter Last', 'Naam_voorzitter Comment']] = pd.DataFrame(ckb['Naam_voorzitter Cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
 
-  ckb[['Naam_secretaris First', 'Naam_secretaris Last', 'Naam_secretaris Comment']] = pd.DataFrame(ckb['Naam_secretaris_cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
+  ckb[['Naam_secretaris First', 'Naam_secretaris Last', 'Naam_secretaris Comment']] = pd.DataFrame(ckb['Naam_secretaris Cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
   
   ckb[['Mail_voorzitter Cleansed', 'Mail_voorzitter Comment', 'Mail_secretaris Cleansed', 'Mail_secretaris Comment']] = pd.DataFrame(ckb['Mail_CKB'].astype(str).apply(helper.split_mail).values.tolist(), columns=['mail_voorzitter', 'mail_voorzitter_comment', 'mail_secretaris', 'mail_secretaris_comment'])
 
