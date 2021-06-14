@@ -15,7 +15,7 @@ def main(orgs):
 
   orgs[['Huisnr Cleansed', 'Busnummer Cleansed', 'Huisnr_comment']] = pd.DataFrame(orgs['Huisnr'].astype(str).apply(helper.split_house_bus_number).values.tolist(), columns=['house_number', 'bus_number', 'comment'])
 
-  orgs = helper.provincie_cleansing(orgs, 'Gemeente van de organisatie', 'Provincie van de organisatie')
+  orgs[['Provincie Cleansed', 'Provincie Comment']] = pd.DataFrame(orgs[['Gemeente van de organisatie', 'Provincie van de organisatie']].astype(str).apply(helper.provincie_cleansing, axis=1).values.tolist(), columns=['provincie_cleansed', 'comment'])
 
   orgs['Gemeente Cleansed'] = orgs['Gemeente van de organisatie'].str.strip().title()
 

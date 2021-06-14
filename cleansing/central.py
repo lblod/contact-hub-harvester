@@ -17,7 +17,7 @@ def main(ckb):
 
   ckb[['Huisnr Cleansed', 'Busnummer Cleansed', 'Huisnr_CKB_Comment']] = pd.DataFrame(ckb['Huisnr_CKB'].astype(str).apply(helper.split_house_bus_number).values.tolist(), columns=['house_number', 'bus_number', 'comment'])
 
-  ckb = helper.provincie_cleansing(ckb, 'Gemeente_CKB', 'Provincie_CKB')
+  ckb[['Provincie Cleansed', 'Provincie Comment']] = pd.DataFrame(ckb[['Gemeente_CKB', 'Provincie_CKB']].astype(str).apply(helper.provincie_cleansing, axis=1).values.tolist(), columns=['provincie_cleansed', 'comment'])
 
   ckb[['Postcode Cleansed', 'Postcode_CKB Comment']] = pd.DataFrame(ckb['Postcode_CKB'].astype(str).apply(helper.postcode_cleansing).values.tolist(), columns=['postcode_cleansed','comment'])
   

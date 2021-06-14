@@ -15,7 +15,7 @@ def main(eb):
 
   eb['Gemeente Cleansed'] = eb['Gemeente_EB'].str.strip().str.title().replace('Antwerpen (Deurne', 'Antwerpen (Deurne)')
 
-  eb = helper.provincie_cleansing(eb, 'Gemeente Cleansed', 'Provincie_EB')
+  eb[['Provincie Cleansed', 'Provincie Comment']] = pd.DataFrame(eb[['Gemeente Cleansed', 'Provincie_EB']].astype(str).apply(helper.provincie_cleansing, axis=1).values.tolist(), columns=['provincie_cleansed', 'comment'])
 
   eb['Provincie Cleansed'] = eb['Provincie Cleansed'].replace('nan', np.nan)
 

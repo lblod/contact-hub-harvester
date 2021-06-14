@@ -146,28 +146,25 @@ def postcode_cleansing(postcode):
 def find_city_provincie(city):
   return GP[GP['Gemeente'].str.fullmatch(city)]
 
-def provincie_cleansing(data, gemeentee_col, provincie_col):
-  data['Provincie Cleansed'] = None
-  data['Provincie Comment'] = None
+def provincie_cleansing(row):
+  provincie_cleansed = comment = np.nan
 
-  for index, row in data.iterrows():
-    city = str(row[gemeentee_col])
-    result = find_city_provincie(city)
-    
-    if len(result) > 0:
-      if str(result.iloc[0]['Provincie']).lower().strip() != str(row[provincie_col]).lower().strip():
-        data.at[index, 'Provincie Cleansed'] = result.iloc[0]['Provincie'].strip().title()
-        data.at[index, 'Provincie Comment'] = "Different Provincie"
-      else:
-        data.at[index, 'Provincie Cleansed'] = str(row[provincie_col])
-    elif city != 'nan':
-      data.at[index, 'Provincie Comment'] = "Municipality Not Found"
-      data.at[index, 'Provincie Cleansed'] = str(row[provincie_col])
-    else:
-      data.at[index, 'Provincie Cleansed'] = np.nan
-
+  city = row.index[0]
+  province = row.index[1]
   
-  return data
+  result = find_city_provincie(city)
+    
+  if len(result) > 0:
+    if str(result.iloc[0]['Provincie']).lower().strip() != province.lower().strip():
+      provincie_cleansed = result.iloc[0]['Provincie'].strip().title()
+      comment = "Different Provincie"
+    else:
+      provincie_cleansed = province
+  elif city != 'nan':
+    provincie_cleansed = province
+    comment = "Municipality Not Found"
+  
+  return [provincie_cleansed, comment]
 
 def mail_cleansing(mail):
   mail_cleansed = comment = np.nan
