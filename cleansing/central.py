@@ -13,7 +13,7 @@ def main(ckb):
 
   ckb[['KBO_CKB_cleansed', 'KBO_CKB_comment']] = pd.DataFrame(ckb['KBO_CKB'].astype(str).apply(helper.kbo_cleansing).values.tolist(), columns=['kbo_cleansed','comment'])
 
-  ckb['Straat'] = ckb['Straat_CKB'].str.strip().str.title().str.replace('--', 'nan') 
+  ckb['Straat'] = ckb['Straat_CKB'].str.replace('<br>', ' ').str.strip().str.title().str.replace('--', 'nan') 
 
   ckb[['Huisnr Cleansed', 'Busnummer Cleansed', 'Huisnr_CKB_Comment']] = pd.DataFrame(ckb['Huisnr_CKB'].astype(str).apply(helper.split_house_bus_number).values.tolist(), columns=['house_number', 'bus_number', 'comment'])
 
@@ -31,8 +31,9 @@ def main(ckb):
 
   ckb['Representatief orgaan'] = pd.Series(ckb[['Type_eredienst_CKB','Provincie Cleansed','Gemeente Cleansed']].astype(str).apply(helper.worship_link_ro, axis=1).values)
 
-  ckb['Naam_voorzitter Cleansed'] = ckb['Naam_Voorzitter_CKB'].replace('<br>', '').str.strip()
-  ckb['Naam_secretaris Cleansed'] = ckb['Naam_secretaris_CKB'].replace('<br>', '').str.strip()
+  ckb['Naam_voorzitter Cleansed'] = ckb['Naam_Voorzitter_CKB'].str.replace('<br>', '').str.strip()
+  
+  ckb['Naam_secretaris Cleansed'] = ckb['Naam_secretaris_CKB'].str.replace('<br>', '').str.strip()
 
   first_names = helper.load_possible_first_names()
 

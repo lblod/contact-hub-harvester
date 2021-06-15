@@ -23,6 +23,7 @@ lblodlg = Namespace('https://data.lblod.info/vocabularies/leidinggevenden/')
 ere = Namespace('http://data.lblod.info/vocabularies/erediensten/')
 ch = Namespace('http://data.lblod.info/vocabularies/contacthub/')
 mu = Namespace('http://mu.semte.ch/vocabularies/core/')
+ext = Namespace('http://mu.semte.ch/vocabularies/ext/')
 
 cs = Namespace('http://data.vlaanderen.be/id/conceptscheme/')
 c = Namespace('http://data.vlaanderen.be/id/concept/')

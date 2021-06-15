@@ -563,6 +563,32 @@ def get_adm_unit_concept(adm_label, classification):
     
   return adm_concept
 
+   
+def get_werkingsgebied_concept(label, level):
+  location_concept = None
+
+  query = """
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+      PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+      PREFIX prov: <http://www.w3.org/ns/prov#>
+
+      SELECT * WHERE {{
+        ?s a prov:Location; ext:werkingsgebiedNiveau "{level}"; rdfs:label "{label}"; mu:uuid ?uuid.
+      }}
+  """.format(label = label, level = level)
+
+  SPARQL.setQuery(query)
+  SPARQL.setReturnFormat(JSON)
+
+  results = SPARQL.query().convert()
+
+  if len(results['results']['bindings']) > 0:
+    location_concept = results['results']['bindings'][0]
+
+  return location_concept
+
+
 def worship_link_ro(row):
   
   type_eredienst = row[row.index[0]]
@@ -599,8 +625,11 @@ def exists_site_org(row):
 def exists_contact_cont(row):
   return ((str(row['Titel Cleansed']) != str(np.nan)) or (str(row['Mail nr2 Cleansed']) != str(np.nan)) or (str(row['Telefoonnr Contact 1']) != str(np.nan)))
 
-def exists_role(row, role):
-  return (str(row[f'Naam_{role} Cleansed']) != str(np.nan))
+def exists_role_worship(row, role):
+  return (str(row[f'Datum verkiezing {role}']) != str(np.nan) and str(row[f'Naam_{role} Cleansed']) != str(np.nan))
+
+def exists_mandate_central(row):
+  return (str(row['Verkiezingen17_Opmerkingen Cleansed']) != str(np.nan) or str(row['Verkiezingen2020_Opmerkingen Cleansed']) != str(np.nan))
 
 def exists_given_and_family_name(row, role):
   return (str(row[f'Naam_{role} First']) != str(np.nan)) and (str(row[f'Naam_{role} Last']) != str(np.nan))
@@ -618,9 +647,13 @@ def exists_address_role(row, role):
 def exists_contact_role(row, role):
   return ((str(row[f'Tel_{role} 1']) != str(np.nan)) or (str(row[f'Mail_{role} Cleansed']) != str(np.nan)))
 
-def exists_bestuursperiode(row, roles):
+def exists_bestuursperiode_central(row):
+  #return (str(row[f'Verkiezingen17_Opmerkingen Cleansed']) != str(np.nan) or str(row['Verkiezingen2020_Opmerkingen Cleansed']) != str(np.nan))
+  return (str(row[f'Verkiezingen17']) != str(np.nan) or str(row['Verkiezingen2020']) != str(np.nan))
+
+def exists_bestuursperiode_worship(row, roles):
   for role in roles:
-    if exists_role(row, role):
+    if exists_role_worship(row, role):
       return True
   
   return False
