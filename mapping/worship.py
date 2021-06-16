@@ -179,12 +179,14 @@ def main(file, mode):
     roles = ['voorzitter', 'secretaris', 'penningmeester']
     roles_lid = ['Lid4', 'Lid5']
 
-    if exists_bestuursperiode_worship(row, roles+roles_lid, 'worship'):
+    if exists_bestuursperiode_worship(row, roles+roles_lid):
       # Bestuursorgaan (in bestuursperiode)
       
       # Bestuursorgaan in bestuursperiode 2017-2020
       bestuur_temporary_17, bestuur_temporary_17_uuid = concept_uri(lblod + 'eredienstbestuursorganen/', str(row['organization_id']) + 'eredienstbestuursorganen/2017')
+      g.add((bestuur_temporary_17, RDF.type, ns.besluit.Bestuursorgaan))
       g.add((bestuur_temporary_17, RDF.type, ns.ere.Eredienstbestuursorgaan))
+
       add_literal(g, bestuur_temporary_17, ns.mu.uuid, bestuur_temporary_17_uuid, XSD.string)
       g.add((bestuur_temporary_17, ns.generiek.isTijdspecialisatieVan, bo_id))
       
@@ -200,6 +202,7 @@ def main(file, mode):
       if str(row['Status_EB Cleansed']) == 'Actief':
         # Bestuursorgaan in bestuursperiode 2020-2023
         bestuur_temporary_20, bestuur_temporary_20_uuid = concept_uri(lblod + 'eredienstbestuursorganen/', str(row['organization_id']) + 'eredienstbestuursorganen/2020')
+        g.add((bestuur_temporary_20, RDF.type, ns.besluit.Bestuursorgaan))
         g.add((bestuur_temporary_20, RDF.type, ns.ere.Eredienstbestuursorgaan))
         add_literal(g, bestuur_temporary_20, ns.mu.uuid, bestuur_temporary_20_uuid, XSD.string)
         g.add((bestuur_temporary_20, ns.generiek.isTijdspecialisatieVan, bo_id))
@@ -240,12 +243,15 @@ def main(file, mode):
                 person_lid_mandaat, person_lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2017/Lid')
               
               #g.add((person_role_mandaat, ns.org.postIn, bestuur_temporary_17))
+              #g.add((person_lid_mandaat, ns.org.postIn, bestuur_temporary_17))
               g.add((bestuur_temporary_17, ns.org.hasPost, person_role_mandaat))
               g.add((bestuur_temporary_17, ns.org.hasPost, person_lid_mandaat)) 
             else:
               person_role_mandaat, person_role_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2020' + role)
               person_lid_mandaat, person_lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2020/Lid') 
+              
               #g.add((person_role_mandaat, ns.org.postIn, bestuur_temporary_20))
+              #g.add((person_lid_mandaat, ns.org.postIn, bestuur_temporary_20))
               g.add((bestuur_temporary_20, ns.org.hasPost, person_role_mandaat))
               g.add((bestuur_temporary_20, ns.org.hasPost, person_lid_mandaat)) 
           elif str(row['Status_EB Cleansed']) == 'Niet Actief':
@@ -379,7 +385,7 @@ def main(file, mode):
             g.add((lid_mandaat, ns.org.role, bestuurfunctie_id))
 
             ## Lid - Mandataris
-            lid_mandataris, lid_mandataris_uuid = concept_uri(lblod + 'mandatarissen/', str(row['organization_id']) + str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']) + role)
+            lid_mandataris, lid_mandataris_uuid = concept_uri(lblod + 'mandatarissen/', str(row['organization_id']) + person_uuid + role)
             g.add((lid_mandataris, RDF.type, ns.mandaat.Mandataris))
             g.add((lid_mandataris, RDF.type, ns.ere.EredienstMandataris))
             add_literal(g, lid_mandataris, ns.mu.uuid, lid_mandataris_uuid, XSD.string)

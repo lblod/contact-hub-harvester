@@ -134,6 +134,7 @@ def main(file, mode):
       if bool(row['Verkiezingen17']) == True:
         # Bestuursorgaan in bestuursperiode 2017-2020
         bestuur_temporary_17, bestuur_temporary_17_uuid = concept_uri(lblod + 'centralebestuursorganen/', str(row['Titel']) + 'centralebestuursorganen/2017')
+        g.add((bestuur_temporary_17, RDF.type, ns.besluit.Bestuursorgaan))
         g.add((bestuur_temporary_17, RDF.type, ns.ere.CentraleBestuursorgaan))
         add_literal(g, bestuur_temporary_17, ns.mu.uuid, bestuur_temporary_17_uuid, XSD.string)
         g.add((bestuur_temporary_17, ns.generiek.isTijdspecialisatieVan, bo_id))
@@ -153,6 +154,7 @@ def main(file, mode):
       if str(row['Status_CKB_cleansed']) == 'Actief' and bool(row['Verkiezingen2020']) == True:
         # Bestuursorgaan in bestuursperiode 2020-2023
         bestuur_temporary_20, bestuur_temporary_20_uuid = concept_uri(lblod + 'centralebestuursorganen/', str(row['Titel']) + 'centralebestuursorganen/2020')
+        g.add((bestuur_temporary_20, RDF.type, ns.besluit.Bestuursorgaan))
         g.add((bestuur_temporary_20, RDF.type, ns.ere.CentraleBestuursorgaan))
         add_literal(g, bestuur_temporary_20, ns.mu.uuid, bestuur_temporary_20_uuid, XSD.string)
         g.add((bestuur_temporary_20, ns.generiek.isTijdspecialisatieVan, bo_id))
@@ -223,16 +225,16 @@ def main(file, mode):
             
             g.add((person_role_mandataris, ns.mandaat.isBestuurlijkeAliasVan, person_role))
             g.add((person_role_mandataris, ns.org.holds, person_role_mandaat))
+            g.add((person_role_mandataris, ns.mandaat.status, ns.mandataris_status['Effectief']))
             
             if str(row['Verkiezingen2020_Opmerkingen Cleansed']) != str(np.nan):
               add_literal(g, person_role_mandataris, ns.mandaat.start, dateparser.parse(str(row['Verkiezingen2020_Opmerkingen Cleansed'])), XSD.dateTime)
                # possible end date = start date + 3 years
               add_literal(g, person_role_mandataris, ns.ere.geplandeEinddatumAanstelling, (dateparser.parse(str(row['Verkiezingen2020_Opmerkingen Cleansed'])) + timedelta(days=1095)).isoformat(), XSD.dateTime)            
-              g.add((person_role_mandataris, ns.mandaat.status, ns.mandataris_status['Effectief']))
+              
             elif str(row['Verkiezingen17_Opmerkingen Cleansed']) != str(np.nan) and str(row['Status_CKB_cleansed']) == 'Niet Actief':
               add_literal(g, person_role_mandataris, ns.mandaat.start, dateparser.parse(str(row['Verkiezingen17_Opmerkingen Cleansed'])), XSD.dateTime) 
               add_literal(g, person_role_mandataris, ns.mandaat.einde, (dateparser.parse(str(row['Verkiezingen17_Opmerkingen Cleansed'])) + timedelta(days=1095)).isoformat(), XSD.dateTime)
-              g.add((person_role_mandataris, ns.mandaat.status, ns.mandataris_status['Effectief']))
 
             g.add((person_role_mandaat, ns.org.heldBy, person_role_mandataris))
             g.add((person_role, ns.mandaat.isAangesteldAls, person_role_mandataris))
