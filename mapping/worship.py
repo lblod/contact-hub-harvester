@@ -47,16 +47,6 @@ def main(file, mode):
     status = get_concept_id(codelist_ere, str(row['Status_EB Cleansed']))
     g.add((abb_id, ns.rov.orgStatus, status))
 
-    if str(row['Gemeente Cleansed']) != str(np.nan):
-      location_concept_g = get_werkingsgebied_concept(str(row['Gemeente Cleansed']), 'Gemeente')
-      if location_concept_g != None:
-        gemeente_id = URIRef(location_concept_g['s']['value'])
-        g.add((gemeente_id, RDF.type, ns.prov.Location))
-        add_literal(g, gemeente_id, ns.mu.uuid, location_concept_g['uuid']['value'], XSD.string)
-        add_literal(g, gemeente_id, RDFS.label, str(row['Gemeente Cleansed']), XSD.string)
-        add_literal(g, gemeente_id, ns.ext.werkingsgebiedNiveau, 'Gemeente', XSD.string)
-        g.add((abb_id, ns.besluit.werkingsgebied, gemeente_id))
-
     if str(row['Provincie Cleansed']) != str(np.nan):
       location_concept_p = get_werkingsgebied_concept(str(row['Provincie Cleansed']), 'Provincie')
       if location_concept_p != None:
@@ -136,8 +126,8 @@ def main(file, mode):
           g.add((ce_id, ns.org.resultingOrganization, abb_id))
           g.add((abb_id, ns.org.resultedFrom, ce_id))
 
-    if row['Public Involvement Cleansed'] != '{}':
-      public_invs_ = row['Public Involvement Cleansed']
+    if row['Local Engagement Cleansed'] != '{}':
+      public_invs_ = row['Local Engagement Cleansed']
       json_acceptable_string = public_invs_.replace("'", "\"")
       public_invs = json.loads(json_acceptable_string)
 
@@ -152,6 +142,16 @@ def main(file, mode):
           g.add((pi_id, ns.org.organization, abb_id))
           
           g.add((URIRef(municipality_uri), ns.ere.betrokkenBestuur, pi_id))
+          
+    elif str(row['Gemeente Cleansed']) != str(np.nan):
+      location_concept_g = get_werkingsgebied_concept(str(row['Gemeente Cleansed']), 'Gemeente')
+      if location_concept_g != None:
+        gemeente_id = URIRef(location_concept_g['s']['value'])
+        g.add((gemeente_id, RDF.type, ns.prov.Location))
+        add_literal(g, gemeente_id, ns.mu.uuid, location_concept_g['uuid']['value'], XSD.string)
+        add_literal(g, gemeente_id, RDFS.label, str(row['Gemeente Cleansed']), XSD.string)
+        add_literal(g, gemeente_id, ns.ext.werkingsgebiedNiveau, 'Gemeente', XSD.string)
+        g.add((abb_id, ns.besluit.werkingsgebied, gemeente_id))
           
     # Vestiging
     if exists_address(row):

@@ -143,7 +143,32 @@ def postcode_cleansing(postcode):
 
   return [postcode_cleansed, comment]
 
-def find_city_provincie(city):
+def gemeente_cleansing(city):
+  gemeente_cleansed = comment = np.nan
+  sl = None
+
+  if city != 'nan':
+    if ' (' in city:
+      sl = city.split(' (')
+    elif '(' in city:
+      sl = city.split('(')
+    elif '-' in city:
+      sl = city.split('-')
+
+    if sl != None:
+      if is_municipality(sl[0]):
+        gemeente_cleansed = sl[0]
+      else:
+        comment = "Municipality Not Found"
+    else:
+      if is_municipality(city):
+        gemeente_cleansed = city
+      else:
+        comment = "Municipality Not Found"
+
+  return [gemeente_cleansed, comment]
+    
+def find_city_province(city):
   return GP[GP['Gemeente'].str.fullmatch(city)]
 
 def provincie_cleansing(row):
@@ -152,18 +177,22 @@ def provincie_cleansing(row):
   city = row[row.index[0]]
   province = row[row.index[1]]
   
-  result = find_city_provincie(city)
-    
-  if len(result) > 0:
-    if str(result.iloc[0]['Provincie']).lower().strip() != province.lower().strip():
-      provincie_cleansed = result.iloc[0]['Provincie'].strip().title()
-      comment = "Different Provincie"
+  if city != 'nan':
+    result = find_city_province(city)
+      
+    if len(result) > 0:
+      if str(result.iloc[0]['Provincie']).lower().strip() != province.lower().strip():
+        provincie_cleansed = result.iloc[0]['Provincie'].strip().title()
+        comment = "Different Province"
+      else:
+        provincie_cleansed = province
     else:
       provincie_cleansed = province
-  elif city != 'nan':
+      comment = "Municipality Not Found"
+  elif province != 'nan':
     provincie_cleansed = province
-    comment = "Municipality Not Found"
-  
+    comment = "Municipality Empty"
+
   return [provincie_cleansed, comment]
 
 def mail_cleansing(mail):
@@ -417,7 +446,7 @@ def voting_cleansing(date):
   return [date_cleansed, comment]
 
 # final data will be [municipality_name:number]
-def extract_municipality_percentage(data):
+def extract_area_percentage(data):
   m_p = []
   m_p.append(re.search(r'[a-zA-Z]+(\-[a-zA-Z]+)*', data).group())
 
@@ -429,60 +458,99 @@ def extract_municipality_percentage(data):
   return m_p
 
 def is_municipality(municipality):
-  res = find_city_provincie(municipality)
+  res = find_city_province(municipality)
 
   if len(res) > 0:
     return True
   else:
     return False
 
-def remarks_cleansing(row):
-  division = {}
+def local_engagement_cleansing(row):
+  division = {'Province': {}, 'Municipality': {}, 'Cross-Border': []}
   sl = None
-  info = row['Opmerkingen_EB'][:]
+  info = row['Opmerkingen_EB']
   cross_border = row['Grensoverschrijdend']
-  
-  if cross_border and info != 'nan':
-    info_ = re.sub(r'\ben\b', ';', info)
-    if 'mschrijving' in info_:
-      info_ = re.sub(r'(Zelfbedruipend - )?([gG]ebiedso[p]?mschrijving)', '', info_)
-      
-      if ';' in info_:
-        sl = info_.split(';')
-      elif ', ' in info:
-        sl = info_.split(', ')
-      elif ' - ' in info:
-        sl = info_.split(' - ')
-      else:
-        sl = info_
-    elif 'Gebiedsverdeling' in info_:
-      info_ = re.sub(r'(Vroeger:)?(Gebiedsverdeling:)', '', info_)
-      sl = info_.split(';')
-    elif 'Verdeelsleutel' in info_:
-      info_ = re.sub(r'(Verdeelsleutel:)', '', info_)
-      sl = info_.split(', ')
-    else:
-      if ' - ' in info_:
-        sl = info_.split(' - ')
-      elif ', ' in info_:
-        sl = info_.split(', ')
-      elif ';' in info_:
-        sl = info_.split(';')
-      elif re.search(r'\d+(\,?\d+)?', info_):
-        sl = info_
-      else:
-        sl = None
-  
-    if sl != None:
-      if isinstance(sl, list):
+  province = row['Provincie Cleansed']
+  municipality = row['Gemeente Cleansed']
+  type_eredienst = row['Type_eredienst Cleansed']
+
+  #{'Provincie': {'sds': 12, 'ss': 12}, 'Gemeente': {'zze':12}, 'Cross-Border': {}}  
+
+  if type_eredienst == "Islamitisch" or type_eredienst == "Orthodox":
+    if not cross_border and province != 'nan':
+      division['Province'][province] = '100'
+      division['Cross-Border'].append(province)
+    elif cross_border and info != 'nan':
+      match = re.sub(r'\ben\b', ';', info)
+      match = re.sub(r'Gebiedsomschrijving: ', '', match)
+      sl = match.split(';')
+
+      if len(sl) == 2:
         for data in sl:
-          mp = extract_municipality_percentage(data)
+          mp = extract_area_percentage(data)
+
+          division['Province'][mp[0]] = mp[1]
+          division['Cross-Border'].append(mp[0])
+      else:
+        division['Province'][province] = ''
+        division['Cross-Border'].append(province)
+        
+        for data in sl:
+          mp = extract_area_percentage(data)
           
           if is_municipality(mp[0]):
-            division[mp[0]] = mp[1]
+            division['Cross-Border'].append(mp[0])
+            division['Municipality'][mp[0]] = mp[1]
+  else:
+    if not cross_border and municipality != 'nan':
+      division['Municipality'][municipality] = '100'
+      division['Cross-Border'].append(municipality)
+    elif cross_border and info != 'nan':
+      match = re.sub(r'\ben\b', ';', info)
+    
+      if 'mschrijving' in match:
+        match = re.sub(r'(Zelfbedruipend - )?([gG]ebiedso[p]?mschrijving)', '', match)
+        
+        if ';' in match:
+          sl = match.split(';')
+        elif ', ' in info:
+          sl = match.split(', ')
+        elif ' - ' in info:
+          sl = match.split(' - ')
+        else:
+          sl = match
+      elif 'Gebiedsverdeling' in match:
+        match = re.sub(r'(Vroeger:)?(Gebiedsverdeling:)', '', match)
+        sl = match.split(';')
+      elif 'Verdeelsleutel' in match:
+        match = re.sub(r'(Verdeelsleutel:)', '', match)
+        sl = match.split(', ')
       else:
-        mp = extract_municipality_percentage(sl)
-        division[mp[0]] = mp[1]
+        if ' - ' in match:
+          sl = match.split(' - ')
+        elif ', ' in match:
+          sl = match.split(', ')
+        elif ';' in match:
+          sl = match.split(';')
+        elif re.search(r'\d+(\,?\d+)?', match):
+          sl = match
+        else:
+          sl = None
+    
+      if sl != None:
+        if isinstance(sl, list):
+          for data in sl:
+            mp = extract_area_percentage(data)
+            
+            if is_municipality(mp[0]):
+              division['Municipality'][mp[0]] = mp[1]
+              division['Cross-Border'].append(mp[0])
+        else:
+          mp = extract_area_percentage(sl)
+          if is_municipality(mp[0]):
+            division['Municipality'][mp[0]] = mp[1]
+            division['Cross-Border'].append(mp[0])
+            
     
   return str(division)
 

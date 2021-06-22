@@ -3,21 +3,25 @@ import pandas as pd
 import numpy as np
 
 def main(eb):
-  eb['Public Involvement Cleansed'] = pd.Series(eb[['Opmerkingen_EB','Grensoverschrijdend']].astype({'Opmerkingen_EB': str, 'Grensoverschrijdend': bool}).apply(helper.remarks_cleansing, axis=1).values)
-
   eb['Change Event Cleansed'] = pd.Series(eb[['Status_EB', 'Statusinfo']].astype(str).apply(helper.change_event_cleansing, axis=1).values)
   
   eb['Status_EB Cleansed'] = pd.Series(eb['Status_EB'].astype(str).apply(helper.status_mapping_worship).values)
 
   eb['Bestuursorgaan Type'] = pd.Series(eb['Type_eredienst_EB'].astype(str).apply(helper.bestuursorgaan_mapping_worship).values)
 
+  eb['Type_eredienst Cleansed'] = eb['Type_eredienst_EB'].str.replace('Rooms-Katholiek Kathedraal', 'Rooms-Katholiek')
+
   eb[['Titel Cleansed']] = pd.Series(eb['Titel'].astype(str).apply(helper.space_cleansing).values)
 
   eb['Gemeente Cleansed'] = eb['Gemeente_EB'].str.strip().str.title().replace('Antwerpen (Deurne', 'Antwerpen (Deurne)')
 
+  eb[['Gemeente Cleansed', 'Gemeente Comment']] = pd.DataFrame(eb['Gemeente Cleansed'].astype(str).apply(helper.gemeente_cleansing).values.tolist(), columns=['gemeente_cleansed', 'comment'])
+
   eb[['Provincie Cleansed', 'Provincie Comment']] = pd.DataFrame(eb[['Gemeente Cleansed', 'Provincie_EB']].astype(str).apply(helper.provincie_cleansing, axis=1).values.tolist(), columns=['provincie_cleansed', 'comment'])
 
   eb['Provincie Cleansed'] = eb['Provincie Cleansed'].replace('nan', np.nan)
+
+  eb['Local Engagement Cleansed'] = pd.Series(eb[['Opmerkingen_EB', 'Grensoverschrijdend', 'Provincie Cleansed', 'Gemeente Cleansed', 'Type_eredienst Cleansed']].astype({'Opmerkingen_EB': str, 'Grensoverschrijdend': bool, 'Provincie Cleansed': str, 'Gemeente Cleansed': str, 'Type_eredienst Cleansed': str}).apply(helper.local_engagement_cleansing, axis=1).values)
 
   eb['Strekking Cleansed'] = eb['Strekking'].str.replace('Denominatie: ', '').str.replace('denominatie ', '').str.strip()
 
@@ -34,8 +38,6 @@ def main(eb):
   eb[['Verkiezingen17_Opmerkingen Cleansed', 'Verkiezingen17_Opmerkingen Comment']] = pd.DataFrame(eb['Verkiezingen17_Opmerkingen'].astype(str).apply(helper.voting_cleansing).values.tolist(), columns=['date_election','comment'])
 
   eb[['Verkiezingen2020_Opmerkingen Cleansed', 'Verkiezingen2020_Opmerkingen Comment']] = pd.DataFrame(eb['Verkiezingen2020_Opmerkingen'].astype(str).apply(helper.voting_cleansing).values.tolist(), columns=['date_election','comment'])
-
-  eb['Type_eredienst Cleansed'] = eb['Type_eredienst_EB'].str.replace('Rooms-Katholiek Kathedraal', 'Rooms-Katholiek') 
 
   eb['Representatief orgaan'] = pd.Series(eb[['Type_eredienst Cleansed','Provincie Cleansed','Gemeente Cleansed']].astype(str).apply(helper.worship_link_ro, axis=1).values)
   
