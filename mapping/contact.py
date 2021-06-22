@@ -68,7 +68,7 @@ def main(file, mode):
       # TODO: Map Functietitel properly
       role_id, _ = concept_uri(ns.lblod + 'rol/', str(row['Functietitel Cleansed']))
       g.add((role_id, RDF.type, ns.org.Role))
-      add_literal(g, role_id, RDFS.label, str(row['Functietitel Cleansed']))
+      add_literal(g, role_id, RDFS.label, str(row['Functietitel Cleansed']), XSD.string)
 
       g.add((position_id, ns.org.role, role_id))
 

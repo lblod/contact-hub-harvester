@@ -31,8 +31,8 @@ def main(file, mode):
     
     add_literal(g, abb_id, ns.mu.uuid, abb_uuid, XSD.string)
 
-    add_literal(g, abb_id, SKOS.prefLabel, str(row['Naam_EB']))
-    #add_literal(g, abb_id, ns.rov.legalName, str(row['Naam_EB']))
+    add_literal(g, abb_id, SKOS.prefLabel, str(row['Naam_EB']), XSD.string)
+    #add_literal(g, abb_id, ns.rov.legalName, str(row['Naam_EB']), XSD.string)
 
     g.add((abb_id, ns.org.classification, bestuurseenheid_classification_id))
 
@@ -40,7 +40,7 @@ def main(file, mode):
       type_ere = get_concept_id(codelist_ere, str(row['Type_eredienst Cleansed']))
       g.add((abb_id, ns.ere.typeEredienst, type_ere))    
   
-    add_literal(g, abb_id, ns.ere.grensoverscheidend, str(row['Grensoverschrijdend']).title(), XSD.boolean)
+    add_literal(g, abb_id, ns.ere.grensoverscheidend, str(row['Grensoverschrijdend']), XSD.boolean)
 
     add_literal(g, abb_id, ns.ere.denominatie, str(row['Strekking Cleansed']), XSD.string)
 
@@ -53,7 +53,7 @@ def main(file, mode):
         gemeente_id = URIRef(location_concept_g['s']['value'])
         g.add((gemeente_id, RDF.type, ns.prov.Location))
         add_literal(g, gemeente_id, ns.mu.uuid, location_concept_g['uuid']['value'], XSD.string)
-        add_literal(g, gemeente_id, RDFS.label, str(row['Gemeente Cleansed']))
+        add_literal(g, gemeente_id, RDFS.label, str(row['Gemeente Cleansed']), XSD.string)
         add_literal(g, gemeente_id, ns.ext.werkingsgebiedNiveau, 'Gemeente', XSD.string)
         g.add((abb_id, ns.besluit.werkingsgebied, gemeente_id))
 
@@ -63,7 +63,7 @@ def main(file, mode):
         province_id = URIRef(location_concept_p['s']['value'])
         g.add((province_id, RDF.type, ns.prov.Location))
         add_literal(g, province_id, ns.mu.uuid, location_concept_p['uuid']['value'], XSD.string)
-        add_literal(g, province_id, RDFS.label, str(row['Provincie Cleansed']))
+        add_literal(g, province_id, RDFS.label, str(row['Provincie Cleansed']), XSD.string)
         add_literal(g, province_id, ns.ext.werkingsgebiedNiveau, 'Provincie', XSD.string)
         g.add((abb_id, ns.vcard.hasRegion, province_id))
     
@@ -163,15 +163,15 @@ def main(file, mode):
       g.add((address_id, RDF.type, ns.locn.Address))
       add_literal(g, address_id, ns.mu.uuid, address_uuid, XSD.string)
       
-      add_literal(g, address_id, ns.locn.thoroughfare, str(row['Straat']))
+      add_literal(g, address_id, ns.locn.thoroughfare, str(row['Straat']), XSD.string)
       add_literal(g, address_id, ns.adres['Adresvoorstelling.huisnummer'], str(row['Huisnr Cleansed']), XSD.string)
       add_literal(g, address_id, ns.adres['Adresvoorstelling.busnummer'], str(row['Busnummer Cleansed']), XSD.string)
       add_literal(g, address_id, ns.locn.postCode, str(row['Postcode Cleansed']), XSD.string)
       add_literal(g, address_id, ns.adres.gemeentenaam, str(row['Gemeente Cleansed']), XSD.string)
-      add_literal(g, address_id, ns.locn.adminUnitL2, str(row['Provincie Cleansed']))
-      add_literal(g, address_id, ns.adres.land, 'België')
+      add_literal(g, address_id, ns.locn.adminUnitL2, str(row['Provincie Cleansed']), XSD.string)
+      add_literal(g, address_id, ns.adres.land, 'België', XSD.string)
       
-      add_literal(g, address_id, ns.locn.fullAddress, get_full_address(str(row['Straat']), str(row['Huisnr Cleansed']), str(row['Busnummer Cleansed']), str(row['Postcode Cleansed']), str(row['Gemeente Cleansed'])))
+      add_literal(g, address_id, ns.locn.fullAddress, get_full_address(str(row['Straat']), str(row['Huisnr Cleansed']), str(row['Busnummer Cleansed']), str(row['Postcode Cleansed']), str(row['Gemeente Cleansed'])), XSD.string)
 
       g.add((site_id, ns.organisatie.bestaatUit, address_id))
       g.add((abb_id, ns.org.hasPrimarySite, site_id))
@@ -222,11 +222,11 @@ def main(file, mode):
           # Person role
           if exists_given_and_family_name(row, role):
             person_role, person_uuid = concept_uri(lblod + 'personen/', str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']))
-            add_literal(g, person_role, FOAF.givenName, str(row[f'Naam_{role} First']))
-            add_literal(g, person_role, FOAF.familyName, str(row[f'Naam_{role} Last']))
+            add_literal(g, person_role, FOAF.givenName, str(row[f'Naam_{role} First']), XSD.string)
+            add_literal(g, person_role, FOAF.familyName, str(row[f'Naam_{role} Last']), XSD.string)
           else:
             person_role, person_uuid = concept_uri(lblod + 'personen/', str(row[f'Naam_{role} Cleansed']))
-            add_literal(g, person_role, FOAF.givenName, str(row[f'Naam_{role} Cleansed']))
+            add_literal(g, person_role, FOAF.givenName, str(row[f'Naam_{role} Cleansed']), XSD.string)
             
           g.add((person_role, RDF.type, ns.person.Person))
           add_literal(g, person_role, ns.mu.uuid, person_uuid, XSD.string)
@@ -338,7 +338,7 @@ def main(file, mode):
                 add_literal(g, person_role_address_id, ns.mu.uuid, person_role_address_uuid, XSD.string)
 
                 g.add((person_role_contact_uri, ns.locn.address, person_role_address_id))
-                add_literal(g, person_role_address_id, ns.locn.fullAddress, str(row[f'Adres_{role} Cleansed']))
+                add_literal(g, person_role_address_id, ns.locn.fullAddress, str(row[f'Adres_{role} Cleansed']), XSD.string)
 
       ####
       # Lids
@@ -346,11 +346,11 @@ def main(file, mode):
         if exists_role_worship(row, role):
           if exists_given_and_family_name(row, role):
             lid, lid_uuid =  concept_uri(lblod + 'personen/', str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']))
-            add_literal(g, lid, FOAF.givenName, str(row[f'Naam_{role} First']))
-            add_literal(g, lid, FOAF.familyName, str(row[f'Naam_{role} Last']))
+            add_literal(g, lid, FOAF.givenName, str(row[f'Naam_{role} First']), XSD.string)
+            add_literal(g, lid, FOAF.familyName, str(row[f'Naam_{role} Last']), XSD.string)
           else:
             lid, lid_uuid =  concept_uri(lblod + 'personen/', str(row[f'Naam_{role} Cleansed']))
-            add_literal(g, lid, FOAF.givenName, str(row[f'Naam_{role} Cleansed']))
+            add_literal(g, lid, FOAF.givenName, str(row[f'Naam_{role} Cleansed']), XSD.string)
           
           g.add((lid, RDF.type, ns.person.Person))
           add_literal(g, lid, ns.mu.uuid, lid_uuid, XSD.string)

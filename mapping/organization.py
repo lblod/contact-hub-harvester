@@ -22,7 +22,7 @@ def main(file, mode):
 
     #g.add((abb_id, RDFS.subClassOf, ns.org.Organization))
 
-    add_literal(g, abb_id, SKOS.prefLabel, str(row['Titel']))
+    add_literal(g, abb_id, SKOS.prefLabel, str(row['Titel']), XSD.string)
     #add_literal(g, abb_id, ns.rov.legalName, str(row['Maatschappelijke Naam']))
    
     bestuurseenheid_classification_id = get_concept_id(codelist_bestuurseenheid, str(row['Type Entiteit']))
@@ -77,13 +77,13 @@ def main(file, mode):
       if exists_address(row):
         address_id, _ = concept_uri(ns.lblod + 'adresvoorstelling/', str(row['organisation_id']))
         g.add((address_id, RDF.type, ns.locn.Address))
-        add_literal(g, address_id, ns.locn.thoroughfare, str(row['Straat']))
+        add_literal(g, address_id, ns.locn.thoroughfare, str(row['Straat']), XSD.string)
         add_literal(g, address_id, ns.adres['Adresvoorstelling.huisnummer'], str(row['Huisnr_cleansed']), XSD.string)
         add_literal(g, address_id, ns.adres['Adresvoorstelling.busnummer'], str(row['Busnr_new']), XSD.string)
         add_literal(g, address_id, ns.locn.postCode, str(row['Postcode van de organisatie_cleansed']), XSD.string)
-        add_literal(g, address_id, ns.adres.gemeentenaam, str(row['Gemeente van de organisatie']))
-        add_literal(g, address_id, ns.locn.adminUnitL2, str(row['Provincie Cleansed']))
-        add_literal(g, address_id, ns.adres.land, 'België')
+        add_literal(g, address_id, ns.adres.gemeentenaam, str(row['Gemeente van de organisatie']), XSD.string)
+        add_literal(g, address_id, ns.locn.adminUnitL2, str(row['Provincie Cleansed']), XSD.string)
+        add_literal(g, address_id, ns.adres.land, 'België', XSD.string)
 
         g.add((site_id, ns.organisatie.bestaatUit, address_id))
       

@@ -21,7 +21,7 @@ def main(file, mode):
     g.add((abb_id, RDF.type, ns.ere.RepresentatiefOrgaan))
     add_literal(g, abb_id, ns.mu.uuid, abb_uuid, XSD.string)
 
-    add_literal(g, abb_id, SKOS.prefLabel, str(row['representatief orgaan']))
+    add_literal(g, abb_id, SKOS.prefLabel, str(row['representatief orgaan']), XSD.string)
 
     #g.add((abb_id, RDFS.subClassOf, ns.org.Organization))
     #g.add((abb_id, RDFS.subClassOf, ns.org.RegisteredOrganization))
@@ -68,13 +68,13 @@ def main(file, mode):
     address_id, address_uuid = concept_uri(lblod + 'adressen/', str(row['representatief orgaan']))
     g.add((address_id, RDF.type, ns.locn.Address))
     add_literal(g, address_id, ns.mu.uuid, address_uuid, XSD.string)
-    add_literal(g, address_id, ns.locn.thoroughfare, str(row['Straatnaam']))
+    add_literal(g, address_id, ns.locn.thoroughfare, str(row['Straatnaam']), XSD.string)
     add_literal(g, address_id, ns.adres['Adresvoorstelling.huisnummer'], str(row['Huisnummer']), XSD.string)
     add_literal(g, address_id, ns.adres['Adresvoorstelling.busnummer'], str(row['Busnummer']), XSD.string)
     add_literal(g, address_id, ns.locn.postCode, str(row['Postcode']), XSD.string)
-    add_literal(g, address_id, ns.adres.gemeentenaam, str(row['Gemeentenaam']))
-    add_literal(g, address_id, ns.locn.adminUnitL2, str(row['Provincie']))
-    add_literal(g, address_id, ns.adres.land, 'België')
+    add_literal(g, address_id, ns.adres.gemeentenaam, str(row['Gemeentenaam']), XSD.string)
+    add_literal(g, address_id, ns.locn.adminUnitL2, str(row['Provincie']), XSD.string)
+    add_literal(g, address_id, ns.adres.land, 'België', XSD.string)
     
     g.add((site_id, ns.organisatie.bestaatUit, address_id))
 
@@ -83,14 +83,14 @@ def main(file, mode):
     person_id, person_uuid = concept_uri(lblod + 'personen/', str(row['Voornaam']) + str(row['Achternaam']))
     g.add((person_id, RDF.type, ns.person.Person))
     add_literal(g, person_id, ns.mu.uuid, person_uuid, XSD.string)
-    add_literal(g, person_id, FOAF.givenName, str(row['Voornaam']))
-    add_literal(g, person_id, FOAF.familyName, str(row['Achternaam']))
-    add_literal(g, person_id, ns.persoon.gebruikteVoornaam, str(row['Gebruikte Voornaam']))
+    add_literal(g, person_id, FOAF.givenName, str(row['Voornaam']), XSD.string)
+    add_literal(g, person_id, FOAF.familyName, str(row['Achternaam']), XSD.string)
+    add_literal(g, person_id, ns.persoon.gebruikteVoornaam, str(row['Gebruikte Voornaam']), XSD.string)
 
     role_id, role_uuid = concept_uri(lblod + 'rol/', str(row['Rol']))
     g.add((role_id, RDF.type, SKOS.Concept))
     add_literal(g, role_id, ns.mu.uuid, role_uuid, XSD.string)
-    add_literal(g, role_id, SKOS.prefLabel, str(row['Rol']))
+    add_literal(g, role_id, SKOS.prefLabel, str(row['Rol']), XSD.string)
 
     position_id, position_uuid = concept_uri(lblod + 'positie/', str(row['representatief orgaan']) + str(row['Rol']))
     g.add((position_id, RDF.type, ns.org.Post))
