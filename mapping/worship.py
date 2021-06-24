@@ -25,8 +25,8 @@ def main(file, mode):
 
   for _, row in worship_cleansed.iterrows():
     abb_id, abb_uuid = concept_uri(lblod + 'besturenVanDeEredienst/', str(row['organization_id']))
-    g.add((abb_id, RDF.type, ns.org.Organization))
-    g.add((abb_id, RDF.type, ns.besluit.Bestuurseenheid))
+    # g.add((abb_id, RDF.type, ns.org.Organization))
+    # g.add((abb_id, RDF.type, ns.besluit.Bestuurseenheid))
     g.add((abb_id, RDF.type, ns.ere.BestuurVanDeEredienst))
     
     add_literal(g, abb_id, ns.mu.uuid, abb_uuid, XSD.string)
@@ -47,16 +47,6 @@ def main(file, mode):
     status = get_concept_id(codelist_ere, str(row['Status_EB Cleansed']))
     g.add((abb_id, ns.rov.orgStatus, status))
 
-    if str(row['Provincie Cleansed']) != str(np.nan):
-      location_concept_p = get_werkingsgebied_concept(str(row['Provincie Cleansed']), 'Provincie')
-      if location_concept_p != None:
-        province_id = URIRef(location_concept_p['s']['value'])
-        g.add((province_id, RDF.type, ns.prov.Location))
-        add_literal(g, province_id, ns.mu.uuid, location_concept_p['uuid']['value'], XSD.string)
-        add_literal(g, province_id, RDFS.label, str(row['Provincie Cleansed']), XSD.string)
-        add_literal(g, province_id, ns.ext.werkingsgebiedNiveau, 'Provincie', XSD.string)
-        g.add((abb_id, ns.vcard.hasRegion, province_id))
-    
     if str(row['Naam_CKB_EB1']) != str(np.nan):
       ckb_id, _ = concept_uri(lblod + 'centraalBestuurVanDeEredienst/', str(row['Naam_CKB_EB1']))
       g.add((abb_id, ns.org.linkedTo, ckb_id))
@@ -126,12 +116,12 @@ def main(file, mode):
           g.add((ce_id, ns.org.resultingOrganization, abb_id))
           g.add((abb_id, ns.org.resultedFrom, ce_id))
 
-    if row['Local Engagement Cleansed'] != '{}':
-      public_invs_ = row['Local Engagement Cleansed']
-      json_acceptable_string = public_invs_.replace("'", "\"")
-      public_invs = json.loads(json_acceptable_string)
+    local_eng = row['Local Engagement Cleansed']
+    json_acceptable_string = local_eng.replace("'", "\"")
+    local_eng = json.loads(json_acceptable_string)
 
-      for municipality, perc in public_invs.items():
+    if len(local_eng['Cross-Border']) > 0:
+      for municipality, perc in local_eng['Municipality'].items():
         municipality_uri = get_adm_unit_concept(municipality, "Gemeente")
         if municipality_uri != None:
           pi_id, pi_uuid = concept_uri(lblod + 'betrokkenLokaleBesturen/', municipality + abb_uuid)
@@ -142,16 +132,47 @@ def main(file, mode):
           g.add((pi_id, ns.org.organization, abb_id))
           
           g.add((URIRef(municipality_uri), ns.ere.betrokkenBestuur, pi_id))
+
+      for province, perc in local_eng['Province'].items():
+        province_uri = get_adm_unit_concept(province, "Provincie")
+        if province_uri != None:
+          pi_id, pi_uuid = concept_uri(lblod + 'betrokkenLokaleBesturen/', province + abb_uuid)
+          g.add((pi_id, RDF.type, ns.ere.BetrokkenLokaleBesturen))
+          add_literal(g, pi_id, ns.mu.uuid, pi_uuid, XSD.string)
+          if perc != '':
+            add_literal(g, pi_id, ns.ere.financieringspercentage, str(perc), XSD.float)
+          g.add((pi_id, ns.org.organization, abb_id))
           
-    elif str(row['Gemeente Cleansed']) != str(np.nan):
-      location_concept_g = get_werkingsgebied_concept(str(row['Gemeente Cleansed']), 'Gemeente')
-      if location_concept_g != None:
-        gemeente_id = URIRef(location_concept_g['s']['value'])
-        g.add((gemeente_id, RDF.type, ns.prov.Location))
-        add_literal(g, gemeente_id, ns.mu.uuid, location_concept_g['uuid']['value'], XSD.string)
-        add_literal(g, gemeente_id, RDFS.label, str(row['Gemeente Cleansed']), XSD.string)
-        add_literal(g, gemeente_id, ns.ext.werkingsgebiedNiveau, 'Gemeente', XSD.string)
-        g.add((abb_id, ns.besluit.werkingsgebied, gemeente_id))
+          g.add((URIRef(province_uri), ns.ere.betrokkenBestuur, pi_id))
+          #g.add((URIRef(province_uri), SKOS.prefLabel, province_uri['label']['value']))
+      
+      if len(local_eng['Cross-Border']) == 1 and local_eng['Municipality']:          
+        location_concept_g = get_werkingsgebied_concept(local_eng['Cross-Border'][0], 'Gemeente')
+        if location_concept_g != None:
+          gemeente_id = URIRef(location_concept_g['s']['value'])
+          g.add((gemeente_id, RDF.type, ns.prov.Location))
+          add_literal(g, gemeente_id, ns.mu.uuid, location_concept_g['uuid']['value'], XSD.string)
+          add_literal(g, gemeente_id, RDFS.label, local_eng['Cross-Border'][0], XSD.string)
+          add_literal(g, gemeente_id, ns.ext.werkingsgebiedNiveau, 'Gemeente', XSD.string)
+          g.add((abb_id, ns.besluit.werkingsgebied, gemeente_id))
+      elif len(local_eng['Cross-Border']) == 1 and local_eng['Province']:
+        location_concept_p = get_werkingsgebied_concept(local_eng['Cross-Border'][0], 'Provincie')
+        if location_concept_p != None:
+          province_id = URIRef(location_concept_p['s']['value'])
+          g.add((province_id, RDF.type, ns.prov.Location))
+          add_literal(g, province_id, ns.mu.uuid, location_concept_p['uuid']['value'], XSD.string)
+          add_literal(g, province_id, RDFS.label, local_eng['Cross-Border'][0], XSD.string)
+          add_literal(g, province_id, ns.ext.werkingsgebiedNiveau, 'Provincie', XSD.string)
+          g.add((abb_id, ns.besluit.werkingsgebied, province_id))
+      else:
+        region_label = ','.join(local_eng['Cross-Border'])
+        region_id, region_uuid = concept_uri(lblod + 'werkingsgebieden/', region_label + abb_uuid)
+        g.add((region_id, RDF.type, ns.prov.Location))
+        add_literal(g, region_id, ns.mu.uuid, region_uuid, XSD.string)
+        add_literal(g, region_id, RDFS.label, region_label, XSD.string)
+        add_literal(g, region_id, ns.ext.werkingsgebiedNiveau, 'Regio', XSD.string)
+        g.add((abb_id, ns.besluit.werkingsgebied, region_id))
+    
           
     # Vestiging
     if exists_address(row):
@@ -278,7 +299,7 @@ def main(file, mode):
 
             ## Role - Mandataris
             person_role_mandataris, person_role_mandataris_uuid = concept_uri(lblod + 'mandatarissen/', str(row['organization_id']) + person_uuid + role)
-            g.add((person_role_mandataris, RDF.type, ns.mandaat.Mandataris))
+            #g.add((person_role_mandataris, RDF.type, ns.mandaat.Mandataris))
             g.add((person_role_mandataris, RDF.type, ns.ere.EredienstMandataris))
             add_literal(g, person_role_mandataris, ns.mu.uuid, person_role_mandataris_uuid, XSD.string)
 
@@ -286,7 +307,7 @@ def main(file, mode):
             g.add((person_role_mandataris, ns.org.holds, person_role_mandaat))
 
             person_lid_mandataris, person_lid_mandataris_uuid = concept_uri(lblod + 'mandatarissen/', str(row['organization_id']) + person_uuid + 'lid')
-            g.add((person_lid_mandataris, RDF.type, ns.mandaat.Mandataris))
+            #g.add((person_lid_mandataris, RDF.type, ns.mandaat.Mandataris))
             g.add((person_lid_mandataris, RDF.type, ns.ere.EredienstMandataris))
             add_literal(g, person_lid_mandataris, ns.mu.uuid, person_lid_mandataris_uuid, XSD.string)
 

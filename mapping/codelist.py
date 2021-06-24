@@ -14,7 +14,7 @@ def create_status_uri(g):
   for status in status_list:
     concept, uuid = concept_uri(ns.gift + 'concepts/', status)
     g.add((concept, RDF.type, SKOS.Concept))
-    g.add((concept, RDF.type, ns.gift_v.StatusCode))
+    g.add((concept, RDF.type, ns.gift_v.OrganisatieStatusCode))
     g.add((concept, SKOS.prefLabel, Literal(status)))
     g.add((concept, SKOS.topConceptOf, status_concept_scheme))
     g.add((concept, SKOS.inScheme, status_concept_scheme))

@@ -23,8 +23,8 @@ def main(file, mode):
 
   for _, row in central_cleansed.iterrows():    
     abb_id, abb_uuid = concept_uri(lblod + 'centraleBesturenVanDeEredienst/', str(row['Titel']))
-    g.add((abb_id, RDF.type, ns.org.Organization))
-    g.add((abb_id, RDF.type, ns.besluit.Bestuurseenheid))
+    #g.add((abb_id, RDF.type, ns.org.Organization))
+    #g.add((abb_id, RDF.type, ns.besluit.Bestuurseenheid))
     g.add((abb_id, RDF.type, ns.ere.CentraalBestuurVanDeEredienst))
 
     add_literal(g, abb_id, ns.mu.uuid, abb_uuid, XSD.string)
@@ -65,7 +65,7 @@ def main(file, mode):
       g.add((abb_id, ns.org.linkedTo, national_id))
 
     bo_id, bo_uuid = concept_uri(lblod + 'centraleBestuursorgaan/', str(row['Titel']) + 'centraleBestuursorgaan')
-    g.add((bo_id, RDF.type, ns.besluit.Bestuursorgaan))
+    #g.add((bo_id, RDF.type, ns.besluit.Bestuursorgaan))
     g.add((bo_id, RDF.type, ns.ere.CentraleBestuursorgaan))
     add_literal(g, bo_id, ns.mu.uuid, bo_uuid, XSD.string)
 

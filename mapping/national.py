@@ -17,7 +17,7 @@ def main(file, mode):
 
   for _, row in national_raw.iterrows():
     abb_id, abb_uuid = concept_uri(lblod + 'representatiefOrgaan/', str(row['representatief orgaan']))
-    g.add((abb_id, RDF.type, ns.org.Organization))
+    #g.add((abb_id, RDF.type, ns.org.Organization))
     g.add((abb_id, RDF.type, ns.ere.RepresentatiefOrgaan))
     add_literal(g, abb_id, ns.mu.uuid, abb_uuid, XSD.string)
 
@@ -88,7 +88,7 @@ def main(file, mode):
     add_literal(g, person_id, ns.persoon.gebruikteVoornaam, str(row['Gebruikte Voornaam']), XSD.string)
 
     role_id, role_uuid = concept_uri(lblod + 'rol/', str(row['Rol']))
-    g.add((role_id, RDF.type, SKOS.Concept))
+    g.add((role_id, RDF.type, ns.org.Role))
     add_literal(g, role_id, ns.mu.uuid, role_uuid, XSD.string)
     add_literal(g, role_id, SKOS.prefLabel, str(row['Rol']), XSD.string)
 

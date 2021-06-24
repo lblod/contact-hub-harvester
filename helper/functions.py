@@ -352,7 +352,8 @@ def splitname(full_name, first_names):
 
   split = remove_title(full_name).split(' ')
 
-  if len(split) == 1 : comment.append('Cannot split name')
+  if len(split) == 1:
+    comment.append('Cannot split name')
 
   potential_first_last = is_known_first_name(split[0], first_names)
   potential_last_first = is_known_first_name(split[-1], first_names)
@@ -374,7 +375,7 @@ def splitname(full_name, first_names):
   else:
     comment.append('No potential first name found - {}'.format(full_name))
     # print([full_name])
-  return [first, last, ' - '.join(comment)]
+  return [str(first).strip(), str(last).strip(), ' - '.join(comment)]
 
 def decretale_functie_cleasing(decretale):
   decretale_functie = functionaris_status = np.nan

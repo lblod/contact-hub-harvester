@@ -28,10 +28,9 @@ ext = Namespace('http://mu.semte.ch/vocabularies/ext/')
 cs = Namespace('http://data.vlaanderen.be/id/conceptscheme/')
 c = Namespace('http://data.vlaanderen.be/id/concept/')
 gift = Namespace('http://lblod.data.gift/')
-gift_v = Namespace('http://lblod.data.gift/vocabularies/organization/')
+gift_v = Namespace('http://lblod.data.gift/vocabularies/organisatie/')
 
 mandataris_status = {
-  "Waarnemend": URIRef("http://data.vlaanderen.be/id/concept/MandatarisStatusCode/e1ca6edd-55e1-4288-92a5-53f4cf71946a"),
   "Effectief": URIRef("http://data.vlaanderen.be/id/concept/MandatarisStatusCode/21063a5b-912c-4241-841c-cc7fb3c73e75")
 }
 
