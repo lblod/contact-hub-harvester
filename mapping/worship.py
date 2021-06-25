@@ -122,8 +122,9 @@ def main(file, mode):
 
     if len(local_eng['Cross-Border']) > 0:
       for municipality, perc in local_eng['Municipality'].items():
-        municipality_uri = get_adm_unit_concept(municipality, "Gemeente")
-        if municipality_uri != None:
+        municipality_res = get_adm_unit_concept(municipality, "Gemeente")
+        if municipality_res != None:
+          municipality_adminunit = URIRef(municipality_res['s']['value'])
           pi_id, pi_uuid = concept_uri(lblod + 'betrokkenLokaleBesturen/', municipality + abb_uuid)
           g.add((pi_id, RDF.type, ns.ere.BetrokkenLokaleBesturen))
           add_literal(g, pi_id, ns.mu.uuid, pi_uuid, XSD.string)
@@ -131,11 +132,15 @@ def main(file, mode):
             add_literal(g, pi_id, ns.ere.financieringspercentage, str(perc), XSD.float)
           g.add((pi_id, ns.org.organization, abb_id))
           
-          g.add((URIRef(municipality_uri), ns.ere.betrokkenBestuur, pi_id))
+          g.add((municipality_adminunit, ns.ere.betrokkenBestuur, pi_id))
+          g.add((municipality_adminunit, RDF.type, ns.besluit.Bestuurseenheid))
+          add_literal(g, municipality_adminunit, SKOS.prefLabel, municipality, XSD.string)
+          add_literal(g, municipality_adminunit, ns.mu.uuid, municipality_res['uuid']['value'], XSD.string)
 
       for province, perc in local_eng['Province'].items():
-        province_uri = get_adm_unit_concept(province, "Provincie")
-        if province_uri != None:
+        province_res = get_adm_unit_concept(province, "Provincie")
+        if province_res != None:
+          province_adminunit = URIRef(province_res['s']['value'])
           pi_id, pi_uuid = concept_uri(lblod + 'betrokkenLokaleBesturen/', province + abb_uuid)
           g.add((pi_id, RDF.type, ns.ere.BetrokkenLokaleBesturen))
           add_literal(g, pi_id, ns.mu.uuid, pi_uuid, XSD.string)
@@ -143,8 +148,10 @@ def main(file, mode):
             add_literal(g, pi_id, ns.ere.financieringspercentage, str(perc), XSD.float)
           g.add((pi_id, ns.org.organization, abb_id))
           
-          g.add((URIRef(province_uri), ns.ere.betrokkenBestuur, pi_id))
-          #g.add((URIRef(province_uri), SKOS.prefLabel, province_uri['label']['value']))
+          g.add((province_adminunit, ns.ere.betrokkenBestuur, pi_id))
+          g.add((province_adminunit, RDF.type, ns.besluit.Bestuurseenheid))
+          add_literal(g, province_adminunit, SKOS.prefLabel, province, XSD.string)
+          add_literal(g, province_adminunit, ns.mu.uuid, province_res['uuid']['value'], XSD.string)
       
       if len(local_eng['Cross-Border']) == 1 and local_eng['Municipality']:          
         location_concept_g = get_werkingsgebied_concept(local_eng['Cross-Border'][0], 'Gemeente')
@@ -165,7 +172,7 @@ def main(file, mode):
           add_literal(g, province_id, ns.ext.werkingsgebiedNiveau, 'Provincie', XSD.string)
           g.add((abb_id, ns.besluit.werkingsgebied, province_id))
       else:
-        region_label = ','.join(local_eng['Cross-Border'])
+        region_label = ', '.join(local_eng['Cross-Border'])
         region_id, region_uuid = concept_uri(lblod + 'werkingsgebieden/', region_label + abb_uuid)
         g.add((region_id, RDF.type, ns.prov.Location))
         add_literal(g, region_id, ns.mu.uuid, region_uuid, XSD.string)
@@ -173,7 +180,6 @@ def main(file, mode):
         add_literal(g, region_id, ns.ext.werkingsgebiedNiveau, 'Regio', XSD.string)
         g.add((abb_id, ns.besluit.werkingsgebied, region_id))
     
-          
     # Vestiging
     if exists_address(row):
       site_id, site_uuid = concept_uri(lblod + 'vestigingen/', str(row['organization_id']) + 'Vestigingen')

@@ -49,23 +49,13 @@ def main(file, mode):
         add_literal(g, gemeente_id, RDFS.label, str(row['Gemeente Cleansed']), XSD.string)
         add_literal(g, gemeente_id, ns.ext.werkingsgebiedNiveau, 'Gemeente', XSD.string)
         g.add((abb_id, ns.besluit.werkingsgebied, gemeente_id))
-      
-    if str(row['Provincie Cleansed']) != str(np.nan):
-      location_concept_p = get_werkingsgebied_concept(str(row['Provincie Cleansed']), 'Provincie')
-      if location_concept_p != None:
-        province_id = URIRef(location_concept_p['s']['value'])
-        g.add((province_id, RDF.type, ns.prov.Location))
-        add_literal(g, province_id, ns.mu.uuid, location_concept_p['uuid']['value'], XSD.string)
-        add_literal(g, province_id, RDFS.label, str(row['Provincie Cleansed']), XSD.string)
-        add_literal(g, province_id, ns.ext.werkingsgebiedNiveau, 'Provincie', XSD.string)
-        g.add((abb_id, ns.vcard.hasRegion, province_id))
 
     if str(row['Representatief orgaan']) != str(np.nan):
       national_id, _ = concept_uri(lblod + 'representatieveOrganen/', str(row['Representatief orgaan']))
       g.add((abb_id, ns.org.linkedTo, national_id))
 
     bo_id, bo_uuid = concept_uri(lblod + 'centraleBestuursorgaan/', str(row['Titel']) + 'centraleBestuursorgaan')
-    #g.add((bo_id, RDF.type, ns.besluit.Bestuursorgaan))
+    g.add((bo_id, RDF.type, ns.besluit.Bestuursorgaan))
     g.add((bo_id, RDF.type, ns.ere.CentraleBestuursorgaan))
     add_literal(g, bo_id, ns.mu.uuid, bo_uuid, XSD.string)
 
@@ -201,7 +191,7 @@ def main(file, mode):
 
             ## Mandataris
             person_role_mandataris, person_role_mandataris_uuid = concept_uri(lblod + 'mandatarissen/', str(row['Titel'] + person_uuid + 'mandatarissen' + role))
-            g.add((person_role_mandataris, RDF.type, ns.mandaat.Mandataris))
+            #g.add((person_role_mandataris, RDF.type, ns.mandaat.Mandataris))
             g.add((person_role_mandataris, RDF.type, ns.ere.EredienstMandataris))
             add_literal(g, person_role_mandataris, ns.mu.uuid, person_role_mandataris_uuid, XSD.string)
 

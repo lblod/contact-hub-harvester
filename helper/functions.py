@@ -616,8 +616,9 @@ def get_adm_unit_concept(adm_label, classification):
       PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
       PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
       PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-      SELECT ?s WHERE {{
-        ?s a besluit:Bestuurseenheid; skos:prefLabel "{adm_label}"; besluit:classificatie ?classificatie .
+      PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+      SELECT ?s ?uuid WHERE {{
+        ?s a besluit:Bestuurseenheid; skos:prefLabel "{adm_label}"; mu:uuid ?uuid; besluit:classificatie ?classificatie .
         ?classificatie skos:prefLabel "{classification}" .
       }}
   """.format(adm_label = adm_label, classification = classification)
@@ -628,7 +629,7 @@ def get_adm_unit_concept(adm_label, classification):
   results = SPARQL.query().convert()
   
   if len(results['results']['bindings']) > 0:
-    adm_concept = results['results']['bindings'][0]['s']['value']    
+    adm_concept = results['results']['bindings'][0]   
     
   return adm_concept
 
