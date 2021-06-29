@@ -120,6 +120,59 @@ def create_type_involvement_ere(g):
     g.add((concept, SKOS.inScheme, types_involvement_concept_scheme))
     g.add((concept, ns.mu.uuid, Literal(uuid)))
 
+def bedinaar_criterion_ere(g): 
+  bedinaar_criterion_list = ['Bevestiging door het representatief orgaan', 'Inburgeringsplicht (niet EU bedienaren)', 'Arbeidsvergunning (niet EU bedienaren)'
+                'Verblijfsvergunning (niet EU bedienaren)']
+
+  bedinaar_concept_scheme, uuid = concept_uri(ns.gift + 'concept-schemes/', 'VoorwaardenBedinaarCriterium')
+  g.add((bedinaar_concept_scheme, RDF.type, SKOS.ConceptScheme))
+  g.add((bedinaar_concept_scheme, SKOS.prefLabel, Literal('Voorwaarden Bedinaar Criterium')))
+  g.add((bedinaar_concept_scheme, ns.mu.uuid, Literal(uuid)))
+
+  for criterion in bedinaar_criterion_list:
+    concept, uuid = concept_uri(ns.gift + 'concepts/', criterion)
+    g.add((concept, RDF.type, ns.gift_v.VoorwaardenBedinaarCriterium))
+    g.add((concept, SKOS.prefLabel, Literal(criterion)))
+    g.add((concept, SKOS.topConceptOf, bedinaar_concept_scheme))
+    g.add((concept, SKOS.inScheme, bedinaar_concept_scheme))
+    g.add((concept, ns.mu.uuid, Literal(uuid)))
+
+def document_type_criterion(g):
+  document_type_criterion_list = ['Bijlage goedkeuring door het Representatief orgaan', 'Bewijststuk status inburgeringsplicht', 'Arbeidskaart',
+                                  'Bewijststuk verblijfsvergunning']
+  
+  document_type_concept_scheme, uuid = concept_uri(ns.gift + 'concept-schemes/', 'BedinaarCriteriumBewijsstuk')
+  g.add((document_type_concept_scheme, RDF.type, SKOS.ConceptScheme))
+  g.add((document_type_concept_scheme, SKOS.prefLabel, Literal('Bedinaar Criterium Bewijsstuk')))
+  g.add((document_type_concept_scheme, ns.mu.uuid, Literal(uuid)))
+
+  for doc_type in document_type_criterion_list:
+    concept, uuid = concept_uri(ns.gift + 'concepts/', doc_type)
+    g.add((concept, RDF.type, ns.gift_v.BedinaarCriteriumBewijsstuk))
+    g.add((concept, SKOS.prefLabel, Literal(doc_type)))
+    g.add((concept, SKOS.topConceptOf, document_type_concept_scheme))
+    g.add((concept, SKOS.inScheme, document_type_concept_scheme))
+    g.add((concept, ns.mu.uuid, Literal(uuid)))
+
+def rol_bedinaar_functies(g):
+  functies_list = ['Vervanger', 'Pastoor', 'Kerkbedienaar', 'Kapelaan', 'Onderpastoor', 'Parochieassistent', 'Eerste predikant', 'Tweede predikant bij het voorzitterschap van de Synode',
+                   'Predikant bij het voorzitterschap van de Synode', 'Secretaris bij het voorzitterschap van de Synode', 'Hulppredikant', 'Pastoor-deken', 'Bedienaar',
+                   'Kapelaan van de kerken te Antwerpen en te Elsene (Geünifieerde anglikaanse kerk)', 'Kapelaan van de andere kerken', 'Rabbijn', 'Officiërend bedienaar',
+                   'Eerste Imam in rang', 'Tweede Imam in rang', 'Derde Imam in rang']
+                  
+  bedinaar_functie_concept_scheme, uuid = concept_uri(ns.gift + 'concept-schemes/', 'RolBedinaarFunctie')
+  g.add((bedinaar_functie_concept_scheme, RDF.type, SKOS.ConceptScheme))
+  g.add((bedinaar_functie_concept_scheme, SKOS.prefLabel, Literal('Rol Bedinaar Functie')))
+  g.add((bedinaar_functie_concept_scheme, ns.mu.uuid, Literal(uuid)))
+
+  for functie in functies_list:
+    concept, uuid = concept_uri(ns.gift + 'concepts/', functie)
+    g.add((concept, RDF.type, ns.gift_v.RolBedinaarFunctie))
+    g.add((concept, SKOS.prefLabel, Literal(functie)))
+    g.add((concept, SKOS.topConceptOf, bedinaar_functie_concept_scheme))
+    g.add((concept, SKOS.inScheme, bedinaar_functie_concept_scheme))
+    g.add((concept, ns.mu.uuid, Literal(uuid)))
+  
 
 def main():
   g = Graph()
@@ -137,6 +190,10 @@ def main():
   create_type_helft(g)
 
   create_type_involvement_ere(g)
+
+  bedinaar_criterion_ere(g)
+
+  document_type_criterion(g)
 
   export_data(g, 'codelist-ere')
 
