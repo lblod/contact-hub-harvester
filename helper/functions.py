@@ -75,11 +75,15 @@ def load_graph(name):
   return cl
 
 def get_concept_id(graph, label):
+  concept = None
   
   qres = graph.query('SELECT ?concept WHERE { ?concept skos:prefLabel ?label .}',
           initNs = { "skos": SKOS }, initBindings={'label': Literal(label)})
+
+  if qres.bindings:
+    concept = qres.bindings[0]['concept']
   
-  return qres.bindings[0]['concept']
+  return concept
 
 def get_label_role(role):
   label_role_dict = {'voorzitter worship':'Voorzitter van het bestuur van de eredienst', 'voorzitter central': 'Voorzitter van het centraal bestuur van de eredienst', 

@@ -13,7 +13,6 @@ def create_status_uri(g):
 
   for status in status_list:
     concept, uuid = concept_uri(ns.gift + 'concepts/', status)
-    g.add((concept, RDF.type, SKOS.Concept))
     g.add((concept, RDF.type, ns.gift_v.OrganisatieStatusCode))
     g.add((concept, SKOS.prefLabel, Literal(status)))
     g.add((concept, SKOS.topConceptOf, status_concept_scheme))
@@ -32,7 +31,6 @@ def create_bestuursfuncie_ere(g):
 
   for bfunctie in ere_bestuursfuncie_list:
     concept, uuid = concept_uri(ns.c + 'BestuursfunctieCode/', bfunctie)
-    g.add((concept, RDF.type, SKOS.Concept))
     g.add((concept, RDF.type, ns.gift_v.BestuursfunctieCode))
     g.add((concept, SKOS.prefLabel, Literal(bfunctie)))
     g.add((concept, SKOS.topConceptOf, ere_bf_concept_scheme))
@@ -49,7 +47,6 @@ def create_bestuursorgaan_ere(g):
 
   for borgaan in bestuursorgaan_classification_code:
     concept, uuid = concept_uri(ns.c + 'BestuursorgaanClassificatieCode/', borgaan)
-    g.add((concept, RDF.type, SKOS.Concept))
     g.add((concept, RDF.type, ns.gift_v.BestuursorgaanClassificatieCode))
     g.add((concept, SKOS.prefLabel, Literal(borgaan)))
     g.add((concept, SKOS.topConceptOf, ere_bo_concept_scheme))
@@ -66,7 +63,6 @@ def create_type_ere(g):
 
   for type_ere in type_list:
     concept, uuid = concept_uri(ns.gift + 'concepts/', type_ere)
-    g.add((concept, RDF.type, SKOS.Concept))
     g.add((concept, RDF.type, ns.gift_v.TypeEredienst))
     g.add((concept, SKOS.prefLabel, Literal(type_ere)))
     g.add((concept, SKOS.topConceptOf, ere_te_concept_scheme))
@@ -83,7 +79,6 @@ def create_type_helft(g):
 
   for type_helft in type_helft_list:
     concept, uuid = concept_uri(ns.gift + 'concepts/', type_helft)
-    g.add((concept, RDF.type, SKOS.Concept))
     g.add((concept, RDF.type, ns.gift_v.HelftVerkiezing))
     g.add((concept, SKOS.prefLabel, Literal(type_helft)))
     g.add((concept, SKOS.topConceptOf, ere_th_concept_scheme))
@@ -103,11 +98,26 @@ def create_change_event_ere(g):
 
   for change_event in change_event_type_list:
     concept, uuid = concept_uri(ns.gift + 'concepts/', change_event)
-    g.add((concept, RDF.type, SKOS.Concept))
     g.add((concept, RDF.type, ns.gift_v.Veranderingsgebeurtenis))
     g.add((concept, SKOS.prefLabel, Literal(change_event)))
     g.add((concept, SKOS.topConceptOf, change_event_concept_scheme))
     g.add((concept, SKOS.inScheme, change_event_concept_scheme))
+    g.add((concept, ns.mu.uuid, Literal(uuid)))
+
+def create_type_involvement_ere(g):
+  types_involvement_list = ['Toezichthoudend en financierend', 'Enkel adviserend', 'Deel van gebiedsomschrijving']
+
+  types_involvement_concept_scheme, uuid = concept_uri(ns.gift + 'concept-schemes/', 'TypeBetrokkenheid')
+  g.add((types_involvement_concept_scheme, RDF.type, SKOS.ConceptScheme))
+  g.add((types_involvement_concept_scheme, SKOS.prefLabel, Literal('Type Betrokkenheid')))
+  g.add((types_involvement_concept_scheme, ns.mu.uuid, Literal(uuid)))
+
+  for type_invol in types_involvement_list:
+    concept, uuid = concept_uri(ns.gift + 'concepts/', type_invol)
+    g.add((concept, RDF.type, ns.gift_v.TypeBetrokkenheid))
+    g.add((concept, SKOS.prefLabel, Literal(type_invol)))
+    g.add((concept, SKOS.topConceptOf, types_involvement_concept_scheme))
+    g.add((concept, SKOS.inScheme, types_involvement_concept_scheme))
     g.add((concept, ns.mu.uuid, Literal(uuid)))
 
 
@@ -125,6 +135,8 @@ def main():
   create_type_ere(g)
 
   create_type_helft(g)
+
+  create_type_involvement_ere(g)
 
   export_data(g, 'codelist-ere')
 

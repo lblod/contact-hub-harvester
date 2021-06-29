@@ -25,8 +25,8 @@ def main(file, mode):
 
   for _, row in worship_cleansed.iterrows():
     abb_id, abb_uuid = concept_uri(lblod + 'besturenVanDeEredienst/', str(row['organization_id']))
-    # g.add((abb_id, RDF.type, ns.org.Organization))
-    # g.add((abb_id, RDF.type, ns.besluit.Bestuurseenheid))
+    #g.add((abb_id, RDF.type, ns.org.Organization))
+    #g.add((abb_id, RDF.type, ns.besluit.Bestuurseenheid))
     g.add((abb_id, RDF.type, ns.ere.BestuurVanDeEredienst))
     
     add_literal(g, abb_id, ns.mu.uuid, abb_uuid, XSD.string)
@@ -48,12 +48,12 @@ def main(file, mode):
     g.add((abb_id, ns.rov.orgStatus, status))
 
     if str(row['Naam_CKB_EB1']) != str(np.nan):
-      ckb_id, _ = concept_uri(lblod + 'centraalBestuurVanDeEredienst/', str(row['Naam_CKB_EB1']))
-      g.add((abb_id, ns.org.linkedTo, ckb_id))
+      ckb_id, _ = concept_uri(lblod + 'centraleBesturenVanDeEredienst/', str(row['Naam_CKB_EB1']))
+      g.add((ckb_id, ns.org.hasSubOrganization, abb_id))
 
     if str(row['Representatief orgaan']) != str(np.nan):
       national_id, _ = concept_uri(lblod + 'representatieveOrganen/', str(row['Representatief orgaan']))
-      g.add((abb_id, ns.org.linkedTo, national_id))
+      g.add((national_id, ns.org.linkedTo, abb_id))
 
     bo_id, bo_uuid = concept_uri(lblod + 'eredienstbestuursorganen/', str(row['organization_id']) + 'eredienstbestuursorganen')
     g.add((bo_id, RDF.type, ns.besluit.Bestuursorgaan))
@@ -121,6 +121,7 @@ def main(file, mode):
     local_eng = json.loads(json_acceptable_string)
 
     if len(local_eng['Cross-Border']) > 0:
+      type_involvement = get_concept_id(codelist_ere, 'Toezichthoudend en financierend')
       for municipality, perc in local_eng['Municipality'].items():
         municipality_res = get_adm_unit_concept(municipality, "Gemeente")
         if municipality_res != None:
@@ -130,6 +131,7 @@ def main(file, mode):
           add_literal(g, pi_id, ns.mu.uuid, pi_uuid, XSD.string)
           if perc != '':
             add_literal(g, pi_id, ns.ere.financieringspercentage, str(perc), XSD.float)
+            g.add((pi_id, ns.ere.typebetrokkenheid, type_involvement))
           g.add((pi_id, ns.org.organization, abb_id))
           
           g.add((municipality_adminunit, ns.ere.betrokkenBestuur, pi_id))
@@ -137,6 +139,7 @@ def main(file, mode):
           add_literal(g, municipality_adminunit, SKOS.prefLabel, municipality, XSD.string)
           add_literal(g, municipality_adminunit, ns.mu.uuid, municipality_res['uuid']['value'], XSD.string)
 
+      
       for province, perc in local_eng['Province'].items():
         province_res = get_adm_unit_concept(province, "Provincie")
         if province_res != None:
@@ -146,6 +149,8 @@ def main(file, mode):
           add_literal(g, pi_id, ns.mu.uuid, pi_uuid, XSD.string)
           if perc != '':
             add_literal(g, pi_id, ns.ere.financieringspercentage, str(perc), XSD.float)
+            g.add((pi_id, ns.ere.typebetrokkenheid, type_involvement))
+            
           g.add((pi_id, ns.org.organization, abb_id))
           
           g.add((province_adminunit, ns.ere.betrokkenBestuur, pi_id))
@@ -182,7 +187,7 @@ def main(file, mode):
     
     # Vestiging
     if exists_address(row):
-      site_id, site_uuid = concept_uri(lblod + 'vestigingen/', str(row['organization_id']) + 'Vestigingen')
+      site_id, site_uuid = concept_uri(lblod + 'vestigingen/', str(row['organization_id']) + 'vestigingen')
       g.add((site_id, RDF.type, ns.org.Site))
       add_literal(g, site_id, ns.mu.uuid, site_uuid, XSD.string)
 

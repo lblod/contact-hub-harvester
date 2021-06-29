@@ -23,6 +23,8 @@ def main(ckb):
   
   ckb['Gemeente Cleansed'] = ckb['Gemeente_CKB'].str.strip().str.title()
 
+  ckb[['Gemeente Cleansed', 'Gemeente Comment']] = pd.DataFrame(ckb['Gemeente Cleansed'].astype(str).apply(helper.gemeente_cleansing).values.tolist(), columns=['gemeente_cleansed', 'comment'])
+
   ckb[['Verkiezingen17_Opmerkingen Cleansed', 'Verkiezingen17_Opmerkingen Comment']] = pd.DataFrame(ckb['Verkiezingen17_Opmerkingen'].astype(str).apply(helper.voting_cleansing).values.tolist(), columns=['date_election','comment'])
 
   ckb[['Verkiezingen2020_Opmerkingen Cleansed', 'Verkiezingen2020_Opmerkingen Comment']] = pd.DataFrame(ckb['Verkiezingen2020_Opmerkingen'].astype(str).apply(helper.voting_cleansing).values.tolist(), columns=['date_election','comment'])

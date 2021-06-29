@@ -34,8 +34,9 @@ def main(file, mode):
 
     g.add((abb_id, ns.org.classification, bestuurseenheid_classification_id))
 
-    type_ere = get_concept_id(codelist_ere, str(row['Type_eredienst_CKB']))
-    g.add((abb_id, ns.ere.typeEredienst, type_ere))
+    if str(row['Type_eredienst_CKB']) != str(np.nan):
+      type_ere = get_concept_id(codelist_ere, str(row['Type_eredienst_CKB']))
+      g.add((abb_id, ns.ere.typeEredienst, type_ere))
 
     status = get_concept_id(codelist_ere, str(row['Status_CKB_cleansed']))
     g.add((abb_id, ns.rov.orgStatus, status))
@@ -52,7 +53,7 @@ def main(file, mode):
 
     if str(row['Representatief orgaan']) != str(np.nan):
       national_id, _ = concept_uri(lblod + 'representatieveOrganen/', str(row['Representatief orgaan']))
-      g.add((abb_id, ns.org.linkedTo, national_id))
+      g.add((national_id, ns.org.linkedTo, abb_id))
 
     bo_id, bo_uuid = concept_uri(lblod + 'centraleBestuursorgaan/', str(row['Titel']) + 'centraleBestuursorgaan')
     g.add((bo_id, RDF.type, ns.besluit.Bestuursorgaan))
