@@ -1,7 +1,7 @@
 import json
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import dateparser
 from numpy.core.numeric import full
 from rdflib import Graph, URIRef
@@ -57,7 +57,7 @@ def main(file, mode):
 
     bo_id, bo_uuid = concept_uri(lblod + 'eredienstbestuursorganen/', str(row['organization_id']) + 'eredienstbestuursorganen')
     g.add((bo_id, RDF.type, ns.besluit.Bestuursorgaan))
-    g.add((bo_id, RDF.type, ns.ere.Eredienstbestuursorgaan))
+    #g.add((bo_id, RDF.type, ns.ere.Eredienstbestuursorgaan))
     add_literal(g, bo_id, ns.mu.uuid, bo_uuid, XSD.string)
 
     if str(row['Bestuursorgaan Type']) != str(np.nan):
@@ -217,7 +217,7 @@ def main(file, mode):
       # Bestuursorgaan in bestuursperiode 2017-2020
       bestuur_temporary_17, bestuur_temporary_17_uuid = concept_uri(lblod + 'eredienstbestuursorganen/', str(row['organization_id']) + 'eredienstbestuursorganen/2017')
       g.add((bestuur_temporary_17, RDF.type, ns.besluit.Bestuursorgaan))
-      g.add((bestuur_temporary_17, RDF.type, ns.ere.Eredienstbestuursorgaan))
+      #g.add((bestuur_temporary_17, RDF.type, ns.ere.Eredienstbestuursorgaan))
 
       add_literal(g, bestuur_temporary_17, ns.mu.uuid, bestuur_temporary_17_uuid, XSD.string)
       g.add((bestuur_temporary_17, ns.generiek.isTijdspecialisatieVan, bo_id))
@@ -235,7 +235,7 @@ def main(file, mode):
         # Bestuursorgaan in bestuursperiode 2020-2023
         bestuur_temporary_20, bestuur_temporary_20_uuid = concept_uri(lblod + 'eredienstbestuursorganen/', str(row['organization_id']) + 'eredienstbestuursorganen/2020')
         g.add((bestuur_temporary_20, RDF.type, ns.besluit.Bestuursorgaan))
-        g.add((bestuur_temporary_20, RDF.type, ns.ere.Eredienstbestuursorgaan))
+        #g.add((bestuur_temporary_20, RDF.type, ns.ere.Eredienstbestuursorgaan))
         add_literal(g, bestuur_temporary_20, ns.mu.uuid, bestuur_temporary_20_uuid, XSD.string)
         g.add((bestuur_temporary_20, ns.generiek.isTijdspecialisatieVan, bo_id))
         
@@ -248,6 +248,7 @@ def main(file, mode):
         else:
           add_literal(g, bestuur_temporary_20, ns.mandaat.bindingEinde, datetime(2023, 4, 30).isoformat(), XSD.dateTime)
 
+      person_lid_mandaat = None
       # Mandaat / Mandataris
       for role in roles:
         if exists_role_worship(row, role):
@@ -341,9 +342,16 @@ def main(file, mode):
             if str(row[f'Datum verkiezing {role}']) != 'NaT':
               add_literal(g, person_role_mandataris, ns.mandaat.start, dateparser.parse(str(row[f'Datum verkiezing {role}'])).isoformat(), XSD.dateTime)
               add_literal(g, person_lid_mandataris, ns.mandaat.start, dateparser.parse(str(row[f'Datum verkiezing {role}'])).isoformat(), XSD.dateTime)
+
               # possible end date = start date + 3 years
-              add_literal(g, person_role_mandataris, ns.ere.geplandeEinddatumAanstelling, (dateparser.parse(str(row[f'Datum verkiezing {role}'])) + timedelta(days=1095)).isoformat(), XSD.dateTime)
-              add_literal(g, person_lid_mandataris, ns.ere.geplandeEinddatumAanstelling, (dateparser.parse(str(row[f'Datum verkiezing {role}'])) + timedelta(days=1095)).isoformat(), XSD.dateTime)
+              year_election = dateparser.parse(str(row[f'Datum verkiezing {role}'])).year
+              if year_election > 2017 and year_election < 2020:
+                remain_years = 2020 - year_election
+                add_literal(g, person_role_mandataris, ns.ere.geplandeEinddatumAanstelling, (dateparser.parse(str(row[f'Datum verkiezing {role}'])) + timedelta(days=remain_years*365)).isoformat(), XSD.dateTime)
+                add_literal(g, person_lid_mandataris, ns.ere.geplandeEinddatumAanstelling, (dateparser.parse(str(row[f'Datum verkiezing {role}'])) + timedelta(days=remain_years*365)).isoformat(), XSD.dateTime)
+              else:
+                add_literal(g, person_role_mandataris, ns.ere.geplandeEinddatumAanstelling, (dateparser.parse(str(row[f'Datum verkiezing {role}'])) + timedelta(days=1095)).isoformat(), XSD.dateTime)
+                add_literal(g, person_lid_mandataris, ns.ere.geplandeEinddatumAanstelling, (dateparser.parse(str(row[f'Datum verkiezing {role}'])) + timedelta(days=1095)).isoformat(), XSD.dateTime)
               
             ### Mandataris - Contact punt
             if exists_contact_role(row, role):
@@ -413,12 +421,12 @@ def main(file, mode):
             g.add((lid_mandaat, RDF.type, ns.mandaat.Mandaat))
             add_literal(g, lid_mandaat, ns.mu.uuid, lid_mandaat_uuid, XSD.string)
 
-            bestuurfunctie_id = get_concept_id(codelist_ere, get_label_role(role[:-1].lower() + ' worship'))
+            bestuurfunctie_id = get_concept_id(codelist_ere, get_label_role('lid worship'))
             g.add((lid_mandaat, ns.org.role, bestuurfunctie_id))
 
             ## Lid - Mandataris
             lid_mandataris, lid_mandataris_uuid = concept_uri(lblod + 'mandatarissen/', str(row['organization_id']) + person_uuid + role)
-            g.add((lid_mandataris, RDF.type, ns.mandaat.Mandataris))
+            #g.add((lid_mandataris, RDF.type, ns.mandaat.Mandataris))
             g.add((lid_mandataris, RDF.type, ns.ere.EredienstMandataris))
             add_literal(g, lid_mandataris, ns.mu.uuid, lid_mandataris_uuid, XSD.string)
 

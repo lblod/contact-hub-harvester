@@ -160,17 +160,33 @@ def rol_bedinaar_functies(g):
                    'Kapelaan van de kerken te Antwerpen en te Elsene (Geünifieerde anglikaanse kerk)', 'Kapelaan van de andere kerken', 'Rabbijn', 'Officiërend bedienaar',
                    'Eerste Imam in rang', 'Tweede Imam in rang', 'Derde Imam in rang']
                   
-  bedinaar_functie_concept_scheme, uuid = concept_uri(ns.gift + 'concept-schemes/', 'RolBedinaarFunctie')
+  bedinaar_functie_concept_scheme, uuid = concept_uri(ns.gift + 'concept-schemes/', 'EredienstBeroepen')
   g.add((bedinaar_functie_concept_scheme, RDF.type, SKOS.ConceptScheme))
-  g.add((bedinaar_functie_concept_scheme, SKOS.prefLabel, Literal('Rol Bedinaar Functie')))
+  g.add((bedinaar_functie_concept_scheme, SKOS.prefLabel, Literal('Eredienst Beroepen')))
   g.add((bedinaar_functie_concept_scheme, ns.mu.uuid, Literal(uuid)))
 
   for functie in functies_list:
     concept, uuid = concept_uri(ns.gift + 'concepts/', functie)
-    g.add((concept, RDF.type, ns.gift_v.RolBedinaarFunctie))
+    g.add((concept, RDF.type, ns.gift_v.EredienstBeroepen))
     g.add((concept, SKOS.prefLabel, Literal(functie)))
     g.add((concept, SKOS.topConceptOf, bedinaar_functie_concept_scheme))
     g.add((concept, SKOS.inScheme, bedinaar_functie_concept_scheme))
+    g.add((concept, ns.mu.uuid, Literal(uuid)))
+
+def financering_bedinaar_functies(g):
+  financering_list = ['FOD Financiën', 'Zelf gefinancierd']
+                  
+  financering_concept_scheme, uuid = concept_uri(ns.gift + 'concept-schemes/', 'BedienaarFinanceringCode')
+  g.add((financering_concept_scheme, RDF.type, SKOS.ConceptScheme))
+  g.add((financering_concept_scheme, SKOS.prefLabel, Literal('Bedienaar Financering Code')))
+  g.add((financering_concept_scheme, ns.mu.uuid, Literal(uuid)))
+
+  for financering in financering_list:
+    concept, uuid = concept_uri(ns.gift + 'concepts/', financering)
+    g.add((concept, RDF.type, ns.gift_v.BedienaarFinanceringCode))
+    g.add((concept, SKOS.prefLabel, Literal(financering)))
+    g.add((concept, SKOS.topConceptOf, financering_concept_scheme))
+    g.add((concept, SKOS.inScheme, financering_concept_scheme))
     g.add((concept, ns.mu.uuid, Literal(uuid)))
   
 
@@ -194,6 +210,8 @@ def main():
   bedinaar_criterion_ere(g)
 
   document_type_criterion(g)
+
+  financering_bedinaar_functies(g)
 
   export_data(g, 'codelist-ere')
 

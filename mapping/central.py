@@ -57,7 +57,7 @@ def main(file, mode):
 
     bo_id, bo_uuid = concept_uri(lblod + 'centraleBestuursorgaan/', str(row['Titel']) + 'centraleBestuursorgaan')
     g.add((bo_id, RDF.type, ns.besluit.Bestuursorgaan))
-    g.add((bo_id, RDF.type, ns.ere.CentraleBestuursorgaan))
+    #g.add((bo_id, RDF.type, ns.ere.CentraleBestuursorgaan))
     add_literal(g, bo_id, ns.mu.uuid, bo_uuid, XSD.string)
 
     bestuursorgaan_classification_id = get_concept_id(codelist_ere, str(row['Bestuursorgaan Type']))
@@ -126,7 +126,7 @@ def main(file, mode):
         # Bestuursorgaan in bestuursperiode 2017-2020
         bestuur_temporary_17, bestuur_temporary_17_uuid = concept_uri(lblod + 'centralebestuursorganen/', str(row['Titel']) + 'centralebestuursorganen/2017')
         g.add((bestuur_temporary_17, RDF.type, ns.besluit.Bestuursorgaan))
-        g.add((bestuur_temporary_17, RDF.type, ns.ere.CentraleBestuursorgaan))
+        #g.add((bestuur_temporary_17, RDF.type, ns.ere.CentraleBestuursorgaan))
         add_literal(g, bestuur_temporary_17, ns.mu.uuid, bestuur_temporary_17_uuid, XSD.string)
         g.add((bestuur_temporary_17, ns.generiek.isTijdspecialisatieVan, bo_id))
 
@@ -146,7 +146,7 @@ def main(file, mode):
         # Bestuursorgaan in bestuursperiode 2020-2023
         bestuur_temporary_20, bestuur_temporary_20_uuid = concept_uri(lblod + 'centralebestuursorganen/', str(row['Titel']) + 'centralebestuursorganen/2020')
         g.add((bestuur_temporary_20, RDF.type, ns.besluit.Bestuursorgaan))
-        g.add((bestuur_temporary_20, RDF.type, ns.ere.CentraleBestuursorgaan))
+        #g.add((bestuur_temporary_20, RDF.type, ns.ere.CentraleBestuursorgaan))
         add_literal(g, bestuur_temporary_20, ns.mu.uuid, bestuur_temporary_20_uuid, XSD.string)
         g.add((bestuur_temporary_20, ns.generiek.isTijdspecialisatieVan, bo_id))
 
