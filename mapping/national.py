@@ -83,26 +83,26 @@ def main(file, mode):
 
     g.add((abb_id, ns.org.hasPrimarySite, site_id))  
 
-    person_id, person_uuid = concept_uri(lblod + 'personen/', str(row['Voornaam']) + str(row['Achternaam']))
+    person_id, person_uuid = concept_uri(lblod + 'personen/', str(row['Voornaam']) + str(row['Achternaam']) + str(row['Gebruikte Voornaam']))
     g.add((person_id, RDF.type, ns.person.Person))
     add_literal(g, person_id, ns.mu.uuid, person_uuid, XSD.string)
     add_literal(g, person_id, FOAF.givenName, str(row['Voornaam']), XSD.string)
     add_literal(g, person_id, FOAF.familyName, str(row['Achternaam']), XSD.string)
     add_literal(g, person_id, ns.persoon.gebruikteVoornaam, str(row['Gebruikte Voornaam']), XSD.string)
 
-    role_id, role_uuid = concept_uri(lblod + 'rol/', str(row['Rol']))
+    role_id, role_uuid = concept_uri(lblod + 'rollen/', str(row['Rol']))
     g.add((role_id, RDF.type, ns.org.Role))
     add_literal(g, role_id, ns.mu.uuid, role_uuid, XSD.string)
     add_literal(g, role_id, SKOS.prefLabel, str(row['Rol']), XSD.string)
 
-    position_id, position_uuid = concept_uri(lblod + 'positie/', str(row['representatief orgaan']) + str(row['Rol']))
+    position_id, position_uuid = concept_uri(lblod + 'posities/', str(row['representatief orgaan']) + str(row['Rol']))
     g.add((position_id, RDF.type, ns.org.Post))
     add_literal(g, position_id, ns.mu.uuid, position_uuid, XSD.string)
     g.add((position_id, ns.org.role, role_id))
     g.add((position_id, ns.org.postIn, abb_id))
     g.add((abb_id, ns.org.hasPost, position_id))
 
-    person_position_id, person_position_uuid = concept_uri(lblod + 'agentenInPositie/', str(row['Voornaam']) + str(row['Achternaam']) + str(row['Rol']))
+    person_position_id, person_position_uuid = concept_uri(lblod + 'agentenInPositie/', str(row['representatief orgaan']) + str(row['Voornaam']) + str(row['Achternaam']) + str(row['Rol']))
     g.add((person_position_id, RDF.type, ns.organisatie.AgentInPositie))
     add_literal(g, person_position_id, ns.mu.uuid, person_position_uuid, XSD.string)
     g.add((person_position_id, ns.org.holds, position_id))
