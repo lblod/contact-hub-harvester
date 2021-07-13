@@ -85,7 +85,6 @@ def create_type_helft(g):
     g.add((concept, SKOS.inScheme, ere_th_concept_scheme))
     g.add((concept, ns.mu.uuid, Literal(uuid)))
                                                           
-
 def create_change_event_ere(g):
   change_event_type_list = ['Erkenning aangevraagd', 'Erkenning toegekend', 'Erkenning niet toegekend', 'Samenvoeging', 
                             'Wijziging Gebiedsomschrijving', 'Naamswijziging', 'Erkenning opgeheven', 'Onder sanctieregime',
@@ -189,14 +188,27 @@ def financering_bedinaar_functies(g):
     g.add((concept, SKOS.inScheme, financering_concept_scheme))
     g.add((concept, ns.mu.uuid, Literal(uuid)))
   
+def vestiging_types(g):
+  vestiging_type_list = ['Maatschappelijke zetel', 'Hoofdgebouw erediensten']
+                  
+  vestiging_type_concept_scheme, uuid = concept_uri(ns.gift + 'concept-schemes/', '+ TypeVestiging')
+  g.add((vestiging_type_concept_scheme, RDF.type, SKOS.ConceptScheme))
+  g.add((vestiging_type_concept_scheme, SKOS.prefLabel, Literal('Type Vestiging')))
+  g.add((vestiging_type_concept_scheme, ns.mu.uuid, Literal(uuid)))
+
+  for vestiging_type in vestiging_type_list:
+    concept, uuid = concept_uri(ns.gift + 'concepts/', vestiging_type)
+    g.add((concept, RDF.type, ns.gift_v.TypeVestiging))
+    g.add((concept, SKOS.prefLabel, Literal(vestiging_type)))
+    g.add((concept, SKOS.topConceptOf, vestiging_type_concept_scheme))
+    g.add((concept, SKOS.inScheme, vestiging_type_concept_scheme))
+    g.add((concept, ns.mu.uuid, Literal(uuid)))
 
 def main():
   g = Graph()
 
   create_status_uri(g)
 
-  create_change_event_ere(g)
-  
   create_bestuursfuncie_ere(g)
 
   create_bestuursorgaan_ere(g)
@@ -205,13 +217,19 @@ def main():
 
   create_type_helft(g)
 
+  create_change_event_ere(g)
+
   create_type_involvement_ere(g)
 
   bedinaar_criterion_ere(g)
 
   document_type_criterion(g)
 
+  rol_bedinaar_functies(g)
+
   financering_bedinaar_functies(g)
+
+  vestiging_types(g)
 
   export_data(g, 'codelist-ere')
 

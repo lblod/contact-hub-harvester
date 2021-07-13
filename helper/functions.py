@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import random
 from datetime import datetime
 import dateparser
 import hashlib
@@ -29,6 +30,9 @@ def add_literal(g, subject, predicate, object_value, datatype=None):
     else:
       g.add((subject, predicate, Literal(object_value, datatype=datatype)))
 
+def shuffle_word(word):
+  return ''.join(random.sample(word.lower(), len(word))).title() 
+  
 def status_mapping_central(status):
   status_dict = {'Operationeel': 'Actief', 'Niet actief - Samengevoegd n.a.v. een gemeentefusie': 'Niet Actief', 
                  'Operationeel – nieuw CKB n.a.v. gemeentefusie': 'Actief', 'Niet actief - opgeheven': 'Niet Actief',

@@ -7,7 +7,7 @@ from numpy.core.numeric import full
 from rdflib import Graph, URIRef
 from rdflib.namespace import FOAF, XSD, FOAF, SKOS, RDF, RDFS, DCTERMS
 
-from helper.functions import add_literal, concept_uri, exists_bestuursperiode_worship, exists_role_worship, export_data, get_cleansed_data, exists_address, exists_address_role, exists_contact_role, exists_bestuursperiode_worship, get_adm_unit_concept, get_werkingsgebied_concept, load_graph, get_concept_id, get_label_role, exists_given_and_family_name, get_full_address
+from helper.functions import add_literal, concept_uri, exists_bestuursperiode_worship, exists_role_worship, export_data, get_cleansed_data, exists_address, exists_address_role, exists_contact_role, exists_bestuursperiode_worship, get_adm_unit_concept, get_werkingsgebied_concept, load_graph, get_concept_id, get_label_role, exists_given_and_family_name, get_full_address, shuffle_word
 import helper.namespaces as ns
 
 
@@ -20,6 +20,9 @@ def main(file, mode):
   codelist_ere = load_graph('codelist-ere')
   codelist_bestuurseenheid = load_graph('bestuurseenheid-classificatie-code')
   bestuurseenheid_classification_id = get_concept_id(codelist_bestuurseenheid, 'Bestuur van de eredienst')
+  BEDIENAAR_FUNCTIE = URIRef('http://lblod.data.gift/concepts/efbf2ff50b5c4f693f129ac03319c4f2')
+  BEDIENNAR_FUNCTIE_UUID = 'efbf2ff50b5c4f693f129ac03319c4f2'
+  VESTIGING_TYPE = URIRef('http://lblod.data.gift/concepts/f1381723dec42c0b6ba6492e41d6f5dd')
 
   print("########### Mapping started #############")
 
@@ -40,7 +43,7 @@ def main(file, mode):
       type_ere = get_concept_id(codelist_ere, str(row['Type_eredienst Cleansed']))
       g.add((abb_id, ns.ere.typeEredienst, type_ere))    
   
-    add_literal(g, abb_id, ns.ere.grensoverscheidend, str(row['Grensoverschrijdend']), XSD.boolean)
+    add_literal(g, abb_id, ns.ere.grensoverschrijdend, str(row['Grensoverschrijdend']), XSD.boolean)
 
     add_literal(g, abb_id, ns.ere.denominatie, str(row['Strekking Cleansed']), XSD.string)
 
@@ -139,7 +142,6 @@ def main(file, mode):
           add_literal(g, municipality_adminunit, SKOS.prefLabel, municipality, XSD.string)
           add_literal(g, municipality_adminunit, ns.mu.uuid, municipality_res['uuid']['value'], XSD.string)
 
-      
       for province, perc in local_eng['Province'].items():
         province_res = get_adm_unit_concept(province, "Provincie")
         if province_res != None:
@@ -206,8 +208,38 @@ def main(file, mode):
       add_literal(g, address_id, ns.locn.fullAddress, get_full_address(str(row['Straat']), str(row['Huisnr Cleansed']), str(row['Busnummer Cleansed']), str(row['Postcode Cleansed']), str(row['Gemeente Cleansed'])), XSD.string)
 
       g.add((site_id, ns.organisatie.bestaatUit, address_id))
+      g.add((site_id, ns.ere.vestigingstype, VESTIGING_TYPE))
       g.add((abb_id, ns.org.hasPrimarySite, site_id))
-   
+
+    # DUMMY Bedienaar
+    if str(row['Naam_voorzitter Cleansed']) != str(np.nan):
+      rol_bedienaar_id, rol_bedienaar_uuid = concept_uri(lblod + 'rollenBedienaar/', abb_uuid + 'Bedienaar')
+      g.add((rol_bedienaar_id, RDF.type, ns.ere.RolBedienaar))
+      add_literal(g, rol_bedienaar_id, ns.mu.uuid, rol_bedienaar_uuid, XSD.string)
+
+      position_rol_bedienaar_id, position_rol_bedienaar_uuid = concept_uri(lblod + 'positiesBedienaar/', abb_uuid + BEDIENNAR_FUNCTIE_UUID)
+      g.add((position_rol_bedienaar_id, RDF.type, ns.ere.PositieBedienaar))
+      add_literal(g, position_rol_bedienaar_id, ns.mu.uuid, position_rol_bedienaar_uuid, XSD.string)
+      g.add((position_rol_bedienaar_id, ns.ere.functie, BEDIENAAR_FUNCTIE))
+      g.add((abb_id, ns.ere.wordtBediendDoor, position_rol_bedienaar_id))
+
+      shuffled_first_name = shuffle_word(str(row['Naam_voorzitter First']))
+      shuffled_last_name = shuffle_word(str(row['Naam_voorzitter Last']))
+      shuffled_cleansed_name = shuffle_word(str(row['Naam_voorzitter Cleansed']))
+      if exists_given_and_family_name(row, 'voorzitter'):
+        person_rol_bedienaar, person_rol_bedienaar_uuid = concept_uri(lblod + 'personen/', shuffled_first_name + shuffled_last_name)
+        add_literal(g, person_rol_bedienaar, FOAF.givenName, shuffled_first_name, XSD.string)
+        add_literal(g, person_rol_bedienaar, FOAF.familyName, shuffled_last_name, XSD.string)
+      else:
+        person_rol_bedienaar, person_rol_bedienaar_uuid = concept_uri(lblod + 'personen/', shuffled_cleansed_name)
+        add_literal(g, person_rol_bedienaar, FOAF.givenName, shuffled_cleansed_name, XSD.string)
+      
+      g.add((person_rol_bedienaar, RDF.type, ns.person.Person))
+      add_literal(g, person_rol_bedienaar, ns.mu.uuid, person_rol_bedienaar_uuid, XSD.string)
+
+      g.add((rol_bedienaar_id, ns.org.heldBy, person_rol_bedienaar))
+      g.add((rol_bedienaar_id, ns.org.holds, position_rol_bedienaar_id))
+
     roles = ['voorzitter', 'secretaris', 'penningmeester']
     roles_lid = ['Lid4', 'Lid5']
 
