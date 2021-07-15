@@ -66,7 +66,7 @@ def main(file, mode):
       add_literal(g, contact_2_id, ns.schema.faxNumber, str(row['Fax 2']), XSD.string)
       g.add((site_id, ns.schema.siteAddress, contact_2_id))
 
-    address_id, address_uuid = concept_uri(lblod + 'adressen/', str(row['representatief orgaan']))
+    address_id, address_uuid = concept_uri(lblod + 'adressen/', str(row['representatief orgaan']) + 'adressen')
     g.add((address_id, RDF.type, ns.locn.Address))
     add_literal(g, address_id, ns.mu.uuid, address_uuid, XSD.string)
     add_literal(g, address_id, ns.locn.thoroughfare, str(row['Straatnaam']), XSD.string)
@@ -99,7 +99,7 @@ def main(file, mode):
     g.add((position_id, RDF.type, ns.org.Post))
     add_literal(g, position_id, ns.mu.uuid, position_uuid, XSD.string)
     g.add((position_id, ns.org.role, role_id))
-    g.add((position_id, ns.org.postIn, abb_id))
+    #g.add((position_id, ns.org.postIn, abb_id))
     g.add((abb_id, ns.org.hasPost, position_id))
 
     person_position_id, person_position_uuid = concept_uri(lblod + 'agentenInPositie/', str(row['representatief orgaan']) + str(row['Voornaam']) + str(row['Achternaam']) + str(row['Rol']))

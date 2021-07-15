@@ -301,18 +301,18 @@ def main(file, mode):
             year_election = dateparser.parse(str(row[f'Datum verkiezing {role}'])).year
             
             if year_election <= 2019:
-              person_role_mandaat, person_role_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2017' + role)
-              if str(row[f'Type Helft Cleansed {role}']) == 'Kleine helft':
-                person_lid_mandaat, person_lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2020/Lid')
-              else:
-                person_lid_mandaat, person_lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2017/Lid')
+              person_role_mandaat, person_role_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2017/' + role)
+              person_lid_mandaat, person_lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2017/Lid')
+              #if str(row[f'Type Helft Cleansed {role}']) == 'Kleine helft':
+                #person_lid_mandaat, person_lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2017/Lid')
+                #person_lid_mandaat, person_lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2020/Lid')
               
               #g.add((person_role_mandaat, ns.org.postIn, bestuur_temporary_17))
               #g.add((person_lid_mandaat, ns.org.postIn, bestuur_temporary_17))
               g.add((bestuur_temporary_17, ns.org.hasPost, person_role_mandaat))
               g.add((bestuur_temporary_17, ns.org.hasPost, person_lid_mandaat)) 
             else:
-              person_role_mandaat, person_role_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2020' + role)
+              person_role_mandaat, person_role_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2020/' + role)
               person_lid_mandaat, person_lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2020/Lid') 
               
               #g.add((person_role_mandaat, ns.org.postIn, bestuur_temporary_20))
@@ -320,7 +320,7 @@ def main(file, mode):
               g.add((bestuur_temporary_20, ns.org.hasPost, person_role_mandaat))
               g.add((bestuur_temporary_20, ns.org.hasPost, person_lid_mandaat)) 
           elif str(row['Status_EB Cleansed']) == 'Niet Actief':
-            person_role_mandaat, person_role_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2017' + role)
+            person_role_mandaat, person_role_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2017/' + role)
             person_lid_mandaat, person_lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2017/Lid') 
             #g.add((person_role_mandaat, ns.org.postIn, bestuur_temporary_17))
             g.add((bestuur_temporary_17, ns.org.hasPost, person_role_mandaat))
@@ -368,8 +368,8 @@ def main(file, mode):
             g.add((person_role, ns.mandaat.isAangesteldAls, person_role_mandataris))
             g.add((person_role, ns.mandaat.isAangesteldAls, person_lid_mandataris))
             
-            g.add((person_role_mandaat, ns.org.heldBy, person_role_mandataris))        
-            g.add((person_lid_mandaat, ns.org.heldBy, person_lid_mandataris))
+            #g.add((person_role_mandaat, ns.org.heldBy, person_role_mandataris))        
+            #g.add((person_lid_mandaat, ns.org.heldBy, person_lid_mandataris))
 
             if str(row[f'Datum verkiezing {role}']) != 'NaT':
               add_literal(g, person_role_mandataris, ns.mandaat.start, dateparser.parse(str(row[f'Datum verkiezing {role}'])).isoformat(), XSD.dateTime)
@@ -377,13 +377,15 @@ def main(file, mode):
 
               # possible end date = start date + 3 years
               year_election = dateparser.parse(str(row[f'Datum verkiezing {role}'])).year
-              if year_election > 2017 and year_election < 2020:
+              if year_election >= 2017 and year_election < 2020:
                 remain_years = 2020 - year_election
                 add_literal(g, person_role_mandataris, ns.ere.geplandeEinddatumAanstelling, (dateparser.parse(str(row[f'Datum verkiezing {role}'])) + timedelta(days=remain_years*365)).isoformat(), XSD.dateTime)
                 add_literal(g, person_lid_mandataris, ns.ere.geplandeEinddatumAanstelling, (dateparser.parse(str(row[f'Datum verkiezing {role}'])) + timedelta(days=remain_years*365)).isoformat(), XSD.dateTime)
+                add_literal(g, person_role_mandataris, ns.mandaat.einde, (dateparser.parse(str(row[f'Datum verkiezing {role}'])) + timedelta(days=remain_years*365)).isoformat(), XSD.dateTime)
+                add_literal(g, person_lid_mandataris, ns.mandaat.einde, (dateparser.parse(str(row[f'Datum verkiezing {role}'])) + timedelta(days=remain_years*365)).isoformat(), XSD.dateTime)
               else:
-                add_literal(g, person_role_mandataris, ns.ere.geplandeEinddatumAanstelling, (dateparser.parse(str(row[f'Datum verkiezing {role}'])) + timedelta(days=1095)).isoformat(), XSD.dateTime)
-                add_literal(g, person_lid_mandataris, ns.ere.geplandeEinddatumAanstelling, (dateparser.parse(str(row[f'Datum verkiezing {role}'])) + timedelta(days=1095)).isoformat(), XSD.dateTime)
+                add_literal(g, person_role_mandataris, ns.ere.geplandeEinddatumAanstelling, (dateparser.parse(str(row[f'Datum verkiezing {role}'])) + timedelta(days=3*365)).isoformat(), XSD.dateTime)
+                add_literal(g, person_lid_mandataris, ns.ere.geplandeEinddatumAanstelling, (dateparser.parse(str(row[f'Datum verkiezing {role}'])) + timedelta(days=3*365)).isoformat(), XSD.dateTime)
               
             ### Mandataris - Contact punt
             if exists_contact_role(row, role):
@@ -433,12 +435,13 @@ def main(file, mode):
             year_election = dateparser.parse(str(row[f'Datum verkiezing {role}'])).year
             
             if year_election <= 2019:
-              if str(row[f'Type Helft Cleansed {role}']) == 'Kleine helft':
-                lid_mandaat, lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2020/Lid')
-              else:
-                lid_mandaat, lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2017/Lid')
+              # if str(row[f'Type Helft Cleansed {role}']) == 'Kleine helft':
+              #   lid_mandaat, lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2017/Lid')
+              # else:
+              #   lid_mandaat, lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2020/Lid')
 
               #g.add((lid_mandaat, ns.org.postIn, bestuur_temporary_17))
+              lid_mandaat, lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2017/Lid')
               g.add((bestuur_temporary_17, ns.org.hasPost, lid_mandaat)) 
             else:
               lid_mandaat, lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2020/Lid')
