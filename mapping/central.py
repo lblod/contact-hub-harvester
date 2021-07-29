@@ -5,7 +5,7 @@ from rdflib import Graph
 from rdflib.namespace import XSD, FOAF, SKOS, RDF, RDFS
 from rdflib.term import URIRef
 
-from helper.functions import add_literal, concept_uri, exists_address, exists_bestuursperiode_central, exists_contact_role, exists_given_and_family_name, exists_mandate_central, get_full_address, get_werkingsgebied_concept, load_graph, get_concept_id, get_label_role, get_cleansed_data, export_data
+from helper.functions import add_literal, concept_uri, exists_address, exists_bestuursperiode_central, exists_contact_role, exists_given_and_family_name, exists_mandate_central, get_full_address, get_location_id, load_graph, get_concept_id, get_label_role, get_cleansed_data, export_data
 import helper.namespaces as ns
 
 def main(file, mode):
@@ -16,6 +16,7 @@ def main(file, mode):
 
   g = Graph()
   codelist_ere = load_graph('codelist-ere')
+  locations = load_graph('locations')
   codelist_bestuurseenheid = load_graph('bestuurseenheid-classificatie-code')
   bestuurseenheid_classification_id = get_concept_id(codelist_bestuurseenheid, 'Centraal bestuur van de eredienst')
 
@@ -42,14 +43,9 @@ def main(file, mode):
     g.add((abb_id, ns.rov.orgStatus, status))
 
     if str(row['Gemeente Cleansed']) != str(np.nan):
-      location_concept_g = get_werkingsgebied_concept(str(row['Gemeente Cleansed']), 'Gemeente')
+      location_concept_g = get_location_id(locations, str(row['Gemeente Cleansed']), 'Gemeente')
       if location_concept_g != None:
-        gemeente_id = URIRef(location_concept_g['s']['value'])
-        g.add((gemeente_id, RDF.type, ns.prov.Location))
-        add_literal(g, gemeente_id, ns.mu.uuid, location_concept_g['uuid']['value'], XSD.string)
-        add_literal(g, gemeente_id, RDFS.label, str(row['Gemeente Cleansed']), XSD.string)
-        add_literal(g, gemeente_id, ns.ext.werkingsgebiedNiveau, 'Gemeente', XSD.string)
-        g.add((abb_id, ns.besluit.werkingsgebied, gemeente_id))
+        g.add((abb_id, ns.besluit.werkingsgebied, location_concept_g))
 
     if str(row['Representatief orgaan']) != str(np.nan):
       national_id, _ = concept_uri(lblod + 'representatieveOrganen/', str(row['Representatief orgaan']))

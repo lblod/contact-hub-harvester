@@ -7,7 +7,7 @@ import hashlib
 from SPARQLWrapper import SPARQLWrapper, JSON
 from cleansing import central, contact, organization, worship
 from rdflib import Graph, Literal, URIRef
-from rdflib.namespace import SKOS
+from rdflib.namespace import SKOS, RDFS, XSD
 import re
 
 SPARQL = SPARQLWrapper("https://centrale-vindplaats.lblod.info/sparql")
@@ -87,6 +87,17 @@ def get_concept_id(graph, label):
   if qres.bindings:
     concept = qres.bindings[0]['concept']
   
+  return concept
+
+def get_location_id(graph, label, level):
+  concept = None
+
+  qres = graph.query("""SELECT ?loc WHERE { ?loc rdfs:label ?label; ext:werkingsgebiedNiveau ?level. }""",
+          initNs = { "rdfs": RDFS, "ext": "http://mu.semte.ch/vocabularies/ext/" }, initBindings={'label': Literal(label, datatype=XSD.string), 'level': Literal(level, datatype=XSD.string)})
+
+  if qres.bindings:
+    concept = qres.bindings[0]['loc']
+
   return concept
 
 def get_label_role(role):
@@ -625,7 +636,7 @@ def get_adm_unit_concept(adm_label, classification):
       PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
       PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
       PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-      SELECT ?s ?uuid WHERE {{
+      SELECT ?s ?uuid ?classificatie WHERE {{
         ?s a besluit:Bestuurseenheid; skos:prefLabel "{adm_label}"; mu:uuid ?uuid; besluit:classificatie ?classificatie .
         ?classificatie skos:prefLabel "{classification}" .
       }}
@@ -641,30 +652,50 @@ def get_adm_unit_concept(adm_label, classification):
     
   return adm_concept
 
-   
-def get_werkingsgebied_concept(label, level):
-  location_concept = None
-
+def get_all_locations():
   query = """
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
       PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
       PREFIX prov: <http://www.w3.org/ns/prov#>
 
-      SELECT * WHERE {{
-        ?s a prov:Location; ext:werkingsgebiedNiveau "{level}"; rdfs:label "{label}"; mu:uuid ?uuid.
-      }}
-  """.format(label = label, level = level)
+      SELECT * { 
+        ?loc a prov:Location; <http://mu.semte.ch/vocabularies/ext/werkingsgebiedNiveau> ?level; mu:uuid ?uuid; rdfs:label ?label
+          FILTER (?level in ("Gemeente", "Provincie"))
+      }
+  """
 
   SPARQL.setQuery(query)
   SPARQL.setReturnFormat(JSON)
 
   results = SPARQL.query().convert()
 
-  if len(results['results']['bindings']) > 0:
-    location_concept = results['results']['bindings'][0]
+  return results['results']['bindings']
 
-  return location_concept
+
+# def get_werkingsgebied_concept(label, level):
+#   location_concept = None
+
+#   query = """
+#       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+#       PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+#       PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+#       PREFIX prov: <http://www.w3.org/ns/prov#>
+
+#       SELECT * WHERE {{
+#         ?s a prov:Location; ext:werkingsgebiedNiveau "{level}"; rdfs:label "{label}"; mu:uuid ?uuid.
+#       }}
+#   """.format(label = label, level = level)
+
+#   SPARQL.setQuery(query)
+#   SPARQL.setReturnFormat(JSON)
+
+#   results = SPARQL.query().convert()
+
+#   if len(results['results']['bindings']) > 0:
+#     location_concept = results['results']['bindings'][0]
+
+#   return location_concept
 
 
 def worship_link_ro(row):

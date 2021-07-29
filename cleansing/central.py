@@ -41,7 +41,15 @@ def main(ckb):
 
   ckb[['Naam_voorzitter First', 'Naam_voorzitter Last', 'Naam_voorzitter Comment']] = pd.DataFrame(ckb['Naam_voorzitter Cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
 
+  ckb['Naam_voorzitter First'] = ckb['Naam_voorzitter First'].str.strip()
+
+  ckb['Naam_voorzitter Last'] = ckb['Naam_voorzitter Last'].str.strip()
+  
   ckb[['Naam_secretaris First', 'Naam_secretaris Last', 'Naam_secretaris Comment']] = pd.DataFrame(ckb['Naam_secretaris Cleansed'].astype(str).apply(helper.splitname, args=(first_names,)).values.tolist(), columns=['first', 'last', 'comment'])
+  
+  ckb['Naam_secretaris First'] = ckb['Naam_secretaris First'].str.strip()
+
+  ckb['Naam_secretaris Last'] = ckb['Naam_secretaris Last'].str.strip()
   
   ckb[['Mail_voorzitter Cleansed', 'Mail_voorzitter Comment', 'Mail_secretaris Cleansed', 'Mail_secretaris Comment']] = pd.DataFrame(ckb['Mail_CKB'].astype(str).apply(helper.split_mail).values.tolist(), columns=['mail_voorzitter', 'mail_voorzitter_comment', 'mail_secretaris', 'mail_secretaris_comment'])
 

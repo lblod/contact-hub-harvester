@@ -1,13 +1,11 @@
 import json
 import numpy as np
-import pandas as pd
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 import dateparser
-from numpy.core.numeric import full
 from rdflib import Graph, URIRef
-from rdflib.namespace import FOAF, XSD, FOAF, SKOS, RDF, RDFS, DCTERMS
+from rdflib.namespace import FOAF, XSD, SKOS, RDF, RDFS, DCTERMS
 
-from helper.functions import add_literal, concept_uri, exists_bestuursperiode_worship, exists_role_worship, export_data, get_cleansed_data, exists_address, exists_address_role, exists_contact_role, exists_bestuursperiode_worship, get_adm_unit_concept, get_werkingsgebied_concept, load_graph, get_concept_id, get_label_role, exists_given_and_family_name, get_full_address, shuffle_word
+from helper.functions import add_literal, concept_uri, exists_bestuursperiode_worship, exists_role_worship, export_data, get_cleansed_data, exists_address, exists_address_role, exists_contact_role, exists_bestuursperiode_worship, get_adm_unit_concept, get_location_id, load_graph, get_concept_id, get_label_role, exists_given_and_family_name, get_full_address, shuffle_word
 import helper.namespaces as ns
 
 
@@ -19,7 +17,8 @@ def main(file, mode):
   g = Graph()
   codelist_ere = load_graph('codelist-ere')
   codelist_bestuurseenheid = load_graph('bestuurseenheid-classificatie-code')
-  bestuurseenheid_classification_id = get_concept_id(codelist_bestuurseenheid, 'Bestuur van de eredienst')
+  locations = load_graph('locations')
+  worship_bestuurseenheid_classification_id = get_concept_id(codelist_bestuurseenheid, 'Bestuur van de eredienst')
   BEDIENAAR_FUNCTIE = URIRef('http://lblod.data.gift/concepts/efbf2ff50b5c4f693f129ac03319c4f2')
   BEDIENNAR_FUNCTIE_UUID = 'efbf2ff50b5c4f693f129ac03319c4f2'
   VESTIGING_TYPE = URIRef('http://lblod.data.gift/concepts/f1381723dec42c0b6ba6492e41d6f5dd')
@@ -37,7 +36,7 @@ def main(file, mode):
     add_literal(g, abb_id, SKOS.prefLabel, str(row['Naam_EB']), XSD.string)
     #add_literal(g, abb_id, ns.rov.legalName, str(row['Naam_EB']), XSD.string)
 
-    g.add((abb_id, ns.org.classification, bestuurseenheid_classification_id))
+    g.add((abb_id, ns.org.classification, worship_bestuurseenheid_classification_id))
 
     if str(row['Type_eredienst Cleansed']) != str(np.nan):
       type_ere = get_concept_id(codelist_ere, str(row['Type_eredienst Cleansed']))
@@ -139,6 +138,7 @@ def main(file, mode):
           
           g.add((municipality_adminunit, ns.ere.betrokkenBestuur, pi_id))
           g.add((municipality_adminunit, RDF.type, ns.besluit.Bestuurseenheid))
+          g.add((municipality_adminunit, ns.org.classification, URIRef(municipality_res['classificatie']['value'])))
           add_literal(g, municipality_adminunit, SKOS.prefLabel, municipality, XSD.string)
           add_literal(g, municipality_adminunit, ns.mu.uuid, municipality_res['uuid']['value'], XSD.string)
 
@@ -157,27 +157,18 @@ def main(file, mode):
           
           g.add((province_adminunit, ns.ere.betrokkenBestuur, pi_id))
           g.add((province_adminunit, RDF.type, ns.besluit.Bestuurseenheid))
+          g.add((province_adminunit, ns.org.classification, URIRef(province_res['classificatie']['value'])))
           add_literal(g, province_adminunit, SKOS.prefLabel, province, XSD.string)
           add_literal(g, province_adminunit, ns.mu.uuid, province_res['uuid']['value'], XSD.string)
       
       if len(local_eng['Cross-Border']) == 1 and local_eng['Municipality']:          
-        location_concept_g = get_werkingsgebied_concept(local_eng['Cross-Border'][0], 'Gemeente')
-        if location_concept_g != None:
-          gemeente_id = URIRef(location_concept_g['s']['value'])
-          g.add((gemeente_id, RDF.type, ns.prov.Location))
-          add_literal(g, gemeente_id, ns.mu.uuid, location_concept_g['uuid']['value'], XSD.string)
-          add_literal(g, gemeente_id, RDFS.label, local_eng['Cross-Border'][0], XSD.string)
-          add_literal(g, gemeente_id, ns.ext.werkingsgebiedNiveau, 'Gemeente', XSD.string)
+        gemeente_id = get_location_id(locations, local_eng['Cross-Border'][0], 'Gemeente')
+        if gemeente_id != None:
           g.add((abb_id, ns.besluit.werkingsgebied, gemeente_id))
       elif len(local_eng['Cross-Border']) == 1 and local_eng['Province']:
-        location_concept_p = get_werkingsgebied_concept(local_eng['Cross-Border'][0], 'Provincie')
-        if location_concept_p != None:
-          province_id = URIRef(location_concept_p['s']['value'])
-          g.add((province_id, RDF.type, ns.prov.Location))
-          add_literal(g, province_id, ns.mu.uuid, location_concept_p['uuid']['value'], XSD.string)
-          add_literal(g, province_id, RDFS.label, local_eng['Cross-Border'][0], XSD.string)
-          add_literal(g, province_id, ns.ext.werkingsgebiedNiveau, 'Provincie', XSD.string)
-          g.add((abb_id, ns.besluit.werkingsgebied, province_id))
+        provincie_id = get_location_id(locations, local_eng['Cross-Border'][0], 'Provincie')
+        if provincie_id != None:
+          g.add((abb_id, ns.besluit.werkingsgebied, provincie_id))
       else:
         region_label = ', '.join(local_eng['Cross-Border'])
         region_id, region_uuid = concept_uri(lblod + 'werkingsgebieden/', region_label + abb_uuid)
@@ -280,9 +271,10 @@ def main(file, mode):
         else:
           add_literal(g, bestuur_temporary_20, ns.mandaat.bindingEinde, datetime(2023, 4, 30).isoformat(), XSD.dateTime)
 
-      person_lid_mandaat = None
+      
       # Mandaat / Mandataris
       for role in roles:
+        person_lid_mandaat = None
         if exists_role_worship(row, role):
           # Person role
           if exists_given_and_family_name(row, role):
@@ -476,7 +468,7 @@ def main(file, mode):
               add_literal(g, lid_mandataris, ns.mandaat.start, dateparser.parse(str(row[f'Datum verkiezing {role}'])).isoformat(), XSD.dateTime)
               add_literal(g, person_role_mandataris, ns.ere.geplandeEinddatumAanstelling, (dateparser.parse(str(row[f'Datum verkiezing {role}'])) + timedelta(days=1095)).isoformat(), XSD.dateTime)
 
-            g.add((lid_mandaat, ns.org.heldBy, lid_mandataris))
+            #g.add((lid_mandaat, ns.org.heldBy, lid_mandataris))
             g.add((lid, ns.mandaat.isAangesteldAls, lid_mandataris))
 
   print("########### Mapping finished #############")
