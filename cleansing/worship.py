@@ -11,8 +11,6 @@ def main(eb):
 
   eb['Type_eredienst Cleansed'] = eb['Type_eredienst_EB'].str.replace('Rooms-Katholiek Kathedraal', 'Rooms-Katholiek')
 
-  eb[['Titel Cleansed']] = pd.Series(eb['Titel'].astype(str).apply(helper.space_cleansing).values)
-
   eb['Gemeente Cleansed'] = eb['Gemeente_EB'].str.strip().str.title().replace('Antwerpen (Deurne', 'Antwerpen (Deurne)')
 
   eb[['Gemeente Cleansed', 'Gemeente Comment']] = pd.DataFrame(eb['Gemeente Cleansed'].astype(str).apply(helper.gemeente_cleansing).values.tolist(), columns=['gemeente_cleansed', 'comment'])
@@ -27,7 +25,7 @@ def main(eb):
 
   eb[['KBO_EB Cleansed', 'KBO_EB Comment']] = pd.DataFrame(eb['KBO_EB'].astype(str).apply(helper.kbo_cleansing).values.tolist(), columns=['kbo_cleansed','comment'])
   
-  eb['organization_id'] = eb['KBO_EB Cleansed'].fillna(eb['Titel Cleansed'])
+  eb['organization_id'] = eb['KBO_EB Cleansed'].fillna(eb['Titel'])
 
   eb[['Huisnr Cleansed', 'Busnummer Cleansed', 'Huisnr_EB Comment']] = pd.DataFrame(eb['Huisnr_EB'].astype(str).apply(helper.split_house_bus_number).values.tolist(), columns=['house_number', 'bus_number', 'comment'])
 

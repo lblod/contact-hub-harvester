@@ -82,16 +82,16 @@ def main(file, mode):
 
       g.add((abb_id, ns.adms.identifier, id_class))
 
-    if str(row['Titel Cleansed']) != str(np.nan):
-      id_class, id_uuid = concept_uri(lblod +'identificatoren/', str(row['Titel Cleansed']) + 'identificatoren')
+    if str(row['Titel']) != str(np.nan):
+      id_class, id_uuid = concept_uri(lblod +'identificatoren/', str(row['Titel']) + 'identificatoren')
       g.add((id_class, RDF.type, ns.adms.Identifier))
       add_literal(g, id_class, SKOS.notation, 'SharePoint identificator', XSD.string)
       add_literal(g, id_class, ns.mu.uuid, id_uuid, XSD.string)
 
-      naam_uri, naam_uuid = concept_uri(lblod + 'gestructureerdeIdentificator/', str(row['Titel Cleansed']) + 'gestructureerdeIdentificator')
+      naam_uri, naam_uuid = concept_uri(lblod + 'gestructureerdeIdentificator/', str(row['Titel']) + 'gestructureerdeIdentificator')
       g.add((naam_uri, RDF.type, ns.generiek.GestructureerdeIdentificator))
       add_literal(g, naam_uri, ns.mu.uuid, naam_uuid, XSD.string)
-      add_literal(g, naam_uri, ns.generiek.lokaleIdentificator, str(row['Titel Cleansed']), XSD.string)
+      add_literal(g, naam_uri, ns.generiek.lokaleIdentificator, str(row['Titel']), XSD.string)
       g.add((id_class, ns.generiek.gestructureerdeIdentificator, naam_uri))
 
       g.add((abb_id, ns.adms.identifier, id_class))
@@ -470,6 +470,13 @@ def main(file, mode):
 
             #g.add((lid_mandaat, ns.org.heldBy, lid_mandataris))
             g.add((lid, ns.mandaat.isAangesteldAls, lid_mandataris))
+    elif str(row['Status_EB Cleansed']) == 'Actief':
+      # Bestuursorgaan in bestuursperiode 2020-2023
+      bestuur_temporary_20, bestuur_temporary_20_uuid = concept_uri(lblod + 'eredienstbestuursorganen/', str(row['organization_id']) + 'eredienstbestuursorganen/2020')
+      g.add((bestuur_temporary_20, RDF.type, ns.besluit.Bestuursorgaan))
+      #g.add((bestuur_temporary_20, RDF.type, ns.ere.Eredienstbestuursorgaan))
+      add_literal(g, bestuur_temporary_20, ns.mu.uuid, bestuur_temporary_20_uuid, XSD.string)
+      g.add((bestuur_temporary_20, ns.generiek.isTijdspecialisatieVan, bo_id))
 
   print("########### Mapping finished #############")
 

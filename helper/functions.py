@@ -794,9 +794,5 @@ def export_data(g, type):
   now = datetime.now().strftime('%Y%m%d%H%M%S')
   g.serialize(f'output/{now}-{type}.ttl',format='turtle')
 
-  f = open(f'output/{now}-{type}.graph', 'w')
-  f.write("http://mu.semte.ch/graphs/public")
-  f.close()
-
 def export_df(data, type):
   data.to_excel(f'output/{type}_cleansed.xlsx', index=False)

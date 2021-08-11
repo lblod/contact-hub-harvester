@@ -226,6 +226,12 @@ def main(file, mode):
 
             g.add((person_role_mandaat, ns.org.heldBy, person_role_mandataris))
             g.add((person_role, ns.mandaat.isAangesteldAls, person_role_mandataris))
+    elif str(row['Status_CKB_cleansed']) == 'Actief':
+      # Bestuursorgaan in bestuursperiode 2020-2023
+      bestuur_temporary_20, bestuur_temporary_20_uuid = concept_uri(lblod + 'centralebestuursorganen/', unique_id + 'centralebestuursorganen/2020')
+      g.add((bestuur_temporary_20, RDF.type, ns.besluit.Bestuursorgaan))
+      add_literal(g, bestuur_temporary_20, ns.mu.uuid, bestuur_temporary_20_uuid, XSD.string)
+      g.add((bestuur_temporary_20, ns.generiek.isTijdspecialisatieVan, bo_id))
 
   print("########### Mapping finished #############")       
 
