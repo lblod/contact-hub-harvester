@@ -202,35 +202,6 @@ def main(file, mode):
       g.add((site_id, ns.ere.vestigingstype, VESTIGING_TYPE))
       g.add((abb_id, ns.org.hasPrimarySite, site_id))
 
-    # DUMMY Bedienaar
-    if str(row['Naam_voorzitter Cleansed']) != str(np.nan):
-      rol_bedienaar_id, rol_bedienaar_uuid = concept_uri(lblod + 'rollenBedienaar/', abb_uuid + 'Bedienaar')
-      g.add((rol_bedienaar_id, RDF.type, ns.ere.RolBedienaar))
-      add_literal(g, rol_bedienaar_id, ns.mu.uuid, rol_bedienaar_uuid, XSD.string)
-
-      position_rol_bedienaar_id, position_rol_bedienaar_uuid = concept_uri(lblod + 'positiesBedienaar/', abb_uuid + BEDIENNAR_FUNCTIE_UUID)
-      g.add((position_rol_bedienaar_id, RDF.type, ns.ere.PositieBedienaar))
-      add_literal(g, position_rol_bedienaar_id, ns.mu.uuid, position_rol_bedienaar_uuid, XSD.string)
-      g.add((position_rol_bedienaar_id, ns.ere.functie, BEDIENAAR_FUNCTIE))
-      g.add((abb_id, ns.ere.wordtBediendDoor, position_rol_bedienaar_id))
-
-      shuffled_first_name = shuffle_word(str(row['Naam_voorzitter First']))
-      shuffled_last_name = shuffle_word(str(row['Naam_voorzitter Last']))
-      shuffled_cleansed_name = shuffle_word(str(row['Naam_voorzitter Cleansed']))
-      if exists_given_and_family_name(row, 'voorzitter'):
-        person_rol_bedienaar, person_rol_bedienaar_uuid = concept_uri(lblod + 'personen/', shuffled_first_name + shuffled_last_name)
-        add_literal(g, person_rol_bedienaar, FOAF.givenName, shuffled_first_name, XSD.string)
-        add_literal(g, person_rol_bedienaar, FOAF.familyName, shuffled_last_name, XSD.string)
-      else:
-        person_rol_bedienaar, person_rol_bedienaar_uuid = concept_uri(lblod + 'personen/', shuffled_cleansed_name)
-        add_literal(g, person_rol_bedienaar, FOAF.givenName, shuffled_cleansed_name, XSD.string)
-      
-      g.add((person_rol_bedienaar, RDF.type, ns.person.Person))
-      add_literal(g, person_rol_bedienaar, ns.mu.uuid, person_rol_bedienaar_uuid, XSD.string)
-
-      g.add((rol_bedienaar_id, ns.org.heldBy, person_rol_bedienaar))
-      g.add((rol_bedienaar_id, ns.org.holds, position_rol_bedienaar_id))
-
     roles = ['voorzitter', 'secretaris', 'penningmeester']
     roles_lid = ['Lid4', 'Lid5']
 
