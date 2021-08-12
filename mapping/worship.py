@@ -478,6 +478,13 @@ def main(file, mode):
       add_literal(g, bestuur_temporary_20, ns.mu.uuid, bestuur_temporary_20_uuid, XSD.string)
       g.add((bestuur_temporary_20, ns.generiek.isTijdspecialisatieVan, bo_id))
 
+       # From 2023 the next bestuursorgaan in bestuursperiode will begin the same day
+      if str(row['Type_eredienst Cleansed']) == 'Israëlitisch':
+        add_literal(g, bestuur_temporary_20, ns.mandaat.bindingEinde, datetime(2023, 5, 31).isoformat(), XSD.dateTime)
+      else:
+        add_literal(g, bestuur_temporary_20, ns.mandaat.bindingEinde, datetime(2023, 4, 30).isoformat(), XSD.dateTime)
+
+
   print("########### Mapping finished #############")
 
   export_data(g, f'worship-{mode}')
