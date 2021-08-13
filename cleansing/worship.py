@@ -4,6 +4,9 @@ import numpy as np
 
 def main(eb):
   eb['Change Event Cleansed'] = pd.Series(eb[['Status_EB', 'Statusinfo']].astype(str).apply(helper.change_event_cleansing, axis=1).values)
+
+  # In case the Grensoverschrijdend column is in Dutch
+  #eb['Grensoverschrijdend'] = eb['Grensoverschrijdend'].replace('Nee', 'False').replace('Ja', 'True') 
   
   eb['Status_EB Cleansed'] = pd.Series(eb['Status_EB'].astype(str).apply(helper.status_mapping_worship).values)
 
