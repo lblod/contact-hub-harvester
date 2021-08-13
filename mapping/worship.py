@@ -19,8 +19,6 @@ def main(file, mode):
   codelist_bestuurseenheid = load_graph('bestuurseenheid-classificatie-code')
   locations = load_graph('locations')
   worship_bestuurseenheid_classification_id = get_concept_id(codelist_bestuurseenheid, 'Bestuur van de eredienst')
-  BEDIENAAR_FUNCTIE = URIRef('http://lblod.data.gift/concepts/efbf2ff50b5c4f693f129ac03319c4f2')
-  BEDIENNAR_FUNCTIE_UUID = 'efbf2ff50b5c4f693f129ac03319c4f2'
   VESTIGING_TYPE = URIRef('http://lblod.data.gift/concepts/f1381723dec42c0b6ba6492e41d6f5dd')
 
   print("########### Mapping started #############")
@@ -202,28 +200,28 @@ def main(file, mode):
       g.add((site_id, ns.ere.vestigingstype, VESTIGING_TYPE))
       g.add((abb_id, ns.org.hasPrimarySite, site_id))
 
-    roles = ['voorzitter', 'secretaris', 'penningmeester']
-    roles_lid = ['Lid4', 'Lid5']
-
-    if exists_bestuursperiode_worship(row, roles+roles_lid):
+    roles = ['voorzitter', 'secretaris', 'penningmeester', 'Lid4', 'Lid5']
+  
+    if exists_bestuursperiode_worship(row, roles):
       # Bestuursorgaan (in bestuursperiode)
       
-      # Bestuursorgaan in bestuursperiode 2017-2020
-      bestuur_temporary_17, bestuur_temporary_17_uuid = concept_uri(lblod + 'eredienstbestuursorganen/', str(row['organization_id']) + 'eredienstbestuursorganen/2017')
-      g.add((bestuur_temporary_17, RDF.type, ns.besluit.Bestuursorgaan))
-      #g.add((bestuur_temporary_17, RDF.type, ns.ere.Eredienstbestuursorgaan))
+      if bool(row['Verkiezingen17']) == True:
+        # Bestuursorgaan in bestuursperiode 2017-2020
+        bestuur_temporary_17, bestuur_temporary_17_uuid = concept_uri(lblod + 'eredienstbestuursorganen/', str(row['organization_id']) + 'eredienstbestuursorganen/2017')
+        g.add((bestuur_temporary_17, RDF.type, ns.besluit.Bestuursorgaan))
+        #g.add((bestuur_temporary_17, RDF.type, ns.ere.Eredienstbestuursorgaan))
 
-      add_literal(g, bestuur_temporary_17, ns.mu.uuid, bestuur_temporary_17_uuid, XSD.string)
-      g.add((bestuur_temporary_17, ns.generiek.isTijdspecialisatieVan, bo_id))
-      
-      if str(row['Verkiezingen17_Opmerkingen Cleansed']) != str(np.nan):
-        add_literal(g, bestuur_temporary_17, ns.mandaat.bindingStart, dateparser.parse(str(row['Verkiezingen17_Opmerkingen Cleansed'])), XSD.dateTime)
+        add_literal(g, bestuur_temporary_17, ns.mu.uuid, bestuur_temporary_17_uuid, XSD.string)
+        g.add((bestuur_temporary_17, ns.generiek.isTijdspecialisatieVan, bo_id))
         
-      if str(row['Verkiezingen2020_Opmerkingen Cleansed']) != str(np.nan):
-        add_literal(g, bestuur_temporary_17, ns.mandaat.bindingEinde, dateparser.parse(str(row['Verkiezingen2020_Opmerkingen Cleansed'])), XSD.dateTime)
-      elif str(row['Verkiezingen17_Opmerkingen Cleansed']) != str(np.nan):
-        # end date = start date + 3 years
-        add_literal(g, bestuur_temporary_17, ns.mandaat.bindingEinde, (dateparser.parse(str(row['Verkiezingen17_Opmerkingen Cleansed'])) + timedelta(days=1095)).isoformat(), XSD.dateTime)
+        if str(row['Verkiezingen17_Opmerkingen Cleansed']) != str(np.nan):
+          add_literal(g, bestuur_temporary_17, ns.mandaat.bindingStart, dateparser.parse(str(row['Verkiezingen17_Opmerkingen Cleansed'])), XSD.dateTime)
+          
+        if str(row['Verkiezingen2020_Opmerkingen Cleansed']) != str(np.nan):
+          add_literal(g, bestuur_temporary_17, ns.mandaat.bindingEinde, dateparser.parse(str(row['Verkiezingen2020_Opmerkingen Cleansed'])), XSD.dateTime)
+        elif str(row['Verkiezingen17_Opmerkingen Cleansed']) != str(np.nan):
+          # end date = start date + 3 years
+          add_literal(g, bestuur_temporary_17, ns.mandaat.bindingEinde, (dateparser.parse(str(row['Verkiezingen17_Opmerkingen Cleansed'])) + timedelta(days=1095)).isoformat(), XSD.dateTime)
 
       if str(row['Status_EB Cleansed']) == 'Actief':
         # Bestuursorgaan in bestuursperiode 2020-2023
@@ -242,10 +240,9 @@ def main(file, mode):
         else:
           add_literal(g, bestuur_temporary_20, ns.mandaat.bindingEinde, datetime(2023, 4, 30).isoformat(), XSD.dateTime)
 
-      
+      person_lid_mandaat = None
       # Mandaat / Mandataris
-      for role in roles:
-        person_lid_mandaat = None
+      for role in roles:        
         if exists_role_worship(row, role):
           # Person role
           if exists_given_and_family_name(row, role):
@@ -258,8 +255,7 @@ def main(file, mode):
             
           g.add((person_role, RDF.type, ns.person.Person))
           add_literal(g, person_role, ns.mu.uuid, person_uuid, XSD.string)
-
-          person_role_mandaat = None
+         
           if str(row[f'Datum verkiezing {role}']) != 'NaT':
             year_election = dateparser.parse(str(row[f'Datum verkiezing {role}'])).year
             
@@ -379,68 +375,74 @@ def main(file, mode):
 
       ####
       # Lids
-      for role in roles_lid:
-        if exists_role_worship(row, role):
-          if exists_given_and_family_name(row, role):
-            lid, lid_uuid =  concept_uri(lblod + 'personen/', str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']))
-            add_literal(g, lid, FOAF.givenName, str(row[f'Naam_{role} First']), XSD.string)
-            add_literal(g, lid, FOAF.familyName, str(row[f'Naam_{role} Last']), XSD.string)
-          else:
-            lid, lid_uuid =  concept_uri(lblod + 'personen/', str(row[f'Naam_{role} Cleansed']))
-            add_literal(g, lid, FOAF.givenName, str(row[f'Naam_{role} Cleansed']), XSD.string)
+      # for role in roles_lid:
+      #   if exists_role_worship(row, role):
+      #     if exists_given_and_family_name(row, role):
+      #       lid, lid_uuid =  concept_uri(lblod + 'personen/', str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']))
+      #       add_literal(g, lid, FOAF.givenName, str(row[f'Naam_{role} First']), XSD.string)
+      #       add_literal(g, lid, FOAF.familyName, str(row[f'Naam_{role} Last']), XSD.string)
+      #     else:
+      #       lid, lid_uuid =  concept_uri(lblod + 'personen/', str(row[f'Naam_{role} Cleansed']))
+      #       add_literal(g, lid, FOAF.givenName, str(row[f'Naam_{role} Cleansed']), XSD.string)
           
-          g.add((lid, RDF.type, ns.person.Person))
-          add_literal(g, lid, ns.mu.uuid, lid_uuid, XSD.string)
+      #     g.add((lid, RDF.type, ns.person.Person))
+      #     add_literal(g, lid, ns.mu.uuid, lid_uuid, XSD.string)
 
-          ## Lid - Mandaat
-          lid_mandaat = None
-          if str(row[f'Datum verkiezing {role}']) != 'NaT':
-            year_election = dateparser.parse(str(row[f'Datum verkiezing {role}'])).year
+      #     ## Lid - Mandaat
+      #     #lid_mandaat = None
+      #     if str(row[f'Datum verkiezing {role}']) != 'NaT':
+      #       year_election = dateparser.parse(str(row[f'Datum verkiezing {role}'])).year
             
-            if year_election <= 2019:
-              # if str(row[f'Type Helft Cleansed {role}']) == 'Kleine helft':
-              #   lid_mandaat, lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2017/Lid')
-              # else:
-              #   lid_mandaat, lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2020/Lid')
+      #       if person_lid_mandaat != None:
+      #         if year_election <= 2019:
+      #         if str(row[f'Type Helft Cleansed {role}']) == 'Kleine helft':
+      #           lid_mandaat, lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2017/Lid')
+      #         else:
+      #           lid_mandaat, lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2020/Lid')
 
-              #g.add((lid_mandaat, ns.org.postIn, bestuur_temporary_17))
-              lid_mandaat, lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2017/Lid')
-              g.add((bestuur_temporary_17, ns.org.hasPost, lid_mandaat)) 
-            else:
-              lid_mandaat, lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2020/Lid')
-              #g.add((lid_mandaat, ns.org.postIn, bestuur_temporary_20))
-              g.add((bestuur_temporary_20, ns.org.hasPost, lid_mandaat))              
-          elif str(row['Status_EB Cleansed']) == 'Niet Actief':
-            lid_mandaat, lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2017/Lid') 
-            #g.add((lid_mandaat, ns.org.postIn, bestuur_temporary_17))
-            g.add((bestuur_temporary_17, ns.org.hasPost, lid_mandaat))
+      #         g.add((lid_mandaat, ns.org.postIn, bestuur_temporary_17))
+      #         lid_mandaat, lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2017/Lid')
+      #           g.add((bestuur_temporary_17, ns.org.hasPost, person_lid_mandaat))
+      #         else:
+      #           g.add((bestuur_temporary_20, ns.org.hasPost, person_lid_mandaat)) 
+      #       elif person_lid_mandaat == None and year_election <= 2019:
+      #         person_lid_mandaat, person_lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2017/Lid')
+      #         g.add((bestuur_temporary_20, ns.org.hasPost, person_lid_mandaat))
+      #       else:
+      #         person_lid_mandaat, person_lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2020/Lid')
+      #         g.add((bestuur_temporary_20, ns.org.hasPost, person_lid_mandaat))
+      #     elif str(row['Status_EB Cleansed']) == 'Niet Actief':
+      #       #lid_mandaat, lid_mandaat_uuid = concept_uri(lblod + 'mandaten/', str(row['organization_id']) + 'eredienstbestuursorganen/2017/Lid') 
+      #       #g.add((lid_mandaat, ns.org.postIn, bestuur_temporary_17))
+      #       g.add((bestuur_temporary_17, ns.org.hasPost, person_lid_mandaat))
           
-          if lid_mandaat != None:
-            g.add((lid_mandaat, RDF.type, ns.mandaat.Mandaat))
-            add_literal(g, lid_mandaat, ns.mu.uuid, lid_mandaat_uuid, XSD.string)
+      #     # if lid_mandaat != None:
+      #     #   g.add((lid_mandaat, RDF.type, ns.mandaat.Mandaat))
+      #     #   add_literal(g, lid_mandaat, ns.mu.uuid, lid_mandaat_uuid, XSD.string)
 
-            bestuurfunctie_id = get_concept_id(codelist_ere, get_label_role('lid worship'))
-            g.add((lid_mandaat, ns.org.role, bestuurfunctie_id))
+      #       # bestuurfunctie_id = get_concept_id(codelist_ere, get_label_role('lid worship'))
+      #       # g.add((lid_mandaat, ns.org.role, bestuurfunctie_id))
 
-            ## Lid - Mandataris
-            lid_mandataris, lid_mandataris_uuid = concept_uri(lblod + 'mandatarissen/', str(row['organization_id']) + person_uuid + role)
-            #g.add((lid_mandataris, RDF.type, ns.mandaat.Mandataris))
-            g.add((lid_mandataris, RDF.type, ns.ere.EredienstMandataris))
-            add_literal(g, lid_mandataris, ns.mu.uuid, lid_mandataris_uuid, XSD.string)
+      #     ## Lid - Mandataris
+      #     lid_mandataris, lid_mandataris_uuid = concept_uri(lblod + 'mandatarissen/', str(row['organization_id']) + lid_uuid + role)
+      #     #g.add((lid_mandataris, RDF.type, ns.mandaat.Mandataris))
+      #     g.add((lid_mandataris, RDF.type, ns.ere.EredienstMandataris))
+      #     add_literal(g, lid_mandataris, ns.mu.uuid, lid_mandataris_uuid, XSD.string)
 
-            g.add((lid_mandataris, ns.mandaat.isBestuurlijkeAliasVan, lid))
-            g.add((lid_mandataris, ns.org.holds, lid_mandaat))
+      #     g.add((lid_mandataris, ns.mandaat.isBestuurlijkeAliasVan, lid))
+      #     g.add((lid_mandataris, ns.org.holds, person_lid_mandaat))
 
-            if str(row[f'Type Helft Cleansed {role}']) != str(np.nan):
-              type_half = get_concept_id(codelist_ere, str(row[f'Type Helft Cleansed {role}']))
-              g.add((lid_mandataris, ns.ere.typeHelft, type_half))
+      #     if str(row[f'Type Helft Cleansed {role}']) != str(np.nan):
+      #       type_half = get_concept_id(codelist_ere, str(row[f'Type Helft Cleansed {role}']))
+      #       g.add((lid_mandataris, ns.ere.typeHelft, type_half))
 
-            if str(row[f'Datum verkiezing {role}']) != 'NaT':
-              add_literal(g, lid_mandataris, ns.mandaat.start, dateparser.parse(str(row[f'Datum verkiezing {role}'])).isoformat(), XSD.dateTime)
-              add_literal(g, person_role_mandataris, ns.ere.geplandeEinddatumAanstelling, (dateparser.parse(str(row[f'Datum verkiezing {role}'])) + timedelta(days=1095)).isoformat(), XSD.dateTime)
+      #     if str(row[f'Datum verkiezing {role}']) != 'NaT':
+      #       add_literal(g, lid_mandataris, ns.mandaat.start, dateparser.parse(str(row[f'Datum verkiezing {role}'])).isoformat(), XSD.dateTime)
+      #       add_literal(g, person_role_mandataris, ns.ere.geplandeEinddatumAanstelling, (dateparser.parse(str(row[f'Datum verkiezing {role}'])) + timedelta(days=1095)).isoformat(), XSD.dateTime)
 
-            #g.add((lid_mandaat, ns.org.heldBy, lid_mandataris))
-            g.add((lid, ns.mandaat.isAangesteldAls, lid_mandataris))
+      #     #g.add((lid_mandaat, ns.org.heldBy, lid_mandataris))
+      #     g.add((lid, ns.mandaat.isAangesteldAls, lid_mandataris))
+
     elif str(row['Status_EB Cleansed']) == 'Actief':
       # Bestuursorgaan in bestuursperiode 2020-2023
       bestuur_temporary_20, bestuur_temporary_20_uuid = concept_uri(lblod + 'eredienstbestuursorganen/', str(row['organization_id']) + 'eredienstbestuursorganen/2020')

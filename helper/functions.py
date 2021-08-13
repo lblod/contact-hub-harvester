@@ -754,7 +754,10 @@ def exists_address_role(row, role):
   return (str(row[f'Adres_{role} Cleansed']) != str(np.nan))
 
 def exists_contact_role(row, role):
-  return ((str(row[f'Tel_{role} 1']) != str(np.nan)) or (str(row[f'Mail_{role} Cleansed']) != str(np.nan)))
+  if 'lid' in role:
+    return ((str(row[f'Tel_{role} 1']) != str(np.nan)) or (str(row[f'Mail_{role} Cleansed']) != str(np.nan)))
+  else:
+    return False
 
 def exists_bestuursperiode_central(row):
   #return (str(row[f'Verkiezingen17_Opmerkingen Cleansed']) != str(np.nan) or str(row['Verkiezingen2020_Opmerkingen Cleansed']) != str(np.nan))
