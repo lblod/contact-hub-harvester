@@ -70,6 +70,12 @@ def bestuurseenheid_mapping_org(type):
                           'IGS_PV': 'Projectvereniging', 'IGS_DV': 'Dienstverlenende vereniging', 'IGS_OV': 'Opdrachthoudende vereniging'}
 
   return bestuurseenheid_dict[type]
+
+def find_central(central_db, central_id):
+  central_row = central_db[central_db['Titel'] == central_id]
+
+  return (str(central_row['KBO_CKB_cleansed']), str(central_row['Naam_CKB']))
+
   
 def load_graph(name):
   cl = Graph()
@@ -473,7 +479,7 @@ def extract_area_percentage(data):
   if re.search(r'\d+(\,?\d+)?', data):
     m_p.append(re.search(r'\d+(\,?\.?\d+)?', data).group().replace(',', '.'))
   else:
-    m_p.append('')
+    m_p.append(0)
   
   return m_p
 
@@ -494,7 +500,7 @@ def local_engagement_cleansing(row):
   municipality = row['Gemeente Cleansed']
   type_eredienst = row['Type_eredienst Cleansed']
 
-  #{'Provincie': {'sds': 12, 'ss': 12}, 'Gemeente': {'zze':12}, 'Cross-Border': {}}  
+  #{'Province': {'sds': 12, 'ss': 12}, 'Municipality': {'zze':12}, 'Cross-Border': []}  
 
   if type_eredienst == "Islamitisch" or type_eredienst == "Orthodox":
     if not cross_border and province != 'nan':
@@ -512,7 +518,7 @@ def local_engagement_cleansing(row):
           division['Province'][mp[0]] = mp[1]
           division['Cross-Border'].append(mp[0])
       else:
-        division['Province'][province] = ''
+        division['Province'][province] = 0
         division['Cross-Border'].append(province)
         
         for data in sl:
@@ -527,7 +533,8 @@ def local_engagement_cleansing(row):
       division['Cross-Border'].append(municipality)
     elif cross_border and info != 'nan':
       match = re.sub(r'\ben\b', ';', info)
-    
+
+      # gebiedsomschrijving or Gebiedsomschrijving or gebiedsopmschrijving
       if 'mschrijving' in match:
         match = re.sub(r'(Zelfbedruipend - )?([gG]ebiedso[p]?mschrijving)', '', match)
         

@@ -5,7 +5,7 @@ import dateparser
 from rdflib import Graph, URIRef
 from rdflib.namespace import FOAF, XSD, SKOS, RDF, RDFS, DCTERMS
 
-from helper.functions import add_literal, concept_uri, exists_bestuursperiode_worship, exists_role_worship, export_data, get_cleansed_data, exists_address, exists_address_role, exists_contact_role, exists_bestuursperiode_worship, get_adm_unit_concept, get_location_id, load_graph, get_concept_id, get_label_role, exists_given_and_family_name, get_full_address, shuffle_word
+from helper.functions import add_literal, concept_uri, exists_bestuursperiode_worship, exists_role_worship, export_data, get_cleansed_data, exists_address, exists_address_role, exists_contact_role, exists_bestuursperiode_worship, get_adm_unit_concept, get_location_id, load_graph, get_concept_id, get_label_role, exists_given_and_family_name, get_full_address, find_central
 import helper.namespaces as ns
 
 
@@ -18,6 +18,7 @@ def main(file, mode):
   codelist_ere = load_graph('codelist-ere')
   codelist_bestuurseenheid = load_graph('bestuurseenheid-classificatie-code')
   locations = load_graph('locations')
+  central_cleansed = get_cleansed_data(file, 'central')
   worship_bestuurseenheid_classification_id = get_concept_id(codelist_bestuurseenheid, 'Bestuur van de eredienst')
   VESTIGING_TYPE = URIRef('http://lblod.data.gift/concepts/f1381723dec42c0b6ba6492e41d6f5dd')
 
@@ -48,7 +49,9 @@ def main(file, mode):
     g.add((abb_id, ns.rov.orgStatus, status))
 
     if str(row['Naam_CKB_EB1']) != str(np.nan):
-      ckb_id, _ = concept_uri(lblod + 'centraleBesturenVanDeEredienst/', str(row['Naam_CKB_EB1']))
+      central_kbo, central_name = find_central(central_cleansed, str(row['Naam_CKB_EB1']))
+      unique_id = str(row['Naam_CKB_EB1']) + central_kbo + central_name
+      ckb_id, _ = concept_uri(lblod + 'centraleBesturenVanDeEredienst/', unique_id)
       g.add((ckb_id, ns.org.hasSubOrganization, abb_id))
 
     if str(row['Representatief orgaan']) != str(np.nan):
@@ -121,7 +124,8 @@ def main(file, mode):
     local_eng = json.loads(json_acceptable_string)
 
     if len(local_eng['Cross-Border']) > 0:
-      type_involvement = get_concept_id(codelist_ere, 'Toezichthoudend en financierend')
+      type_involvement_perc_not_null = get_concept_id(codelist_ere, 'Toezichthoudend en financierend')
+      type_involvement_perc_null = get_concept_id(codelist_ere, 'Deel van gebiedsomschrijving')
       for municipality, perc in local_eng['Municipality'].items():
         municipality_res = get_adm_unit_concept(municipality, "Gemeente")
         if municipality_res != None:
@@ -129,9 +133,12 @@ def main(file, mode):
           pi_id, pi_uuid = concept_uri(lblod + 'betrokkenLokaleBesturen/', municipality + abb_uuid)
           g.add((pi_id, RDF.type, ns.ere.BetrokkenLokaleBesturen))
           add_literal(g, pi_id, ns.mu.uuid, pi_uuid, XSD.string)
-          if perc != '':
-            add_literal(g, pi_id, ns.ere.financieringspercentage, str(perc), XSD.float)
-            g.add((pi_id, ns.ere.typebetrokkenheid, type_involvement))
+          if perc != 0:
+            g.add((pi_id, ns.ere.typebetrokkenheid, type_involvement_perc_not_null))
+          else:
+            g.add((pi_id, ns.ere.typebetrokkenheid, type_involvement_perc_null))
+
+          add_literal(g, pi_id, ns.ere.financieringspercentage, str(perc), XSD.float)
           g.add((pi_id, ns.org.organization, abb_id))
           
           g.add((municipality_adminunit, ns.ere.betrokkenBestuur, pi_id))
@@ -147,10 +154,12 @@ def main(file, mode):
           pi_id, pi_uuid = concept_uri(lblod + 'betrokkenLokaleBesturen/', province + abb_uuid)
           g.add((pi_id, RDF.type, ns.ere.BetrokkenLokaleBesturen))
           add_literal(g, pi_id, ns.mu.uuid, pi_uuid, XSD.string)
-          if perc != '':
-            add_literal(g, pi_id, ns.ere.financieringspercentage, str(perc), XSD.float)
-            g.add((pi_id, ns.ere.typebetrokkenheid, type_involvement))
-            
+          if perc != 0:
+            g.add((pi_id, ns.ere.typebetrokkenheid, type_involvement_perc_not_null))
+          else:
+            g.add((pi_id, ns.ere.typebetrokkenheid, type_involvement_perc_null))
+
+          add_literal(g, pi_id, ns.ere.financieringspercentage, str(perc), XSD.float)  
           g.add((pi_id, ns.org.organization, abb_id))
           
           g.add((province_adminunit, ns.ere.betrokkenBestuur, pi_id))
@@ -231,14 +240,14 @@ def main(file, mode):
         # end date of governing body temporary 2017
         if start_date_bestuur_temporary_20 != None:
           end_date_bestuur_temporary_17 = start_date_bestuur_temporary_20        
-          print("from 2017", end_date_bestuur_temporary_17)
+          #print("from 2020", end_date_bestuur_temporary_17)
           add_literal(g, bestuur_temporary_17, ns.mandaat.bindingEinde, end_date_bestuur_temporary_17.isoformat(), XSD.dateTime)
           
         elif start_date_bestuur_temporary_17 != None:
           remain_years = 2020 - start_date_bestuur_temporary_17.year
-          print(remain_years)
+          #print(remain_years)
           end_date_bestuur_temporary_17 = (start_date_bestuur_temporary_17 + timedelta(days=remain_years*365)).isoformat()
-          print("from 2020", end_date_bestuur_temporary_17)
+          #print("from 2017", end_date_bestuur_temporary_17)
           add_literal(g, bestuur_temporary_20, ns.mandaat.bindingEinde, end_date_bestuur_temporary_17, XSD.dateTime)
 
 
@@ -314,16 +323,16 @@ def main(file, mode):
             if str(row[f'Datum verkiezing {role}']) != 'NaT':
               start_mandataris = dateparser.parse(str(row[f'Datum verkiezing {role}']))
 
-            year_election = dateparser.parse(str(row[f'Datum verkiezing {role}'])).year
-            if year_election >= 2017 and year_election < 2020 and end_date_bestuur_temporary_17 != None:
-              expected_end_mandataris = end_date_bestuur_temporary_17
-              end_mandataris = expected_end_mandataris
-            elif end_date_bestuur_temporary_17 == None:
-              remain_years = 2020 - year_election
-              expected_end_mandataris = (start_mandataris + timedelta(days=remain_years*365)).isoformat()
-              end_mandataris = expected_end_mandataris
-            elif end_date_bestuur_temporary_20 != None:
-              expected_end_mandataris = end_date_bestuur_temporary_20
+              year_election = dateparser.parse(str(row[f'Datum verkiezing {role}'])).year
+              if year_election >= 2017 and year_election < 2020 and end_date_bestuur_temporary_17 != None:
+                expected_end_mandataris = end_date_bestuur_temporary_17
+                end_mandataris = expected_end_mandataris
+              elif end_date_bestuur_temporary_17 == None:
+                remain_years = 2020 - year_election
+                expected_end_mandataris = (start_mandataris + timedelta(days=remain_years*365)).isoformat()
+                end_mandataris = expected_end_mandataris
+              elif end_date_bestuur_temporary_20 != None:
+                expected_end_mandataris = end_date_bestuur_temporary_20
         
             if 'Lid' not in role:
               ## Role - Mandaat
