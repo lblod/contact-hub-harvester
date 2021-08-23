@@ -239,10 +239,10 @@ def main(file, mode):
       else:
         add_literal(g, bestuur_temporary_20, ns.mandaat.bindingEinde, datetime(2023, 4, 30).isoformat(), XSD.dateTime)
 
-
-
   print("########### Mapping finished #############")       
 
   export_data(g, f'central-{mode}')
+
+  g.serialize('input/codelists/central.ttl',format='turtle')
 
 

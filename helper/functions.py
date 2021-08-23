@@ -71,11 +71,41 @@ def bestuurseenheid_mapping_org(type):
 
   return bestuurseenheid_dict[type]
 
-def find_central(central_db, central_id):
-  central_row = central_db[central_db['Titel'] == central_id]
+def find_central_info(central_db, central_id):
+  central_row = central_db[central_db['Titel'] == central_id][['KBO_CKB_cleansed','Naam_CKB']]
 
-  return (str(central_row['KBO_CKB_cleansed']), str(central_row['Naam_CKB']))
+  return (str(central_row['KBO_CKB_cleansed'].values[0]), str(central_row['Naam_CKB'].values[0]))
 
+def find_central_entity(central_graph, central_titel, central_kbo, central_name):
+  concept = None
+
+  query = """
+          SELECT ?central WHERE { ?central skos:prefLabel ?central_name; adms:identifier ?identifier_sp . 
+            ?identifier_sp generiek:gestructureerdeIdentificator ?titel_id .
+            ?titel_id generiek:lokaleIdentificator ?central_titel .
+          }
+          """
+
+  # ?identifier_kbo generiek:gestructureerdeIdentificator ?kbo_id . ?kbo_id generiek:lokaleIdentificator ?central_kbo .
+  # 'central_kbo': Literal(central_kbo, datatype=XSD.string)
+
+  namespaces = {
+    'generiek': 'https://data.vlaanderen.be/ns/generiek#',
+    'skos': SKOS,
+    'adms': 'http://www.w3.org/ns/adms#'
+  }
+
+  bindings = {
+    'central_name': Literal(central_name, datatype=XSD.string),
+    'central_titel': Literal(central_titel, datatype=XSD.string),    
+  }
+
+  qres = central_graph.query(query, initNs = namespaces, initBindings = bindings)
+
+  if qres.bindings:
+    concept = qres.bindings[0]['central']
+  
+  return concept
   
 def load_graph(name):
   cl = Graph()
@@ -781,7 +811,7 @@ def get_cleansed_data(file, type):
   try:
     data_cleansed = pd.read_excel(f'output/{type}_cleansed.xlsx', dtype=str)
   except FileNotFoundError:
-    data_raw = pd.read_excel(file)
+    data_raw = pd.read_excel(file, dtype=str)
     
     print("########### Cleansing started #############")
 

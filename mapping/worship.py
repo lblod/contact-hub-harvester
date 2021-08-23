@@ -5,7 +5,7 @@ import dateparser
 from rdflib import Graph, URIRef
 from rdflib.namespace import FOAF, XSD, SKOS, RDF, RDFS, DCTERMS
 
-from helper.functions import add_literal, concept_uri, exists_bestuursperiode_worship, exists_role_worship, export_data, get_cleansed_data, exists_address, exists_address_role, exists_contact_role, exists_bestuursperiode_worship, get_adm_unit_concept, get_location_id, load_graph, get_concept_id, get_label_role, exists_given_and_family_name, get_full_address, find_central
+from helper.functions import add_literal, concept_uri, exists_bestuursperiode_worship, exists_role_worship, export_data, get_cleansed_data, exists_address, exists_address_role, exists_contact_role, exists_bestuursperiode_worship, get_adm_unit_concept, get_location_id, load_graph, get_concept_id, get_label_role, exists_given_and_family_name, get_full_address, find_central_info, find_central_entity
 import helper.namespaces as ns
 
 
@@ -19,6 +19,7 @@ def main(file, mode):
   codelist_bestuurseenheid = load_graph('bestuurseenheid-classificatie-code')
   locations = load_graph('locations')
   central_cleansed = get_cleansed_data(file, 'central')
+  central_graph = load_graph('central')
   worship_bestuurseenheid_classification_id = get_concept_id(codelist_bestuurseenheid, 'Bestuur van de eredienst')
   VESTIGING_TYPE = URIRef('http://lblod.data.gift/concepts/f1381723dec42c0b6ba6492e41d6f5dd')
 
@@ -48,10 +49,11 @@ def main(file, mode):
     status = get_concept_id(codelist_ere, str(row['Status_EB Cleansed']))
     g.add((abb_id, ns.rov.orgStatus, status))
 
-    if str(row['Naam_CKB_EB1']) != str(np.nan):
-      central_kbo, central_name = find_central(central_cleansed, str(row['Naam_CKB_EB1']))
-      unique_id = str(row['Naam_CKB_EB1']) + central_kbo + central_name
-      ckb_id, _ = concept_uri(lblod + 'centraleBesturenVanDeEredienst/', unique_id)
+    central_titel = str(row['Naam_CKB_EB1'])
+    if central_titel != str(np.nan):
+      central_kbo, central_name = find_central_info(central_cleansed, central_titel)
+      ckb_id = find_central_entity(central_graph, central_titel, central_kbo, central_name)
+      #print("out ", central_kbo, central_name)
       g.add((ckb_id, ns.org.hasSubOrganization, abb_id))
 
     if str(row['Representatief orgaan']) != str(np.nan):
