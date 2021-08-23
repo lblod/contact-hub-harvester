@@ -507,7 +507,7 @@ def extract_area_percentage(data):
   m_p.append(re.search(r'[a-zA-Z]+(\-[a-zA-Z]+)*', data).group())
 
   if re.search(r'\d+(\,?\d+)?', data):
-    m_p.append(re.search(r'\d+(\,?\.?\d+)?', data).group().replace(',', '.'))
+    m_p.append(float(re.search(r'\d+(\,?\.?\d+)?', data).group().replace(',', '.')))
   else:
     m_p.append(0)
   
@@ -530,11 +530,11 @@ def local_engagement_cleansing(row):
   municipality = row['Gemeente Cleansed']
   type_eredienst = row['Type_eredienst Cleansed']
 
-  #{'Province': {'sds': 12, 'ss': 12}, 'Municipality': {'zze':12}, 'Cross-Border': []}  
+  #{'Province': {'sds': 12, 'ss': 12}, 'Municipality': {'zze': 12}, 'Cross-Border': []}  
 
   if type_eredienst == "Islamitisch" or type_eredienst == "Orthodox":
     if not cross_border and province != 'nan':
-      division['Province'][province] = '100'
+      division['Province'][province] = 100
       division['Cross-Border'].append(province)
     elif cross_border and info != 'nan':
       match = re.sub(r'\ben\b', ';', info)
@@ -559,7 +559,7 @@ def local_engagement_cleansing(row):
             division['Municipality'][mp[0]] = mp[1]
   else:
     if not cross_border and municipality != 'nan':
-      division['Municipality'][municipality] = '100'
+      division['Municipality'][municipality] = 100
       division['Cross-Border'].append(municipality)
     elif cross_border and info != 'nan':
       match = re.sub(r'\ben\b', ';', info)
@@ -733,6 +733,27 @@ def get_all_locations():
 #     location_concept = results['results']['bindings'][0]
 
 #   return location_concept
+
+def get_all_admin_units():
+  query = """
+     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+      PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
+      PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+      PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+      SELECT ?admin_unit ?uuid ?classificatie WHERE {
+        ?admin_unit a besluit:Bestuurseenheid; skos:prefLabel ?admin_unit_label; mu:uuid ?uuid; besluit:classificatie ?classificatie .
+        ?classificatie skos:prefLabel ?classification_label .
+        FILTER (?classification_label in "Gemeente", "Provincie")
+      }
+      
+  """
+
+  SPARQL.setQuery(query)
+  SPARQL.setReturnFormat(JSON)
+
+  results = SPARQL.query().convert()
+
+  return results['results']['bindings']
 
 
 def worship_link_ro(row):

@@ -19,6 +19,7 @@ def main(file, mode):
   locations = load_graph('locations')
   codelist_bestuurseenheid = load_graph('bestuurseenheid-classificatie-code')
   bestuurseenheid_classification_id = get_concept_id(codelist_bestuurseenheid, 'Centraal bestuur van de eredienst')
+  VESTIGING_TYPE = URIRef('http://lblod.data.gift/concepts/f1381723dec42c0b6ba6492e41d6f5dd')
 
   print("########### Mapping started #############")
 
@@ -111,6 +112,7 @@ def main(file, mode):
       add_literal(g, address_uri, ns.locn.fullAddress, get_full_address(str(row['Straat']), str(row['Huisnr Cleansed']), str(row['Busnummer Cleansed']), str(row['Postcode Cleansed']), str(row['Gemeente Cleansed'])), XSD.string)
 
       g.add((vestiging_uri, ns.organisatie.bestaatUit, address_uri))
+      g.add((vestiging_uri, ns.ere.vestigingstype, VESTIGING_TYPE))
       g.add((abb_id, ns.org.hasPrimarySite, vestiging_uri))
 
     roles = ['voorzitter', 'secretaris']

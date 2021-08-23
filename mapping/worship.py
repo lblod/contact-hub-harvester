@@ -250,7 +250,7 @@ def main(file, mode):
           #print(remain_years)
           end_date_bestuur_temporary_17 = (start_date_bestuur_temporary_17 + timedelta(days=remain_years*365)).isoformat()
           #print("from 2017", end_date_bestuur_temporary_17)
-          add_literal(g, bestuur_temporary_20, ns.mandaat.bindingEinde, end_date_bestuur_temporary_17, XSD.dateTime)
+          add_literal(g, bestuur_temporary_17, ns.mandaat.bindingEinde, end_date_bestuur_temporary_17, XSD.dateTime)
 
 
       if str(row['Status_EB Cleansed']) == 'Actief':
