@@ -13,7 +13,7 @@ def main():
     g.add((admin_unit_id, RDF.type, ns.besluit.Bestuurseenheid))
     add_literal(g, admin_unit_id, ns.mu.uuid, result['uuid']['value'], XSD.string)
     add_literal(g, admin_unit_id, RDFS.label, result['admin_unit_label']['value'], XSD.string)
-    add_literal(g, admin_unit_id, ns.besluit.classificatie, result['classificatie']['value'], XSD.string)
+    g.add((admin_unit_id, ns.besluit.classificatie, URIRef(result['classificatie']['value'])))
 
   export_data(g, 'local_administrative_units')
 

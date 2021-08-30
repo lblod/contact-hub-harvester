@@ -736,14 +736,14 @@ def get_all_locations():
 
 def get_all_admin_units():
   query = """
-     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+      PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
       PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
       PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
       PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-      SELECT ?admin_unit ?uuid ?classificatie WHERE {
+      SELECT ?admin_unit ?admin_unit_label ?uuid ?classificatie WHERE {
         ?admin_unit a besluit:Bestuurseenheid; skos:prefLabel ?admin_unit_label; mu:uuid ?uuid; besluit:classificatie ?classificatie .
         ?classificatie skos:prefLabel ?classification_label .
-        FILTER (?classification_label in "Gemeente", "Provincie")
+        FILTER (?classification_label in ("Gemeente", "Provincie"))
       }
       
   """

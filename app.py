@@ -9,6 +9,8 @@ import mapping.national as national
 import mapping.codelist as codelist
 import mapping.vocabulary as vocab
 import mapping.location as location
+import mapping.local_admin_unit as local_admin_unit
+import mapping.nationality as nationality
 
 def main(*args):  
   if args[0] == 'org':
@@ -27,6 +29,10 @@ def main(*args):
     vocab.main(args[1])
   elif args[0] == 'location':
     location.main()
+  elif args[0] == 'local_admin_unit':
+    local_admin_unit.main()
+  elif args[0] == 'nationality':
+    nationality.main()
 
 if __name__ == '__main__':
   args = sys.argv[1:]
