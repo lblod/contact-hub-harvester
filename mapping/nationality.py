@@ -1,18 +1,20 @@
-from rdflib import Graph, URIRef
-from rdflib.namespace import SKOS, RDFS
+from rdflib import Graph, URIRef, Namespace, Literal
+from rdflib.namespace import SKOS, RDFS, RDF
 from helper.functions import export_data
 
 def main():
-  graph = Graph()
+  euvoc = Namespace("http://publications.europa.eu/ontology/euvoc#")
 
+  graph = Graph()
   graph.parse('output/20210830182209-codelist-nationality.ttl')
 
   query = """
-            SELECT ?concept 
+            SELECT ?concept ?label ?adjective
             WHERE { 
               ?concept a euvoc:Country; skos:prefLabel ?label; skos-xl:altLabel [ a skos-xl:Label; rdfs:label ?adjective; 
               dct:type <http://publications.europa.eu/resource/authority/label-type/ADJECTIVE> ]
-              FILTER(lang(?label) = "nl" || lang(?adjective) = "nl")
+              FILTER(lang(?label) = 'nl') 
+              FILTER(lang(?adjective) = 'nl')
             }
           """
 
@@ -26,8 +28,17 @@ def main():
 
   qres = graph.query(query, initNs = namespaces)
 
-  if qres.bindings:
-    concept = qres.bindings[0]['concept']
+  nationality_graph = Graph()
 
-  export_data(g, 'codelist-nationality-cleansed')
+  if qres.bindings:
+    for row in qres:
+      print(f"{row.concept}")
+      print(f"{row.label}")
+      print(f"{row.adjective}")
+      nationality_concept = URIRef(f'{row.concept}')
+      nationality_graph.add((nationality_concept, RDF.type, euvoc.Country))
+      nationality_graph.add((nationality_concept, SKOS.prefLabel, Literal(f'{row.label}')))
+      nationality_graph.add((nationality_concept, RDFS.label, Literal(f'{row.adjective}')))
+
+  export_data(nationality_graph, 'codelist-nationality')
 
