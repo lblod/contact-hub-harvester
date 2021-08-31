@@ -6,11 +6,11 @@ def main(eb):
   eb['Change Event Cleansed'] = pd.Series(eb[['Status_EB', 'Statusinfo']].astype(str).apply(helper.change_event_cleansing, axis=1).values)
 
   # In case the Grensoverschrijdend column is in Dutch
-  eb['Grensoverschrijdend'] = eb['Grensoverschrijdend'].replace('Nee', 'False').replace('Ja', 'True')
+  #eb['Grensoverschrijdend'] = eb['Grensoverschrijdend'].replace('Nee', 'False').replace('Ja', 'True')
 
-  eb['Verkiezingen17'] = eb['Verkiezingen17'].replace('Nee', 'False').replace('Ja', 'True')
+  #eb['Verkiezingen17'] = eb['Verkiezingen17'].replace('Nee', 'False').replace('Ja', 'True')
 
-  eb['Verkiezingen2020'] = eb['Verkiezingen2020'].replace('Nee', 'Flase').replace('Ja', 'True')
+  #eb['Verkiezingen2020'] = eb['Verkiezingen2020'].replace('Nee', 'Flase').replace('Ja', 'True')
   
   eb['Status_EB Cleansed'] = pd.Series(eb['Status_EB'].astype(str).apply(helper.status_mapping_worship).values)
 
@@ -127,5 +127,7 @@ def main(eb):
   eb['Datum verkiezing Lid5'] = eb['Datum verkiezing lid 5']
 
   eb['Type Helft Cleansed Lid5'] = eb['Grote helft/kleine helft lid 5'].replace('Onbekend', np.nan)
+
+  eb = eb[eb['Status_EB Cleansed'] != 'DELETE RECORD']
 
   return eb

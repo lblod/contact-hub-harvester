@@ -275,19 +275,15 @@ def main(file, mode):
       person_lid_mandaat = None
       # Mandaat / Mandataris
       for role in roles:        
-        if exists_role_worship(row, role):
+        if exists_role_worship(row, role) and exists_given_and_family_name(row, role):
           # Person role
-          if exists_given_and_family_name(row, role):
-            person_role, person_uuid = concept_uri(lblod + 'personen/', str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']))
-            add_literal(g, person_role, FOAF.givenName, str(row[f'Naam_{role} First']), XSD.string)
-            add_literal(g, person_role, FOAF.familyName, str(row[f'Naam_{role} Last']), XSD.string)
-          else:
-            person_role, person_uuid = concept_uri(lblod + 'personen/', str(row[f'Naam_{role} Cleansed']))
-            add_literal(g, person_role, FOAF.givenName, str(row[f'Naam_{role} Cleansed']), XSD.string)
-            
+          person_role, person_uuid = concept_uri(lblod + 'personen/', str(row[f'Naam_{role} First']) + str(row[f'Naam_{role} Last']))
+          add_literal(g, person_role, FOAF.givenName, str(row[f'Naam_{role} First']), XSD.string)
+          add_literal(g, person_role, FOAF.familyName, str(row[f'Naam_{role} Last']), XSD.string)
+          
           g.add((person_role, RDF.type, ns.person.Person))
           add_literal(g, person_role, ns.mu.uuid, person_uuid, XSD.string)
-         
+        
           if str(row[f'Datum verkiezing {role}']) != 'NaT':
             year_election = dateparser.parse(str(row[f'Datum verkiezing {role}'])).year
             
@@ -395,7 +391,7 @@ def main(file, mode):
           
             if end_mandataris != None:
               add_literal(g, person_lid_mandataris, ns.mandaat.einde, end_mandataris, XSD.dateTime)
-               
+              
             ### Mandataris - Contact punt
             if exists_contact_role(row, role):
               person_role_contact_uri, person_role_contact_uuid = concept_uri(lblod + 'contact-punten/', str(row['organization_id']) + person_uuid + role + str(row[f'Tel_{role} 1']))

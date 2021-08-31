@@ -5,8 +5,6 @@ from helper.functions import export_data
 def main():
   graph = Graph()
 
-  #nationalities.parse('input/countries-skos-ap-act.rdf')
-
   graph.parse('output/20210830182209-codelist-nationality.ttl')
 
   query = """

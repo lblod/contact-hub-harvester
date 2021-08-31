@@ -41,7 +41,7 @@ def status_mapping_central(status):
   return status_dict[status]
 
 def status_mapping_worship(status):
-  status_dict = {'Erkenningsaanvraag in behandeling': 'In oprichting', 'Operationeel': 'Actief', 'Niet actief - Samengevoegd (overgenomen)': 'Niet Actief',
+  status_dict = {'Erkenningsaanvraag in behandeling': 'DELETE RECORD', 'Operationeel': 'Actief', 'Niet actief - Samengevoegd (overgenomen)': 'Niet Actief',
                  'Operationeel - Samengevoegd (met behoud van naam)': 'Actief', 'Niet actief - Samengevoegd (nieuwe entiteit)': 'Niet Actief',
                  'Operationeel - Samengevoegd (met nieuwe naam)': 'Actief', 'Niet actief - Erkenning niet toegestaan': 'Niet Actief',
                  'Operationeel - Samenvoeging lopende':	'Actief', 'Niet actief - Ingetrokken': 'Niet Actief', 'Operationeel - Intrekkingsaanvraag lopende':	'Actief'}
@@ -179,7 +179,7 @@ def split_house_bus_number(house_bus_number):
       bus_number = split[1]
     else:
         house_number = house_bus_number
-    house_number =  house_number.replace('/', '').replace('-', '').replace(',', '')
+    house_number =  house_number.replace('/', '').replace('-', '').replace(',', '').replace(';', '')
       
   return [house_number, bus_number, ' - '.join(comment)]
 
@@ -403,33 +403,45 @@ def splitname(full_name, first_names):
   first = last = np.nan
   comment = []
 
+  if 'verkozen' in full_name or 'vacature nog open' in full_name or 'vacant' in full_name:
+    comment = 'Vacant position'
+    return [first, last, comment]
+  
   likely_last_names = ['Vos', 'Matthijs', 'Stevens', 'Maere', 'Rubens', 'Beer', 'Duran', 'Roos', 'Broos', 'Thijs', 'Perre', 'Joris', 'Winter', 'Claus', 'Thys', 'Massa', 'Roy']
 
-  split = remove_title(full_name).split(' ')
+  if ';' in full_name:
+    split = remove_title(full_name).split(';')
 
-  if len(split) == 1:
-    comment.append('Cannot split name')
+    first = split[0]
+    last = split[1]
+  else:
+    split = remove_title(full_name).split(' ')
 
-  potential_first_last = is_known_first_name(split[0], first_names)
-  potential_last_first = is_known_first_name(split[-1], first_names)
+    if len(split) == 1:
+      comment.append('Cannot split name')
 
-  if potential_first_last and potential_last_first:
-    if split[-1] in likely_last_names:
+    potential_first_last = is_known_first_name(split[0], first_names)
+    potential_last_first = is_known_first_name(split[-1], first_names)
+
+    if potential_first_last and potential_last_first:
+      if split[-1] in likely_last_names:
+        first = split[0]
+        last = ' '.join(split[1:])
+      elif split[0] in likely_last_names:
+        first = split[-1]
+        last = ' '.join(split[0:-1])
+      comment.append('Ambiguous: two possible first names - {}'.format(full_name))
+      first = full_name
+    elif potential_first_last:
       first = split[0]
       last = ' '.join(split[1:])
-    elif split[0] in likely_last_names:
+    elif potential_last_first:
       first = split[-1]
       last = ' '.join(split[0:-1])
-    comment.append('Ambiguous: two possible first names - {}'.format(full_name))
-  elif potential_first_last:
-    first = split[0]
-    last = ' '.join(split[1:])
-  elif potential_last_first:
-    first = split[-1]
-    last = ' '.join(split[0:-1])
-  else:
-    comment.append('No potential first name found - {}'.format(full_name))
-    # print([full_name])
+    else:
+      comment.append('No potential first name found - {}'.format(full_name))
+      first = full_name
+      # print([full_name])
   return [str(first).strip(), str(last).strip(), ' - '.join(comment)]
 
 def decretale_functie_cleasing(decretale):
@@ -799,7 +811,7 @@ def exists_mandate_central(row):
   return (str(row['Verkiezingen17_Opmerkingen Cleansed']) != str(np.nan) or str(row['Verkiezingen2020_Opmerkingen Cleansed']) != str(np.nan))
 
 def exists_given_and_family_name(row, role):
-  return (str(row[f'Naam_{role} First']) != str(np.nan)) and (str(row[f'Naam_{role} Last']) != str(np.nan))
+  return (str(row[f'Naam_{role} First']) != str(np.nan)) or (str(row[f'Naam_{role} Last']) != str(np.nan))
 
 def exists_address(row):
   return ((str(row['Straat']) != str(np.nan)) or (str(row['Huisnr Cleansed']) != str(np.nan)) or (str(row['Busnummer Cleansed']) != str(np.nan)) or
@@ -812,7 +824,7 @@ def exists_address_role(row, role):
   return (str(row[f'Adres_{role} Cleansed']) != str(np.nan))
 
 def exists_contact_role(row, role):
-  if 'lid' in role:
+  if not 'Lid' in role:
     return ((str(row[f'Tel_{role} 1']) != str(np.nan)) or (str(row[f'Mail_{role} Cleansed']) != str(np.nan)))
   else:
     return False
