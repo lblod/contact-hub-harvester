@@ -12,6 +12,7 @@ adms = Namespace('http://www.w3.org/ns/adms#')
 euro = Namespace('http://data.europa.eu/m8g/')
 prov = Namespace('http://www.w3.org/ns/prov#')
 owl = Namespace('http://www.w3.org/2002/07/owl#')
+euvoc = Namespace("http://publications.europa.eu/ontology/euvoc#")
 
 organisatie = Namespace('https://data.vlaanderen.be/ns/organisatie#')
 persoon = Namespace('http://data.vlaanderen.be/ns/persoon#')

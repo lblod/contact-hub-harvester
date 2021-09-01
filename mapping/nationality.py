@@ -1,12 +1,11 @@
 from rdflib import Graph, URIRef, Namespace, Literal
 from rdflib.namespace import SKOS, RDFS, RDF
-from helper.functions import export_data
+from helper.functions import export_data, concept_uri
+import helper.namespaces as ns
 
 def main():
-  euvoc = Namespace("http://publications.europa.eu/ontology/euvoc#")
-
   graph = Graph()
-  graph.parse('output/20210830182209-codelist-nationality.ttl')
+  graph.parse('output/20210830182209-codelist-nationality-complete.ttl')
 
   query = """
             SELECT ?concept ?label ?adjective
@@ -32,11 +31,10 @@ def main():
 
   if qres.bindings:
     for row in qres:
-      print(f"{row.concept}")
-      print(f"{row.label}")
-      print(f"{row.adjective}")
       nationality_concept = URIRef(f'{row.concept}')
-      nationality_graph.add((nationality_concept, RDF.type, euvoc.Country))
+      _, nationality_uuid = concept_uri(ns.euvoc.Country, f'{row.concept}')
+      nationality_graph.add((nationality_concept, RDF.type, ns.euvoc.Country))
+      nationality_graph.add((nationality_concept, ns.mu.uuid, Literal(nationality_uuid)))
       nationality_graph.add((nationality_concept, SKOS.prefLabel, Literal(f'{row.label}')))
       nationality_graph.add((nationality_concept, RDFS.label, Literal(f'{row.adjective}')))
 
